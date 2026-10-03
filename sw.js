@@ -1,5 +1,5 @@
 // 뭉치와 냥이의 글자 모험 — 인터넷이 없어도 열리게 저장해 두기
-const V = 'app-959fa2a11f';
+const V = 'app-3fb79ecafa';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const MANIFEST = './voice-manifest.json';
 

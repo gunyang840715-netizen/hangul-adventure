@@ -49,8 +49,8 @@ ok(played[0]?.startsWith('cat::'), `강아지가 대표여도 고양이 성장 �
 // 묶음에 없는 말은 기존 음성팩
 setLead('cat'); played = []; await say('하나!');
 ok(played.length === 1 && played[0] === '하나!', `묶음에 없는 말은 기존 음성 (${played[0]})`);
-// 고양이 녹음이 없는 말(놀이 시간 안내)은 고양이가 대표여도 기존 음성으로
-const timeup = '오늘 놀 시간이 다 됐어. 이번 놀이까지만 하자!';
+// 고양이 녹음이 없는 말(두더지 안내)은 고양이가 대표여도 기존 음성으로
+const timeup = '이 글자를 든 두더지를 콕 잡아 봐!';
 setLead('cat'); played = []; await say(timeup);
 ok(played.length === 1 && played[0] === timeup, `고양이 녹음이 없으면 기존 음성으로 (${played[0]})`);
 console.log('캐릭터 목소리 연결 동작 | 문제:', bad);

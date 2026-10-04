@@ -428,3 +428,8 @@ button { font-family: inherit; color: inherit; border: none; background: none; p
 .build-btn.enter { background: #20c997; box-shadow: 0 8px 0 #0ca678, 0 16px 26px rgba(0, 120, 90, .3); }
 .build-stage[data-enter="1"] { cursor: pointer; }
 .install-btn { position: absolute; right: 30px; top: 30px; font-size: 26px; padding: 14px 24px; background: #e7f5ff; color: #1864ab; z-index: 5; }
+
+/* 동물 사진 머리: 말할 때 살짝 들썩 */
+.pt-photo { transform-box: fill-box; transform-origin: 50% 80%; }
+.pt-photo.talk { animation: ptTalk .26s ease-in-out infinite alternate; }
+@keyframes ptTalk { from { transform: scale(1) rotate(0deg); } to { transform: scale(1.035, .985) rotate(-1.2deg); } }

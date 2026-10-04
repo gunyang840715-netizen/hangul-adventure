@@ -1,0 +1,65 @@
+# source/ 가 바뀌면: 검사 → 빌드 → 맨 위 index.html · sw.js · manifest.webmanifest 갱신 → 사이트 반영
+# 검사에 실패하면 아무것도 바뀌지 않음 (사이트는 이전 버전 그대로)
+name: 앱 자동 빌드·배포
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'source/**'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: build-app
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+
+      - name: 준비
+        working-directory: source
+        run: npm ci
+
+      - name: 검사 (타입 · 안 배운 글자 · 이어하기 · 합치기 규칙)
+        working-directory: source
+        run: npm run check
+
+      - name: 빌드
+        working-directory: source
+        run: |
+          export BUILD_ID="$(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M') · ${GITHUB_SHA::7}"
+          npm run build
+
+      - name: 앱 파일 만들기
+        run: python3 source/scripts/build_pwa.py
+
+      - name: 올리기
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js manifest.webmanifest
+          if git diff --cached --quiet; then echo "바뀐 것 없음"; exit 0; fi
+          git commit -m "앱 빌드 ${GITHUB_SHA::7}"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: 사이트 새로 만들기 요청
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages/builds" || echo "요청 실패 (보통은 자동으로 반영됨)"

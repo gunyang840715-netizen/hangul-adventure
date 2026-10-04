@@ -11,6 +11,7 @@ GitHub Pages로 바로 공개되는 **공개 저장소**이고, 태블릿에서 
 | 맨 위 `index.html` · `sw.js` · `manifest.webmanifest` | 자동 빌드 결과물 | ✗ (Actions가 다시 만듦) |
 | 맨 위 `voice-manifest.json` · `voice.*.json` | 녹음 음성팩 | ✗ |
 | 맨 위 `icon-*.png` · `apple-touch-icon.png` | 앱 아이콘 | 필요할 때만 |
+| 맨 위 `voice.<해시>.char.json` | 캐릭터 목소리(강아지 유라 · 고양이 명쾌한) 녹음 + 앱 문장 연결표(`pool`) | ✗ (`scripts/build_char_voice.py`로 다시 만듦) |
 | `.github/workflows/build.yml` | main에 `source/` 변경이 들어오면 검사 → 빌드 → 맨 위 파일 갱신 → 사이트 반영 | 필요할 때만 |
 
 `source/` 안:
@@ -23,6 +24,15 @@ GitHub Pages로 바로 공개되는 **공개 저장소**이고, 태블릿에서 
 - `shared/merge.js` — 두 기기 진도 합치기 규칙 (구글 Apps Script 서버와 같이 씀)
 - `scripts/` — 검사 스크립트, PWA 파일 만들기(`build_pwa.py`)
 - `backend/Code.template.gs` — 서버(구글 Apps Script) 원본. **자동 배포되지 않음** (사람이 Apps Script 편집기에 붙여 넣어야 함)
+
+## 캐릭터 목소리 (강아지 유라 · 고양이 명쾌한)
+
+- 칭찬(`PRAISE`)·다시 하기(`RETRY`, `GENTLE`)·인사·모험 시작·하루 마무리·성장 말은 **아이가 고른 대표 친구(`lead`)의 목소리**로 나온다.
+  앱이 같은 문장을 말해도 녹음 묶음(pool)에서 돌아가며 골라 말하고, 연달아 같은 녹음은 피한다. (`engine/audio.ts`의 `poolKey`)
+- 대표 친구의 녹음이 없는 문장은 기존 음성팩(SunHi · YuJin)으로 말한다. 글자 이름·소리·낱말·시험·지시 문장은 기존 음성 그대로.
+- 새 녹음을 넣으려면: mp3 폴더(파일 이름 `유라-기쁨-날짜-문장.mp3` / `명쾌한-한국어-여성-날짜-문장.mp3`) →
+  `python3 source/scripts/build_char_voice.py <mp3 폴더> .` 실행 후, 스크립트 안의 `POOLS`에 문장을 추가한 뒤 다시 실행.
+- `npm run check`의 `voice_pool_check`(연결 문장·녹음 존재)와 `voice_route_test`(대표 친구에 따라 목소리가 맞게 나오는지)가 통과해야 한다.
 
 ## 작업 방법
 

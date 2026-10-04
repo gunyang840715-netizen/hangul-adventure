@@ -3,7 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { Backdrop, burst, centerOf } from '../art/Scene';
 import { LetterGlyph, drawDuration } from '../art/LetterGlyph';
 import { JAMO } from '../data/jamo';
-import { say, sayAll, sfx } from '../engine/audio';
+import { say, sayAll, sfx, petEx } from '../engine/audio';
 import { introduce } from '../engine/srs';
 import { josa } from '../lib/hangul';
 import { Buddies } from './Buddies';
@@ -12,6 +12,8 @@ import { introName, introSound, introExample, CUE_GAP } from '../data/voice';
 
 export function Intro({ step, onDone, outfit }: GameProps<'intro'>) {
   const j = JAMO[step.ch];
+  const pe = petEx(step.ch);
+  const exWord = pe ? pe.w : j.ex.word, exEmoji = pe ? pe.e : j.ex.emoji;
   const { alive, sleep } = useScene();
   const [phase, setPhase] = useState<'draw' | 'name' | 'example' | 'tap'>('draw');
   const [text, setText] = useState('새 글자 친구를 만나 볼까?');
@@ -37,9 +39,10 @@ export function Intro({ step, onDone, outfit }: GameProps<'intro'>) {
       setText(j.hint);
       await say(j.hint); if (!alive()) return;
       setPhase('example');
-      setText(`${j.ex.word}`);
+      setText(`${pe ? pe.w : j.ex.word}`);
       sfx.pop();
-      await sayAll(introExample(step.ch), CUE_GAP); if (!alive()) return;
+      if (pe) await say(pe.k); else await sayAll(introExample(step.ch), CUE_GAP);      // 대표 친구가 "기역, 거울의 기역"처럼 말해 줌
+      if (!alive()) return;
       setPhase('tap');
       setText('글자 친구를 눌러 봐!');
       await say('글자 친구를 눌러 봐!');
@@ -71,9 +74,9 @@ export function Intro({ step, onDone, outfit }: GameProps<'intro'>) {
         </div>
         {(phase === 'example' || phase === 'tap') && (
           <div class="card slide-up" style={{ position: 'absolute', right: 40, top: 150, width: 220, height: 260, flexDirection: 'column', gap: 6 }}
-            onClick={() => { sfx.tap(); say(j.ex.word); }}>
-            <div style={{ fontSize: 120 }}>{j.ex.emoji}</div>
-            <div style={{ fontSize: 44 }}><b style={{ color: j.color, fontWeight: 'normal' }}>{j.ex.word.split(' ').pop()![0]}</b>{j.ex.word.split(' ').pop()!.slice(1)}</div>
+            onClick={() => { sfx.tap(); if (pe) say(pe.k); else say(j.ex.word); }}>
+            <div style={{ fontSize: 120 }}>{exEmoji}</div>
+            <div style={{ fontSize: 44 }}><b style={{ color: j.color, fontWeight: 'normal' }}>{exWord.split(' ').pop()![0]}</b>{exWord.split(' ').pop()!.slice(1)}</div>
           </div>
         )}
         {canNext && <button class="btn big mint pulse slide-up" style={{ position: 'absolute', right: 50, bottom: 50 }} onClick={() => { sfx.tap(); onDone(); }}>다음 ▶</button>}

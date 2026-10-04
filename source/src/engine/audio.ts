@@ -2,7 +2,9 @@
 import { load } from './store';
 import { buddy } from './bus';
 
-declare global { interface Window { __VOICE__?: Record<string, string>; __VOICE_ALIAS__?: Record<string, string> } }
+/** 캐릭터 목소리 묶음: 앱 문장 → 녹음 키 목록 (d=강아지 유라, c=고양이 명쾌한, f=그 목소리로 고정) */
+type CharPool = { d?: string[]; c?: string[]; f?: 'd' | 'c' };
+declare global { interface Window { __VOICE__?: Record<string, string>; __VOICE_ALIAS__?: Record<string, string>; __VOICE_POOL__?: Record<string, CharPool> } }
 
 let ctx: AudioContext | null = null;
 let master: GainNode, sfxGain: GainNode, musicGain: GainNode, voiceGain: GainNode;
@@ -92,10 +94,30 @@ export async function loadVoicePack(urls: string | string[], bytes = 0) {
       clearTimeout(tm);
       window.__VOICE__ = { ...(j.voices || {}), ...(window.__VOICE__ || {}) };
       window.__VOICE_ALIAS__ = { ...(j.alias || {}), ...(window.__VOICE_ALIAS__ || {}) };
+      window.__VOICE_POOL__ = { ...(j.pool || {}), ...(window.__VOICE_POOL__ || {}) };
       packCount = -1;
     } catch { clearTimeout(tm); /* 없으면 기기 음성 */ }
   }
   packNote({ progress: 1, done: true });
+}
+
+/**
+ * 캐릭터 목소리: 칭찬·다시 하기·인사·마무리처럼 친구가 하는 말은 아이가 고른 대표 친구(강아지 유라 / 고양이 명쾌한)의
+ * 녹음 묶음에서 돌아가며 고른다. 그 친구의 녹음이 없으면 null → 기존 음성으로 말한다.
+ */
+const lastPick = new Map<string, string>();
+function poolKey(text: string): string | null {
+  const e = window.__VOICE_POOL__?.[text];
+  if (!e) return null;
+  const who = e.f || (load().lead === 'cat' ? 'c' : 'd');
+  const v = window.__VOICE__ || {};
+  const list = (who === 'c' ? e.c : e.d)?.filter(k => !!v[k]) || [];
+  if (!list.length) return null;
+  const last = lastPick.get(text + who);
+  const cand = list.length > 1 ? list.filter(k => k !== last) : list;
+  const k = cand[Math.floor(Math.random() * cand.length)];
+  lastPick.set(text + who, k);
+  return k;
 }
 
 /** 녹음 찾기 (같은 뜻의 다른 문장으로 연결된 것 포함) → base64 */
@@ -108,7 +130,12 @@ function b64For(text: string): string | null {
   if (a) return p[a] || extra.get(a) || null;
   return null;
 }
-export function hasClip(text: string) { return !!b64For(text); }
+export function hasClip(text: string) {
+  const t = text.trim();
+  const e = window.__VOICE_POOL__?.[t];
+  if (e && ((e.d && e.d.length) || (e.c && e.c.length))) return true;
+  return !!b64For(t);
+}
 
 /** 녹음 앞뒤의 빈 소리를 잘라 낸다 (말이 끝나고 한참 기다리는 느낌 없애기) */
 function trimSilence(buf: AudioBuffer): AudioBuffer {
@@ -137,12 +164,14 @@ function trimSilence(buf: AudioBuffer): AudioBuffer {
 
 async function clip(text: string): Promise<AudioBuffer | null> {
   const t = text.trim();
-  if (decoded.has(t)) return decoded.get(t)!;
-  const b64 = b64For(t);
+  const pk = poolKey(t);                       // 캐릭터 목소리가 있으면 그 녹음, 없으면 기존 음성팩
+  const id = pk ?? t;
+  if (decoded.has(id)) return decoded.get(id)!;
+  const b64 = pk ? window.__VOICE__![pk] : b64For(t);
   if (!b64) return null;
   const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
   const buf = trimSilence(await audioCtx().decodeAudioData(bin.buffer));
-  decoded.set(t, buf);
+  decoded.set(id, buf);
   return buf;
 }
 

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc -p . && vite build",
-    "check": "tsc -p . && tsx scripts/learned_check.mts 30 && tsx scripts/resume_check.mts && node scripts/merge_test.js",
+    "check": "tsc -p . && tsx scripts/learned_check.mts 30 && tsx scripts/resume_check.mts && tsx scripts/voice_pool_check.mts && tsx scripts/voice_route_test.mts && node scripts/merge_test.js",
     "pwa": "python3 scripts/build_pwa.py",
     "dev": "vite"
   },

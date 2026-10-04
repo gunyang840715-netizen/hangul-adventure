@@ -1,0 +1,29 @@
+{
+  "name": "hangul",
+  "version": "1.0.0",
+  "description": "뭉치와 냥이의 글자 모험 (한글 학습 앱) 소스",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p . && vite build",
+    "check": "tsc -p . && tsx scripts/learned_check.mts 30 && tsx scripts/resume_check.mts && node scripts/merge_test.js",
+    "pwa": "python3 scripts/build_pwa.py",
+    "dev": "vite"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vite-plugin-singlefile": "^2.3.3"
+  },
+  "dependencies": {
+    "@fontsource/gowun-dodum": "^5.3.0",
+    "@fontsource/jua": "^5.3.0",
+    "microsoft-cognitiveservices-speech-sdk": "^1.51.0",
+    "preact": "^10.29.8"
+  },
+  "private": true
+}

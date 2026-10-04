@@ -4,7 +4,9 @@ import { buddy } from './bus';
 
 /** 캐릭터 목소리 묶음: 앱 문장 → 녹음 키 목록 (d=강아지 유라, c=고양이 명쾌한, f=그 목소리로 고정) */
 type CharPool = { d?: string[]; c?: string[]; f?: 'd' | 'c' };
-declare global { interface Window { __VOICE__?: Record<string, string>; __VOICE_ALIAS__?: Record<string, string>; __VOICE_POOL__?: Record<string, CharPool> } }
+declare global { interface Window { __VOICE__?: Record<string, string>; __VOICE_ALIAS__?: Record<string, string>; __VOICE_POOL__?: Record<string, CharPool>; __VOICE_EX__?: { d?: Record<string, CharEx>; c?: Record<string, CharEx> } } }
+/** 글자별 예시 낱말(캐릭터가 말하는 것): w=낱말, e=그림, k=녹음 키 */
+export type CharEx = { w: string; e: string; k: string };
 
 let ctx: AudioContext | null = null;
 let master: GainNode, sfxGain: GainNode, musicGain: GainNode, voiceGain: GainNode;
@@ -95,6 +97,7 @@ export async function loadVoicePack(urls: string | string[], bytes = 0) {
       window.__VOICE__ = { ...(j.voices || {}), ...(window.__VOICE__ || {}) };
       window.__VOICE_ALIAS__ = { ...(j.alias || {}), ...(window.__VOICE_ALIAS__ || {}) };
       window.__VOICE_POOL__ = { ...(j.pool || {}), ...(window.__VOICE_POOL__ || {}) };
+      if (j.ex) window.__VOICE_EX__ = { d: { ...(j.ex.d || {}), ...(window.__VOICE_EX__?.d || {}) }, c: { ...(j.ex.c || {}), ...(window.__VOICE_EX__?.c || {}) } };
       packCount = -1;
     } catch { clearTimeout(tm); /* 없으면 기기 음성 */ }
   }
@@ -106,8 +109,22 @@ export async function loadVoicePack(urls: string | string[], bytes = 0) {
  * 녹음 묶음에서 돌아가며 고른다. 그 친구의 녹음이 없으면 null → 기존 음성으로 말한다.
  */
 const lastPick = new Map<string, string>();
+/** 아이 이름이 들어간 말은 묶음에 '{이름}'으로 적혀 있다 ("로희야, 안녕!" → "{이름}, 안녕!") */
+function poolEntry(text: string): CharPool | undefined {
+  const P = window.__VOICE_POOL__;
+  if (!P) return undefined;
+  if (P[text]) return P[text];
+  const nm = load().name;
+  if (nm && text.startsWith(nm)) return P['{이름}' + text.slice(nm.length).replace(/^[아야]/, '')];
+  return undefined;
+}
+/** 대표 친구(강아지/고양이)가 말하는 글자 예시 낱말. 없으면 null → 기존 예시 낱말 */
+export function petEx(ch: string): CharEx | null {
+  const E = window.__VOICE_EX__?.[load().lead === 'cat' ? 'c' : 'd']?.[ch];
+  return E && window.__VOICE__?.[E.k] ? E : null;
+}
 function poolKey(text: string): string | null {
-  const e = window.__VOICE_POOL__?.[text];
+  const e = poolEntry(text);
   if (!e) return null;
   const who = e.f || (load().lead === 'cat' ? 'c' : 'd');
   const v = window.__VOICE__ || {};
@@ -132,7 +149,7 @@ function b64For(text: string): string | null {
 }
 export function hasClip(text: string) {
   const t = text.trim();
-  const e = window.__VOICE_POOL__?.[t];
+  const e = poolEntry(t);
   if (e && ((e.d && e.d.length) || (e.c && e.c.length))) return true;
   return !!b64For(t);
 }

@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { JSX } from 'preact';
 import { onSpeaking } from '../engine/audio';
 import { PET, MAX_LEVEL, type Stage, type Slot } from '../data/pets';
+import { PET_PHOTO, PHOTO_BOX } from './petphotos';
 
 export type Mood = 'happy' | 'wow' | 'think' | 'sleep' | 'love';
 export type Motion = 'bob' | 'jump' | 'cheer' | 'wiggle' | 'none' | 'fly' | 'hop';
@@ -21,16 +22,16 @@ interface Look {
 }
 
 const LOOK: Record<string, Look> = {
-  maltese: { fur: '#fffdfa', dark: '#f1e7ef', line: '#bdb0c2', light: '#ffffff', inner: '#ffd6e4', nose: '#2b2230' },
-  poodle: { fur: '#e3a86e', dark: '#c98a4e', line: '#9b612f', light: '#f4cf9f', inner: '#e3a86e', nose: '#3b2620' },
-  corgi: { fur: '#f3a557', dark: '#e28d3c', line: '#c27530', light: '#fffdf7', inner: '#ffc9d8', nose: '#2b2230' },
-  shiba: { fur: '#e08a3c', dark: '#c9722b', line: '#aa5f25', light: '#fff2df', inner: '#fff2df', nose: '#2b2230' },
-  schnauzer: { fur: '#949eab', dark: '#737d8b', line: '#565f6c', light: '#eceff3', inner: '#737d8b', nose: '#23252b', paw: '#eceff3' },
-  koshort: { fur: '#f9c17c', dark: '#e48b36', line: '#c26f26', light: '#fffaf2', inner: '#ffb8cc', nose: '#ff8fab', whisker: '#c26f26' },
-  russian: { fur: '#abb8c8', dark: '#8c9bb0', line: '#66768c', light: '#c3cedb', inner: '#e8bccb', nose: '#8a8aa8', eye: '#5cbf62', whisker: '#eef3f8' },
-  siamese: { fur: '#fbf1e2', dark: '#7a5847', line: '#8b6a57', light: '#fffaf2', inner: '#c69a84', nose: '#4b3128', eye: '#4aa6ff', whisker: '#f3e8da', paw: '#7a5847' },
-  fold: { fur: '#dbe0e8', dark: '#8f99a8', line: '#6d7787', light: '#f7f8fb', inner: '#e9c6d2', nose: '#ff9db4', eye: '#e8a33c', whisker: '#6d7787' },
-  persian: { fur: '#fffcfa', dark: '#f0e6ec', line: '#c4b6c3', light: '#ffffff', inner: '#ffd0de', nose: '#ff9db4', eye: '#e8943e', whisker: '#c4b6c3' },
+  maltese: { fur: '#f6efd9', dark: '#e8dcc0', line: '#c9b98f', light: '#fffaf0', inner: '#ffd6e4', nose: '#3a2a22' },
+  poodle: { fur: '#cf7e3e', dark: '#b5662d', line: '#8a4a1f', light: '#e3a468', inner: '#cf7e3e', nose: '#2b2230' },
+  corgi: { fur: '#f0a04b', dark: '#de8a38', line: '#b9702a', light: '#fff1d6', inner: '#ffc9d8', nose: '#2b2230' },
+  shiba: { fur: '#ecc27d', dark: '#d9a35a', line: '#b9803a', light: '#fff4df', inner: '#fff2df', nose: '#4a3326' },
+  schnauzer: { fur: '#3b3430', dark: '#2a2420', line: '#1d1815', light: '#e3c79a', inner: '#2a2420', nose: '#23252b', paw: '#e8d2ae' },
+  koshort: { fur: '#f0a04b', dark: '#d9822f', line: '#b4691f', light: '#fff6ea', inner: '#ffb8cc', nose: '#ff8fab', whisker: '#c26f26' },
+  russian: { fur: '#2e3140', dark: '#1f2230', line: '#14161f', light: '#f5f5f7', inner: '#e8bccb', nose: '#8a8aa8', eye: '#5cbf62', whisker: '#eef3f8', paw: '#f5f5f7' },
+  siamese: { fur: '#d9c79a', dark: '#8a6d3b', line: '#6b5230', light: '#fff6df', inner: '#c69a84', nose: '#4b3128', eye: '#e8c43c', whisker: '#f3e8da', paw: '#fff6df' },
+  fold: { fur: '#8a6a45', dark: '#5e4529', line: '#3f2c18', light: '#f5efe2', inner: '#e9c6d2', nose: '#ff9db4', eye: '#e8c43c', whisker: '#6d7787' },
+  persian: { fur: '#f6e3b4', dark: '#e8cf94', line: '#c7a869', light: '#fff7e3', inner: '#ffd0de', nose: '#ff9db4', eye: '#6aa8a0', whisker: '#c4b6c3' },
 };
 
 /** 겹친 동그라미로 복슬복슬한 모양 (바깥 테두리만 보이게) */
@@ -75,6 +76,7 @@ export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}
   const def = PET[pet] ?? PET.maltese;
   const L = LOOK[def.id];
   const cat = def.species === 'cat';
+  const photo = PET_PHOTO[def.id];          // 동물 사진이 있으면 머리를 사진으로
   // 레벨이 오를 때마다 조금씩: 몸이 커지고, 머리·눈 비율은 아기처럼 크다가 점점 어른처럼
   const g = growthOf(level, stage);
   const S = 0.6 + 0.4 * g;                 // 몸 크기
@@ -103,6 +105,7 @@ export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}
           {wear.shoes && <Shoes k={wear.shoes} />}
           {wear.neck && <Neck k={wear.neck} />}
           <g transform={`translate(100 150) scale(${H}) translate(-100 -150)`}>
+            {photo ? <PhotoHead src={photo} mood={mood} talking={talking} /> : <>
             <g transform={`translate(100 100) scale(${Y}) translate(-100 -100)`}><EarsBack pet={def.id} L={L} /></g>
             <Head pet={def.id} L={L} />
             <Marks pet={def.id} L={L} />
@@ -113,12 +116,25 @@ export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}
             <Mouth cat={cat} mood={mood} talking={talking} pet={def.id} />
             <g transform={`translate(100 100) scale(${Y}) translate(-100 -100)`}><EarsFront pet={def.id} L={L} /></g>
             <ellipse cx="80" cy="60" rx="20" ry="11" fill={`url(#${id}-sh)`} transform="rotate(-20 80 60)" />
+            </>}
             {wear.glasses && <Glasses k={wear.glasses} rb={`url(#${id}-rb)`} />}
             {wear.hat && <Hat k={wear.hat} pet={def.id} />}
           </g>
         </g>
       </svg>
     </div>
+  );
+}
+
+/** 사진 머리: 배경을 지운 투명 이미지를 머리 자리에 (눈 위치를 (100,94)에 맞춰 둠). 말할 때 살짝 들썩, 잘 때 어둡게, 사랑일 땐 하트 */
+function PhotoHead({ src, mood, talking }: { src: string; mood: Mood; talking: boolean }) {
+  return (
+    <g>
+      <image href={src} x={PHOTO_BOX.x} y={PHOTO_BOX.y} width={PHOTO_BOX.size} height={PHOTO_BOX.size}
+        class={`pt-photo${talking ? ' talk' : ''}`} style={mood === 'sleep' ? { filter: 'brightness(.82) saturate(.85)' } : undefined} />
+      {mood === 'love' && <g class="pt-hearts"><text x="150" y="30" font-size="26">❤️</text><text x="34" y="44" font-size="18">💕</text></g>}
+      {mood === 'sleep' && <text x="146" y="34" font-size="24" fill="#6b7aa8" font-weight="bold">z</text>}
+    </g>
   );
 }
 

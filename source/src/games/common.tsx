@@ -5,7 +5,6 @@ import { buddy } from '../engine/bus';
 import { pick, josa } from '../lib/hangul';
 import { JAMO } from '../data/jamo';
 import { cueParts, CUE_GAP } from '../data/voice';
-import { takeBack } from '../engine/store';
 export { CUE_GAP };
 import type { Step } from '../engine/session';
 import type { Outfit } from '../engine/store';
@@ -22,8 +21,8 @@ export const RETRY = ['다시 해 볼까?', '괜찮아, 한 번 더!', '다시 �
 /** 틀렸을 때: 상냥하고 부드럽게 (아이가 속상하지 않게) */
 export const GENTLE = ['괜찮아~ 다시 찾아 보자!', '괜찮아, 천천히 다시 찾아 볼까?', '아깝다~ 다시 한번 찾아 보자!'];
 export const gentle = (lines: string[] = GENTLE) => say(pick(lines));
-/** 놀이에서 틀리면 받은 것(간식·꾸미기·재료) 하나를 무작위로 돌려받기 — 화면 위쪽에 날아가는 모습이 보임 */
-export const penalty = () => { try { takeBack(); } catch { /* 무시 */ } };
+/** 놀이의 오답은 다시 배울 기회. 받은 보상은 빼앗지 않는다. 호출부 호환 유지. */
+export const penalty = () => {};
 
 /**
  * 말하는 중에도 바로 누를 수 있게: 누를 때마다 새 차례를 받는다(하던 말은 바로 멈춤).

@@ -18,7 +18,7 @@ import { PETS, ITEM_LIST, SNACKS } from './data/pets';
 
 function Gallery() {
   const g = new URLSearchParams(location.search).get('gallery');
-  const box = { background: '#e8f3ff', display: 'flex', flexWrap: 'wrap', gap: 6, padding: 12, alignContent: 'flex-start', width: 1280, height: 800, position: 'fixed', left: 0, top: 0 } as any;
+  const box = { background: '#e8f3ff', display: 'flex', flexWrap: 'wrap', gap: 6, padding: '40px 12px 12px', alignContent: 'flex-start', width: 1280, height: 800, position: 'fixed', left: 0, top: 0 } as any;
   const lab = (t: string) => <div style={{ fontSize: 16, textAlign: 'center', fontFamily: 'sans-serif' }}>{t}</div>;
   if (g === '2') return (
     <div style={box}>{PETS.map(p => (['baby', 'kid', 'adult'] as const).map(st => <div><Pet pet={p.id} stage={st} size={118} motion="none" autoTalk={false} />{lab(`${p.breed} ${st}`)}</div>))}</div>

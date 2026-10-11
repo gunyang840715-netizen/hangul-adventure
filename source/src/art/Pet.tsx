@@ -70,13 +70,14 @@ export function growthOf(level?: number, stage: Stage = 'adult') {
 
 export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}, stage = 'adult', level, talk, autoTalk = true, class: cls = '', style, flip }: Props) {
   const [speaking, setSpeaking] = useState(false);
+  const [failedPhoto, setFailedPhoto] = useState('');
   const [id] = useState(() => 'pt' + (++uid));
   useEffect(() => (autoTalk ? onSpeaking(setSpeaking) : undefined) as any, [autoTalk]);
   const talking = talk ?? speaking;
   const def = PET[pet] ?? PET.maltese;
   const L = LOOK[def.id];
   const cat = def.species === 'cat';
-  const photo = PET_PHOTO[def.id];          // 동물 사진이 있으면 머리를 사진으로
+  const photo = PET_PHOTO[def.id] !== failedPhoto ? PET_PHOTO[def.id] : undefined;
   // 레벨이 오를 때마다 조금씩: 몸이 커지고, 머리·눈 비율은 아기처럼 크다가 점점 어른처럼
   const g = growthOf(level, stage);
   const S = 0.6 + 0.4 * g;                 // 몸 크기
@@ -105,7 +106,7 @@ export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}
           {wear.shoes && <Shoes k={wear.shoes} />}
           {wear.neck && <Neck k={wear.neck} />}
           <g transform={`translate(100 150) scale(${H}) translate(-100 -150)`}>
-            {photo ? <PhotoHead src={photo} mood={mood} talking={talking} /> : <>
+            {photo ? <PhotoHead src={photo} mood={mood} talking={talking} onError={() => setFailedPhoto(photo)} /> : <>
             <g transform={`translate(100 100) scale(${Y}) translate(-100 -100)`}><EarsBack pet={def.id} L={L} /></g>
             <Head pet={def.id} L={L} />
             <Marks pet={def.id} L={L} />
@@ -127,10 +128,11 @@ export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}
 }
 
 /** 사진 머리: 배경을 지운 투명 이미지를 머리 자리에 (눈 위치를 (100,94)에 맞춰 둠). 말할 때 살짝 들썩, 잘 때 어둡게, 사랑일 땐 하트 */
-function PhotoHead({ src, mood, talking }: { src: string; mood: Mood; talking: boolean }) {
+function PhotoHead({ src, mood, talking, onError }: { src: string; mood: Mood; talking: boolean; onError: () => void }) {
   return (
     <g>
       <image href={src} x={PHOTO_BOX.x} y={PHOTO_BOX.y} width={PHOTO_BOX.size} height={PHOTO_BOX.size}
+        onError={onError}
         class={`pt-photo${talking ? ' talk' : ''}`} style={mood === 'sleep' ? { filter: 'brightness(.82) saturate(.85)' } : undefined} />
       {mood === 'love' && <g class="pt-hearts"><text x="150" y="30" font-size="26">❤️</text><text x="34" y="44" font-size="18">💕</text></g>}
       {mood === 'sleep' && <text x="146" y="34" font-size="24" fill="#6b7aa8" font-weight="bold">z</text>}

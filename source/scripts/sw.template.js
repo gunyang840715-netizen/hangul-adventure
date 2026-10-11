@@ -2,6 +2,22 @@
 const V = 'app-__VERSION__';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const MANIFEST = './voice-manifest.json';
+const ART_MANIFEST = './art/art-manifest.json';
+
+async function precacheArt(c) {
+  const r = await fetch(ART_MANIFEST, { cache: 'reload' });
+  if (r.status === 404) return; // 그림 없는 이전 설치 방식도 지원
+  if (!r.ok) throw new Error('그림 목록 다운로드 실패');
+  const m = await r.clone().json();
+  await c.put(ART_MANIFEST, r);
+  for (const f of m.files || []) {
+    const old = await caches.match(f.u);
+    if (old) { await c.put(f.u, old); continue; }
+    const x = await fetch(f.u);
+    if (!x.ok) throw new Error('그림 다운로드 실패: ' + f.u);
+    await c.put(f.u, x);
+  }
+}
 
 async function precacheVoices(c) {
   // 음성팩 목록을 받아 조각들을 저장 (이름에 내용 표시(해시)가 있어서, 전에 받아 둔 게 있으면 다시 받지 않음)
@@ -28,6 +44,7 @@ self.addEventListener('install', (e) => {
       return c.put(u, r);
     }));
     await precacheVoices(c);
+    await precacheArt(c);
     await self.skipWaiting();
   })());
 });
@@ -35,7 +52,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((ks) => Promise.all(ks.filter((k) => k !== V).map((k) => caches.delete(k))))
+      .then((ks) => Promise.all(ks.filter((k) => k.startsWith('app-') && k !== V).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -61,6 +78,7 @@ self.addEventListener('fetch', (e) => {
   if (req.mode === 'navigate') { e.respondWith(netFirst(req, './index.html', 3000)); return; }
   // 음성팩 목록: 새 음성이 있으면 받도록 인터넷 먼저
   if (url.pathname.endsWith('/voice-manifest.json')) { e.respondWith(netFirst(req, MANIFEST, 4000)); return; }
+  if (url.pathname.endsWith('/art/art-manifest.json')) { e.respondWith(netFirst(req, ART_MANIFEST, 4000)); return; }
 
   // 나머지(음성 조각·아이콘): 저장본 먼저
   e.respondWith(

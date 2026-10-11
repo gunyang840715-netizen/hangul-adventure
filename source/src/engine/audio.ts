@@ -18,7 +18,11 @@ export function audioCtx() {
     master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
     sfxGain = ctx.createGain(); sfxGain.gain.value = 0.55; sfxGain.connect(master);
     musicGain = ctx.createGain(); musicGain.gain.value = 0.0; musicGain.connect(master);
-    voiceGain = ctx.createGain(); voiceGain.gain.value = 1.0; voiceGain.connect(master);
+    voiceGain = ctx.createGain(); voiceGain.gain.value = 1.0;
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -3; limiter.knee.value = 0; limiter.ratio.value = 20;
+    limiter.attack.value = 0.002; limiter.release.value = 0.15;
+    voiceGain.connect(limiter); limiter.connect(master);
   }
   if (ctx.state === 'suspended') ctx.resume();
   return ctx;
@@ -35,7 +39,10 @@ export function unlock() {
 
 // ---------------- 음성 ----------------
 const decoded = new Map<string, AudioBuffer>();
+const levels = new Map<string, { gain: number; silent: boolean }>();
+const unavailable = new Set<string>();
 let current: AudioBufferSourceNode | null = null;
+let finishCurrent: (() => void) | null = null;
 let speaking = 0;
 const listeners = new Set<(on: boolean) => void>();
 export function onSpeaking(f: (on: boolean) => void) { listeners.add(f); return () => listeners.delete(f); }
@@ -96,7 +103,16 @@ export async function loadVoicePack(urls: string | string[], bytes = 0) {
       clearTimeout(tm);
       window.__VOICE__ = { ...(j.voices || {}), ...(window.__VOICE__ || {}) };
       window.__VOICE_ALIAS__ = { ...(j.alias || {}), ...(window.__VOICE_ALIAS__ || {}) };
-      window.__VOICE_POOL__ = { ...(j.pool || {}), ...(window.__VOICE_POOL__ || {}) };
+      // 같은 문장에 추가한 녹음도 결합한다. 기존 고정 목소리와 순서는 유지.
+      const pools = { ...(window.__VOICE_POOL__ || {}) };
+      for (const [line, value] of Object.entries(j.pool || {}) as [string, CharPool][]) {
+        const old = pools[line];
+        pools[line] = { ...value, ...old,
+          d: [...new Set([...(old?.d || []), ...(value.d || [])])],
+          c: [...new Set([...(old?.c || []), ...(value.c || [])])],
+        };
+      }
+      window.__VOICE_POOL__ = pools;
       if (j.ex) window.__VOICE_EX__ = { d: { ...(j.ex.d || {}), ...(window.__VOICE_EX__?.d || {}) }, c: { ...(j.ex.c || {}), ...(window.__VOICE_EX__?.c || {}) } };
       packCount = -1;
     } catch { clearTimeout(tm); /* 없으면 기기 음성 */ }
@@ -109,7 +125,7 @@ export async function loadVoicePack(urls: string | string[], bytes = 0) {
  * 녹음 묶음에서 돌아가며 고른다. 그 친구의 녹음이 없으면 null → 기존 음성으로 말한다.
  */
 const lastPick = new Map<string, string>();
-/** 아이 이름이 들어간 말은 묶음에 '{이름}'으로 적혀 있다 ("로희야, 안녕!" → "{이름}, 안녕!") */
+/** 아이 이름이 들어간 말은 묶음에 '{이름}'으로 적혀 있다 */
 function poolEntry(text: string): CharPool | undefined {
   const P = window.__VOICE_POOL__;
   if (!P) return undefined;
@@ -128,7 +144,7 @@ function poolKey(text: string): string | null {
   if (!e) return null;
   const who = e.f || (load().lead === 'cat' ? 'c' : 'd');
   const v = window.__VOICE__ || {};
-  const list = (who === 'c' ? e.c : e.d)?.filter(k => !!v[k]) || [];
+  const list = (who === 'c' ? e.c : e.d)?.filter(k => !!v[k] && !unavailable.has(k)) || [];
   if (!list.length) return null;
   const last = lastPick.get(text + who);
   const cand = list.length > 1 ? list.filter(k => k !== last) : list;
@@ -150,20 +166,26 @@ function b64For(text: string): string | null {
 export function hasClip(text: string) {
   const t = text.trim();
   const e = poolEntry(t);
-  if (e && ((e.d && e.d.length) || (e.c && e.c.length))) return true;
-  return !!b64For(t);
+  if (e) {
+    const who = e.f || (load().lead === 'cat' ? 'c' : 'd');
+    if ((who === 'c' ? e.c : e.d)?.some(k => !!window.__VOICE__?.[k] && !unavailable.has(k))) return true;
+  }
+  return !unavailable.has(t) && !!b64For(t);
 }
 
 /** 녹음 앞뒤의 빈 소리를 잘라 낸다 (말이 끝나고 한참 기다리는 느낌 없애기) */
-function trimSilence(buf: AudioBuffer): AudioBuffer {
+function trimSilence(buf: AudioBuffer, gain: number): AudioBuffer {
   const sr = buf.sampleRate;
   const d = buf.getChannelData(0);
   const win = Math.max(1, Math.round(sr * 0.01));
   let first = -1, last = -1;
   for (let i = 0; i + win <= d.length; i += win) {
     let s = 0;
-    for (let j = i; j < i + win; j++) s += d[j] * d[j];
-    if (Math.sqrt(s / win) > 0.012) { if (first < 0) first = i; last = i + win; }
+    for (let c = 0; c < buf.numberOfChannels; c++) {
+      const channel = buf.getChannelData(c);
+      for (let j = i; j < i + win; j++) s += channel[j] * channel[j];
+    }
+    if (Math.sqrt(s / (win * buf.numberOfChannels)) * gain > 0.012) { if (first < 0) first = i; last = i + win; }
   }
   if (first < 0) return buf;
   const start = Math.max(0, first - Math.round(sr * 0.045));
@@ -179,17 +201,55 @@ function trimSilence(buf: AudioBuffer): AudioBuffer {
   return out;
 }
 
-async function clip(text: string): Promise<AudioBuffer | null> {
-  const t = text.trim();
-  const pk = poolKey(t);                       // 캐릭터 목소리가 있으면 그 녹음, 없으면 기존 음성팩
-  const id = pk ?? t;
+/** 20ms마다 무음 구간을 제외한 말소리 평균을 재서 재생 배율을 기억한다. */
+export function recordedLevel(buf: Pick<AudioBuffer, 'sampleRate' | 'length' | 'numberOfChannels' | 'getChannelData'>) {
+  const win = Math.max(1, Math.round(buf.sampleRate * 0.02));
+  const channels = Array.from({ length: buf.numberOfChannels }, (_, c) => buf.getChannelData(c));
+  let energy = 0, active = 0, peakWindow = 0;
+  for (let start = 0; start < buf.length; start += win) {
+    const end = Math.min(start + win, buf.length);
+    let sum = 0;
+    for (const channel of channels) for (let j = start; j < end; j++) sum += channel[j] * channel[j];
+    const count = (end - start) * channels.length;
+    const rms = Math.sqrt(sum / count);
+    peakWindow = Math.max(peakWindow, rms);
+    if (rms > Math.pow(10, -45 / 20)) { energy += sum; active += count; }
+  }
+  const rms = active ? Math.sqrt(energy / active) : peakWindow;
+  const silent = !Number.isFinite(rms) || rms < Math.pow(10, -50 / 20);
+  return { gain: silent ? 1 : Math.max(0.5, Math.min(30, Math.pow(10, -17 / 20) / rms)), silent };
+}
+
+async function decodedClip(id: string, b64: string): Promise<AudioBuffer | null> {
+  if (unavailable.has(id)) return null;
   if (decoded.has(id)) return decoded.get(id)!;
-  const b64 = pk ? window.__VOICE__![pk] : b64For(t);
+  try {
+    const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const raw = await audioCtx().decodeAudioData(bin.buffer);
+    const level = recordedLevel(raw);
+    levels.set(id, level);
+    if (level.silent) { unavailable.add(id); return null; }
+    const buf = trimSilence(raw, level.gain);
+    decoded.set(id, buf);
+    return buf;
+  } catch { unavailable.add(id); return null; }
+}
+
+async function clip(text: string): Promise<{ buffer: AudioBuffer; gain: number } | null> {
+  const t = text.trim();
+  // 무음·깨진 녹음이면 같은 목소리 묶음에서 다시 고른 뒤 기존 음성팩으로 돌아간다.
+  const tried = new Set<string>();
+  for (;;) {
+    const pk = poolKey(t);
+    if (!pk || tried.has(pk)) break;
+    tried.add(pk);
+    const buf = await decodedClip(pk, window.__VOICE__![pk]);
+    if (buf) return { buffer: buf, gain: levels.get(pk)!.gain };
+  }
+  const b64 = b64For(t);
   if (!b64) return null;
-  const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-  const buf = trimSilence(await audioCtx().decodeAudioData(bin.buffer));
-  decoded.set(id, buf);
-  return buf;
+  const buf = await decodedClip(t, b64);
+  return buf ? { buffer: buf, gain: levels.get(t)!.gain } : null;
 }
 
 // ---------- 서버에서 받은 음성 저장 (IndexedDB) ----------
@@ -297,8 +357,10 @@ let seq = 0;
 let talk = 0;
 function halt() {
   seq++;
-  try { current?.stop(); } catch { /* 이미 멈춤 */ }
+  const source = current;
   current = null;
+  try { source?.stop(); } catch { /* 이미 멈춤 */ }
+  finishCurrent?.();
   try { speechSynthesis.cancel(); } catch { /* 없음 */ }
   speaking = 0; listeners.forEach(f => f(false));
 }
@@ -319,28 +381,47 @@ async function speak(text: string, opt: { rate?: number; pitch?: number; interru
   if ((window as any).__FAST__) { await wait(40); return; }
   const my = ++seq;
   const rate = (opt.rate ?? 1) * (load().settings.voiceRate || 1);
-  const buf = await clip(text).catch(() => null);
+  const recording = await clip(text).catch(() => null);
+  const buf = recording?.buffer;
   if (!buf && remote) wantVoices([text], true);
   if (my !== seq) return;
   if (buf) {
     return new Promise(res => {
       let done = false;
-      const fin = () => { if (!done) { done = true; setSpeaking(-1); res(); } };
+      let timer: ReturnType<typeof setTimeout> | undefined;
       const ac = audioCtx();
       const src = ac.createBufferSource();
       src.buffer = buf;
-      src.connect(voiceGain);
+      const levelGain = ac.createGain(); levelGain.gain.value = recording!.gain;
+      src.connect(levelGain); levelGain.connect(voiceGain);
+      const fin = () => {
+        if (done) return;
+        done = true; clearTimeout(timer);
+        if (finishCurrent === fin) finishCurrent = null;
+        if (current === src) current = null;
+        src.onended = null;
+        try { src.disconnect(); levelGain.disconnect(); } catch { /* 이미 정리됨 */ }
+        setSpeaking(-1); res();
+      };
       current = src;
+      finishCurrent = fin;
       setSpeaking(1);
       src.onended = fin;
       try { src.start(); } catch { fin(); return; }
       // 앱을 다시 열었을 때 소리 장치가 멈춰 있으면 '끝남' 신호가 안 와서 다음으로 못 넘어감 → 길이만큼 기다린 뒤 넘어가기
-      setTimeout(fin, buf.duration * 1000 + (ac.state === 'running' ? 1200 : 400));
+      if (!done) timer = setTimeout(fin, buf.duration * 1000 + (ac.state === 'running' ? 1200 : 400));
     });
   }
   return new Promise(res => {
     let done = false;
-    const fin = () => { if (!done) { done = true; setSpeaking(-1); res(); } };
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const fin = () => {
+      if (done) return;
+      done = true; clearTimeout(timer);
+      if (finishCurrent === fin) finishCurrent = null;
+      setSpeaking(-1); res();
+    };
+    finishCurrent = fin;
     try {
       const u = new SpeechSynthesisUtterance(text);
       u.lang = 'ko-KR';
@@ -351,7 +432,7 @@ async function speak(text: string, opt: { rate?: number; pitch?: number; interru
       setSpeaking(1);
       speechSynthesis.speak(u);
       // 일부 안드로이드에서 onend가 안 오는 문제 대비
-      setTimeout(fin, 900 + text.length * 260 / rate);
+      if (!done) timer = setTimeout(fin, 900 + text.length * 260 / rate);
     } catch { fin(); }
   });
 }

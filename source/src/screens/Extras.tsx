@@ -1,3 +1,4 @@
+import { appTitle } from '../lib/appTitle';
 // 제목, 스티커북, 꾸미기, 잠자기, 부모 설정
 import { useEffect, useState } from 'preact/hooks';
 import { Backdrop, burst, centerOf } from '../art/Scene';
@@ -39,7 +40,7 @@ export function Title({ onStart }: { onStart: () => void }) {
     <div class="screen" onClick={() => ready && onStart()}>
       <Backdrop theme="sky" />
       <div class="layer">
-        <div class="title-logo slide-up" style={{ fontSize: 96 }}>뭉치와 냥이의 글자 모험<small>한글 모험을 떠나요!</small></div>
+        <div class="title-logo slide-up" style={{ fontSize: 96 }}>{appTitle(load().name)}<small>한글 모험을 떠나요!</small></div>
         <div style={{ position: 'absolute', left: 110, top: 400 }} class="float"><LetterGlyph ch="ㄱ" size={160} /></div>
         <div style={{ position: 'absolute', left: 250, top: 560, animationDelay: '.5s' }} class="float"><LetterGlyph ch="ㅏ" size={130} /></div>
         <div style={{ position: 'absolute', right: 250, top: 560, animationDelay: '.9s' }} class="float"><LetterGlyph ch="ㅎ" size={130} /></div>

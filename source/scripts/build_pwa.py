@@ -20,7 +20,7 @@ html = app.replace('<head>', '<head>' + head, 1)
 open(p(OUT, 'index.html'), 'w', encoding='utf-8').write(html)
 
 manifest = {
-  'id': './', 'name': '뭉치와 냥이의 글자 모험', 'short_name': '글자 모험', 'lang': 'ko',
+  'id': './', 'name': '한글나라', 'short_name': '한글나라', 'lang': 'ko',
   'start_url': './', 'scope': './', 'display': 'fullscreen', 'display_override': ['fullscreen', 'standalone'], 'orientation': 'landscape',
   'launch_handler': {'client_mode': ['navigate-existing', 'auto']},
   'background_color': '#ffe3f1', 'theme_color': '#ffc6e1',

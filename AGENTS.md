@@ -1,18 +1,23 @@
 # AGENTS.md — 이 저장소를 고치는 AI(ChatGPT · Codex 등)를 위한 안내
 
-유치원생 아이의 한글 학습 앱 「뭉치와 냥이의 글자 모험」입니다.
+> **GPT·Claude 공동 작업 중 (2026-10-12~): 작업 전에 반드시 `COLLAB.md`(공동 규칙)와 `HANDOFF.md`(작업판)를 읽는다.**
+> 이 파일과 COLLAB.md가 다르면 COLLAB.md를 따른다. 그림은 GPT, 코드·검사·배포는 Claude가 맡는다.
+
+유치원생 아이의 한글 학습 앱 「한글나라」(옛 이름 「뭉치와 냥이의 글자 모험」)입니다.
 GitHub Pages로 바로 공개되는 **공개 저장소**이고, 태블릿에서 앱(PWA)으로 설치해 씁니다.
 
 ## 구조
 
 | 위치 | 내용 | 고쳐도 되나 |
 |---|---|---|
-| `source/` | 앱 소스 (Preact + TypeScript + Vite, 한 파일로 빌드) | **고치는 곳은 여기뿐** |
+| `source/` | 앱 소스 (Preact + TypeScript + Vite, 한 파일로 빌드) | **코드는 여기서만** |
+| 맨 위 `art/` | 그림 (WebP, 이름에 내용 해시 · 목록 `art/art-manifest.json`, 경로표 `source/src/art/artmap.ts`) | 그림을 넣을 때만 (COLLAB.md 9장) |
+| 맨 위 `COLLAB.md` · `HANDOFF.md` | GPT·Claude 공동 규칙 · 작업판 | 차례가 끝날 때 HANDOFF 갱신 |
 | 맨 위 `index.html` · `sw.js` · `manifest.webmanifest` | 자동 빌드 결과물 | ✗ (Actions가 다시 만듦) |
 | 맨 위 `voice-manifest.json` · `voice.*.json` | 녹음 음성팩 | ✗ |
 | 맨 위 `icon-*.png` · `apple-touch-icon.png` | 앱 아이콘 | 필요할 때만 |
 | 맨 위 `voice.<해시>.char.json` | 캐릭터 목소리(강아지 유라 · 고양이 명쾌한) 녹음 + 앱 문장 연결표(`pool`) | ✗ (`scripts/build_char_voice.py`로 다시 만듦) |
-| `.github/workflows/build.yml` | main에 `source/` 변경이 들어오면 검사 → 빌드 → 맨 위 파일 갱신 → 사이트 반영 | 필요할 때만 |
+| `.github/workflows/build.yml` | main에 `source/`·`art/` 변경이 들어오면 검사 → 빌드 → 맨 위 파일 갱신 → 사이트 반영 | 필요할 때만 |
 
 `source/` 안:
 
@@ -45,7 +50,7 @@ npm run check   # 타입 검사 + 안 배운 글자 검사 + 이어하기 검사
 npm run build   # dist/index.html 이 생기면 성공
 ```
 
-- 변경은 `source/` 안에서만 합니다. `source/dist/`, `source/node_modules/` 는 커밋하지 않습니다.
+- 코드 변경은 `source/` 안에서만 합니다(그림은 맨 위 `art/` — COLLAB.md 9장). `source/dist/`, `source/node_modules/`, `source/public/art/` 는 커밋하지 않습니다.
 - 맨 위 `index.html` · `sw.js` · `manifest.webmanifest` 는 main에 반영되면 GitHub Actions가 다시 만듭니다.
 - 화면 확인: `npm run dev` → `http://localhost:5173/?demo=1` (데모 모드: 시간 제한 없음, ⏭ 넘기기 버튼)
   - 바로 열기: `?play=feed&lesson=6`, `?play=dictation&items=ㄱㄴ&mode=review`, `?play=lesson&lesson=0`,

@@ -1,8 +1,8 @@
-# 뭉치와 냥이의 글자 모험
+# 한글나라 (옛 이름: 뭉치와 냥이의 글자 모험)
 
 유치원생을 위한 한글 학습 앱 · 앱 주소: <https://gunyang840715-netizen.github.io/hangul-adventure/>
 
-- 소스는 `source/` 폴더, 고치는 AI를 위한 규칙은 [`AGENTS.md`](AGENTS.md)
+- 소스는 `source/` 폴더, 고치는 AI를 위한 규칙은 [`AGENTS.md`](AGENTS.md) · GPT·Claude 공동 작업 규칙은 [`COLLAB.md`](COLLAB.md), 작업판은 [`HANDOFF.md`](HANDOFF.md)
 - `source/` 가 바뀌면 GitHub Actions가 자동으로 검사 → 빌드 → 사이트 반영 (2~3분)
 
 ## ChatGPT로 같이 고치기

@@ -1,0 +1,4 @@
+# GPT·Claude 공동 작업: 컴퓨터에만 두는 폴더 (공개 저장소에 올리지 않음)
+# art-src/ = GPT가 그린 원본 PNG·참고 사진·주문서 / review/ = Claude의 미리보기·목록·검사 결과
+art-src/
+review/

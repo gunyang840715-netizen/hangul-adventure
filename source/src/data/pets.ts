@@ -109,7 +109,8 @@ export const ITEM: Record<string, ItemDef> = Object.fromEntries(ITEM_LIST.map(i 
 export const DROP_ORDER: string[] = (() => {
   const slots: Slot[] = ['hat', 'glasses', 'neck', 'clothes', 'toy', 'shoes'];
   const q: Record<string, ItemDef[]> = { dog: [], cat: [], both: [] };
-  for (let r = 0; r < 20; r++) slots.forEach(sl => { (['dog', 'cat', 'both'] as const).forEach(f => { const x = ITEM_LIST.filter(i => i.slot === sl && i.for === f)[r]; if (x) q[f].push(x); }); });
+  // 칸 수 제한 없이 모두 넣는다 (예전엔 20에서 멈춰서, 한 종류가 20개를 넘으면 아래 반복이 끝나지 않았음)
+  for (let r = 0; r < ITEM_LIST.length; r++) slots.forEach(sl => { (['dog', 'cat', 'both'] as const).forEach(f => { const x = ITEM_LIST.filter(i => i.slot === sl && i.for === f)[r]; if (x) q[f].push(x); }); });
   const order: string[] = [];
   const turn = ['dog', 'cat', 'dog', 'cat', 'both'];
   for (let i = 0; order.length < ITEM_LIST.length; i++) {

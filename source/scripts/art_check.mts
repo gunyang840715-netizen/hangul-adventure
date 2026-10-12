@@ -28,8 +28,11 @@ if (!fs.existsSync(p)) {
     assert.equal(data.toString('ascii', 8, 12), 'WEBP');
     assert.equal(createHash('sha256').update(data).digest('hex').slice(0, 8), f.u.split('.').at(-2), '내용 해시가 다름');
     const group = f.u.split('/')[1];
+    // 한 장 상한: 배경 700KB(가로로 긴 .long. 1.2MB, 앞쪽 층 .front. 300KB) · 캐릭터 부품 350KB(마리당 합계도 350KB)
+    // 가구·마당·놀이터 기구·효과 70KB · 집 짓기 500KB · 벽지·바닥 무늬 150KB · 그 밖(아이템·간식·낱말) 40KB
     const limit = group === 'backgrounds' ? (f.u.includes('.long.') ? 1200000 : f.u.includes('.front.') ? 300000 : 700000)
-      : group === 'pets' ? 350000 : group === 'furniture' || group === 'yard' ? 70000 : group === 'builds' ? 500000 : 40000;
+      : group === 'pets' ? 350000 : ['furniture', 'yard', 'park', 'effects'].includes(group) ? 70000
+      : group === 'builds' ? 500000 : group === 'tiles' ? 150000 : 40000;
     assert.ok(data.length <= limit, '그림 용량 초과: ' + f.u);
     if (group === 'pets') {
       const id = f.u.split('/')[2].split('.')[0];

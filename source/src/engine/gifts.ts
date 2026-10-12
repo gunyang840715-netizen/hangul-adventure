@@ -7,7 +7,8 @@ export type Gift = { kind: 'snack' | 'item' | 'mat'; id: string };
 const GAMES = new Set(['hunt', 'bubble', 'mole', 'memory', 'feed', 'hop', 'blend', 'picture', 'build', 'cards', 'sentence', 'rescue', 'recall']);
 const TRACE = new Set(['traceSet', 'trace']);
 
-const SNACK_WEIGHT: [string, number][] = [['bone', 3], ['fish', 3], ['cookie', 2], ['milk', 2], ['meat', 1], ['churu', 1]];
+/** 간식이 선물로 나올 비율 (새 간식은 여기에도 넣어야 실제로 나온다 — id_keep_check가 확인) */
+export const SNACK_WEIGHT: [string, number][] = [['bone', 3], ['fish', 3], ['cookie', 2], ['milk', 2], ['meat', 1], ['churu', 1]];
 export function randomSnack(): string {
   const tot = SNACK_WEIGHT.reduce((a, [, w]) => a + w, 0);
   let r = Math.random() * tot;

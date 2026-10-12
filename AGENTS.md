@@ -12,7 +12,7 @@ GitHub Pages로 바로 공개되는 **공개 저장소**이고, 태블릿에서 
 |---|---|---|
 | `source/` | 앱 소스 (Preact + TypeScript + Vite, 한 파일로 빌드) | **코드는 여기서만** |
 | 맨 위 `art/` | 그림 (WebP, 이름에 내용 해시 · 목록 `art/art-manifest.json`, 경로표 `source/src/art/artmap.ts`) | 그림을 넣을 때만 (COLLAB.md 9장) |
-| 맨 위 `COLLAB.md` · `HANDOFF.md` | GPT·Claude 공동 규칙 · 작업판 | 차례가 끝날 때 HANDOFF 갱신 |
+| 맨 위 `COLLAB.md` · `HANDOFF.md` · `프롬프트/` | GPT·Claude 공동 규칙 · 작업판(Claude가 관리, GPT는 읽기만) · 시작 문구 | Claude만 |
 | 맨 위 `index.html` · `sw.js` · `manifest.webmanifest` | 자동 빌드 결과물 | ✗ (Actions가 다시 만듦) |
 | 맨 위 `voice-manifest.json` · `voice.*.json` | 녹음 음성팩 | ✗ |
 | 맨 위 `icon-*.png` · `apple-touch-icon.png` | 앱 아이콘 | 필요할 때만 |

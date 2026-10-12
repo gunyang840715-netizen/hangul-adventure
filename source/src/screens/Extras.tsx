@@ -1,5 +1,5 @@
-import { appTitle } from '../lib/appTitle';
 // 제목, 스티커북, 꾸미기, 잠자기, 부모 설정
+import { appTitle } from '../lib/appTitle';
 import { useEffect, useState } from 'preact/hooks';
 import { Backdrop, burst, centerOf } from '../art/Scene';
 import { Buddy } from '../games/Buddies';

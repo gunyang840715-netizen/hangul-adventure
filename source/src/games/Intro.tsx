@@ -1,9 +1,9 @@
 // 새 글자 소개: 한 획씩 그려지고 → 이름 → 소리 → 모양 이야기 → 예시 낱말
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { Backdrop, burst, centerOf } from '../art/Scene';
 import { LetterGlyph, drawDuration } from '../art/LetterGlyph';
 import { JAMO } from '../data/jamo';
-import { say, sayAll, sfx, petEx } from '../engine/audio';
+import { say, sayAll, sfx, petEx, clipUsable } from '../engine/audio';
 import { introduce } from '../engine/srs';
 import { josa } from '../lib/hangul';
 import { Buddies } from './Buddies';
@@ -12,7 +12,9 @@ import { introName, introSound, introExample, CUE_GAP } from '../data/voice';
 
 export function Intro({ step, onDone, outfit }: GameProps<'intro'>) {
   const j = JAMO[step.ch];
-  const pe = petEx(step.ch);
+  // 대표 친구의 예시 낱말 녹음: 미리 풀어 보고 무음·깨진 녹음이면 기존 예시 낱말(그림·글자·소리 모두)로 바꾼다
+  const [pe, setPe] = useState(() => petEx(step.ch));
+  const peOk = useRef<Promise<boolean>>(pe ? clipUsable(pe.k) : Promise.resolve(false));
   const exWord = pe ? pe.w : j.ex.word, exEmoji = pe ? pe.e : j.ex.emoji;
   const { alive, sleep } = useScene();
   const [phase, setPhase] = useState<'draw' | 'name' | 'example' | 'tap'>('draw');
@@ -22,6 +24,7 @@ export function Intro({ step, onDone, outfit }: GameProps<'intro'>) {
 
   useEffect(() => {
     introduce('j:' + step.ch);
+    peOk.current.then(ok => { if (!ok) setPe(null); });
     (async () => {
       say('새 글자 친구를 만나 볼까?');
       if (!await sleep(drawDuration(step.ch) * 1000 + 700)) return;
@@ -38,10 +41,11 @@ export function Intro({ step, onDone, outfit }: GameProps<'intro'>) {
       }
       setText(j.hint);
       await say(j.hint); if (!alive()) return;
+      const usePet = !!pe && await peOk.current; if (!alive()) return;
       setPhase('example');
-      setText(`${pe ? pe.w : j.ex.word}`);
+      setText(usePet ? pe!.w : j.ex.word);
       sfx.pop();
-      if (pe) await say(pe.k); else await sayAll(introExample(step.ch), CUE_GAP);      // 대표 친구가 "기역, 거울의 기역"처럼 말해 줌
+      if (usePet) await say(pe!.k); else await sayAll(introExample(step.ch), CUE_GAP);      // 대표 친구가 "기역, 거울의 기역"처럼 말해 줌
       if (!alive()) return;
       setPhase('tap');
       setText('글자 친구를 눌러 봐!');

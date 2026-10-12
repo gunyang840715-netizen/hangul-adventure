@@ -201,24 +201,44 @@ function trimSilence(buf: AudioBuffer, gain: number): AudioBuffer {
   return out;
 }
 
-/** 20ms마다 무음 구간을 제외한 말소리 평균을 재서 재생 배율을 기억한다. */
+/**
+ * 녹음 크기 재기: 20ms마다 RMS를 재고, 가장 큰 구간보다 30dB 안쪽(말소리)만 평균 낸다.
+ * (고정 기준 −45dBFS로 자르면 아주 작은 녹음은 말소리가 다 빠져 크기를 잘못 잰다)
+ * 배율 = 목표 −17dBFS에 맞춤, 0.5~30배, 그리고 가장 큰 순간이 −1dBFS를 넘지 않게.
+ * 말소리 평균이 −50dBFS보다 작으면 쓰지 않는다(silent) → 같은 묶음의 다른 녹음이나 기존 음성으로.
+ */
 export function recordedLevel(buf: Pick<AudioBuffer, 'sampleRate' | 'length' | 'numberOfChannels' | 'getChannelData'>) {
   const win = Math.max(1, Math.round(buf.sampleRate * 0.02));
   const channels = Array.from({ length: buf.numberOfChannels }, (_, c) => buf.getChannelData(c));
-  let energy = 0, active = 0, peakWindow = 0;
+  const sums: number[] = [], counts: number[] = [];
+  let loud = 0, peak = 0;
   for (let start = 0; start < buf.length; start += win) {
     const end = Math.min(start + win, buf.length);
     let sum = 0;
-    for (const channel of channels) for (let j = start; j < end; j++) sum += channel[j] * channel[j];
+    for (const channel of channels) for (let j = start; j < end; j++) { const x = channel[j]; sum += x * x; const a = x < 0 ? -x : x; if (a > peak) peak = a; }
     const count = (end - start) * channels.length;
-    const rms = Math.sqrt(sum / count);
-    peakWindow = Math.max(peakWindow, rms);
-    if (rms > Math.pow(10, -45 / 20)) { energy += sum; active += count; }
+    sums.push(sum); counts.push(count);
+    loud = Math.max(loud, Math.sqrt(sum / count));
   }
-  const rms = active ? Math.sqrt(energy / active) : peakWindow;
+  if (!(loud > 0)) return { gain: 1, silent: true };
+  const floor = loud * Math.pow(10, -30 / 20);
+  let energy = 0, active = 0;
+  for (let i = 0; i < sums.length; i++) if (Math.sqrt(sums[i] / counts[i]) >= floor) { energy += sums[i]; active += counts[i]; }
+  const rms = Math.sqrt(energy / active);
   const silent = !Number.isFinite(rms) || rms < Math.pow(10, -50 / 20);
-  return { gain: silent ? 1 : Math.max(0.5, Math.min(30, Math.pow(10, -17 / 20) / rms)), silent };
+  if (silent) return { gain: 1, silent };
+  const gain = Math.max(0.5, Math.min(30, Math.pow(10, -17 / 20) / rms, peak > 0 ? Math.pow(10, -1 / 20) / peak : 30));
+  return { gain, silent };
 }
+
+/** 녹음 키(dog::…·cat::…)를 미리 풀어서 쓸 수 있는지 확인 (무음·깨진 녹음이면 false). 글자 소개의 예시 낱말에 씀 */
+export async function clipUsable(key: string): Promise<boolean> {
+  const b64 = window.__VOICE__?.[key];
+  if (!b64) return false;
+  try { return !!(await decodedClip(key, b64)); } catch { return false; }
+}
+/** 녹음 키는 글자로 읽으면 안 된다 (기기 음성이 'dog 콜론…'을 읽는 일 방지) */
+const isVoiceKey = (t: string) => /^(dog|cat)::/.test(t.trim());
 
 async function decodedClip(id: string, b64: string): Promise<AudioBuffer | null> {
   if (unavailable.has(id)) return null;
@@ -383,6 +403,7 @@ async function speak(text: string, opt: { rate?: number; pitch?: number; interru
   const rate = (opt.rate ?? 1) * (load().settings.voiceRate || 1);
   const recording = await clip(text).catch(() => null);
   const buf = recording?.buffer;
+  if (!buf && isVoiceKey(text)) return;          // 쓸 수 없는 녹음 키: 조용히 넘어감
   if (!buf && remote) wantVoices([text], true);
   if (my !== seq) return;
   if (buf) {

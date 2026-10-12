@@ -109,4 +109,26 @@ await new Promise(r => setTimeout(r, 0));
 audio.stopVoice(); await pending;
 assert.ok(settled);
 assert.ok(sources.at(-1).disconnected);
+// 아주 작은 녹음: 말소리 대부분이 −45dBFS 아래여도 크기를 제대로 잰다 (가장 큰 구간 기준 30dB 안쪽 평균)
+const faint = new BufferMock(1, 1000); faint.channels[0].fill(.002, 200, 600); faint.channels[0].fill(.005, 600, 620);
+assert.equal(audio.recordedLevel(faint).silent, true, '말소리 평균 −53dBFS는 쓰지 않음');
+const faintOk = new BufferMock(1, 1000); faintOk.channels[0].fill(.004, 200, 600); faintOk.channels[0].fill(.006, 600, 620);
+assert.equal(audio.recordedLevel(faintOk).silent, false);
+assert.equal(audio.recordedLevel(faintOk).gain, 30);
+// 가장 큰 순간이 −1dBFS를 넘지 않게 배율 상한
+const spiky = make(.01); spiky.channels[0][300] = .5;
+assert.ok(Math.abs(audio.recordedLevel(spiky).gain - Math.pow(10, -1 / 20) / .5) < .001, '피크 상한');
+// 녹음 키 미리 확인 + 쓸 수 없는 녹음 키는 기기 음성으로 읽지 않음
+const spoken: string[] = [];
+g.SpeechSynthesisUtterance = class { lang = ''; voice: any; rate = 1; pitch = 1; onend: any; onerror: any; constructor(public text: string) {} };
+g.speechSynthesis = { speak(u: any) { spoken.push(u.text); setTimeout(() => u.onend?.(), 0); }, cancel() {}, getVoices: () => [] };
+Object.assign(g.__VOICE__, { 'dog::faint-ex': b64('silent'), 'dog::ok-ex': b64('quiet') });
+assert.equal(await audio.clipUsable('dog::faint-ex'), false);
+assert.equal(await audio.clipUsable('dog::ok-ex'), true);
+assert.equal(await audio.clipUsable('dog::없는-키'), false);
+autoEnd = true;
+await audio.say('dog::faint-ex');
+assert.deepEqual(spoken, [], '녹음 키를 글자로 읽으면 안 됨');
+await audio.say('녹음 없는 새 문장');
+assert.deepEqual(spoken, ['녹음 없는 새 문장'], '녹음 없는 보통 문장은 지금처럼 기기 음성');
 console.log('녹음 음량·조각 병합·무음 재선택·중단 검사 통과');

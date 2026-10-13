@@ -28,10 +28,10 @@ if (!fs.existsSync(p)) {
     assert.equal(data.toString('ascii', 8, 12), 'WEBP');
     assert.equal(createHash('sha256').update(data).digest('hex').slice(0, 8), f.u.split('.').at(-2), '내용 해시가 다름');
     const group = f.u.split('/')[1];
-    // 한 장 상한: 배경 700KB(가로로 긴 .long. 1.2MB, 앞쪽 층 .front. 300KB) · 캐릭터 부품 350KB(마리당 합계도 350KB)
+    // 한 장 상한: 배경 700KB(가로로 긴 .long. 1.2MB, 앞쪽 층 .front. 300KB) · 친구 그림 400KB(마리당 합계 2.5MB — 연속 동작 포함)
     // 가구·마당·놀이터 기구·효과 70KB · 집 짓기 500KB · 벽지·바닥 무늬 150KB · 그 밖(아이템·간식·낱말) 40KB
     const limit = group === 'backgrounds' ? (f.u.includes('.long.') ? 1200000 : f.u.includes('.front.') ? 300000 : 700000)
-      : group === 'pets' ? 350000 : ['furniture', 'yard', 'park', 'effects'].includes(group) ? 70000
+      : group === 'pets' ? 400000 : ['furniture', 'yard', 'park', 'effects'].includes(group) ? 70000
       : group === 'builds' ? 500000 : group === 'tiles' ? 150000 : 40000;
     assert.ok(data.length <= limit, '그림 용량 초과: ' + f.u);
     if (group === 'pets') {
@@ -40,8 +40,8 @@ if (!fs.existsSync(p)) {
     }
     total += data.length; files.set(f.u, f.b);
   }
-  assert.ok(total <= 45000000, '전체 그림 45MB 초과');
-  for (const b of pets.values()) assert.ok(b <= 350000, '친구 하나의 부품 합계 350KB 초과');
+  assert.ok(total <= 60000000, '전체 그림 60MB 초과');
+  for (const [id, b] of pets) assert.ok(b <= 2500000, '친구 하나의 그림 합계 2.5MB 초과: ' + id);
   for (const [id, u] of Object.entries(ART_MAP)) assert.ok(files.has(u), '그림 경로 표에만 있음: ' + id);
   console.log('그림 경로·내용 해시·용량 검사:', files.size, '개,', total, '바이트');
 }

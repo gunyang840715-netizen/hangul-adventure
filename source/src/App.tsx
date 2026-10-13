@@ -9,11 +9,12 @@ import { BuildScreen } from './screens/Build';
 import { RoomScreen, ParkScreen } from './screens/Home';
 import { BuildArt } from './art/Build';
 import { buildLesson, buildPlay, refreshSteps, dictationStep, LETTER_SETS, type Step } from './engine/session';
-import { load, remainingMs, startClock, onChange, addLessonToday, addAdventure, addStars, todayDoneLessons, getResume, setResume, setClockActive, today, curLesson, passLesson, reviewDue, passReview, failReview } from './engine/store';
+import { petView, load, remainingMs, startClock, onChange, addLessonToday, addAdventure, addStars, todayDoneLessons, getResume, setResume, setClockActive, today, curLesson, passLesson, reviewDue, passReview, failReview } from './engine/store';
 import { unlock, music, newScene } from './engine/audio';
 import { syncSoon } from './engine/sync';
 import { LESSONS } from './data/curriculum';
 import { Pet, ItemIcon, SnackIcon } from './art/Pet';
+import { prefetchPets } from './art/petpaint';
 import { PETS, ITEM_LIST, SNACKS } from './data/pets';
 
 function Gallery() {
@@ -105,6 +106,9 @@ export function App() {
     if (!r.replay && r.lessonIdx !== curLesson()) return null;
     return r;
   };
+
+  // 고른 강아지·고양이의 새 그림을 한가할 때 미리 받아 둔다(인터넷이 없을 때도 보이게 — 서비스워커가 저장)
+  useEffect(() => { try { prefetchPets([petView('dog').id, petView('cat').id]); } catch { /* 무시 */ } }, []);
 
   // 시험용: ?screen=room&place=cathouse / ?screen=park / ?screen=build → 그 화면 바로 열기
   useEffect(() => {

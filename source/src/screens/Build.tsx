@@ -92,7 +92,7 @@ export function BuildScreen({ onBack, onEnter }: { onBack: () => void; onEnter?:
         </div>
         {petFor.map((v, i) => (
           <div style={{ position: 'absolute', left: i === 0 ? 40 : 1040, top: 470 }}>
-            <Pet pet={v.id} stage={v.stage} level={v.level} wear={v.wear} size={200} mood={done ? (nap ? 'sleep' : 'love') : 'happy'} motion={cheer ? 'cheer' : done && nap ? 'none' : 'bob'} autoTalk={i === 0 && !nap} />
+            <Pet pet={v.id} stage={v.stage} level={v.level} wear={v.wear} size={200} mood={done ? (nap ? 'sleep' : 'love') : 'happy'} motion={cheer ? 'cheer' : done && nap ? 'none' : 'bob'} act={done && nap ? 'sleep' : undefined} autoTalk={i === 0 && !nap} />
             {done && nap && <div class="zzz"><span>Z</span><span>z</span><span>z</span></div>}
           </div>
         ))}

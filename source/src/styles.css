@@ -30,6 +30,10 @@ button { font-family: inherit; color: inherit; border: none; background: none; p
 /* ---------- 마스코트 ---------- */
 .mascot { position: relative; flex: none; }
 .mascot svg { display: block; }
+.mascot.pp { position: relative; }
+/* 새 그림: 캔버스·아이템 층은 친구 상자보다 넓게(점프·옆모습이 잘리지 않게), 누르기는 상자가 받음 */
+.pp-in { position: absolute; inset: 0; }
+.pp-layer { position: absolute; left: -25%; top: -50%; width: 150%; height: 153.125%; pointer-events: none; overflow: visible; }
 .m-bob svg { animation: bob 2.6s ease-in-out infinite; }
 .m-jump svg { animation: jump .7s cubic-bezier(.3, 1.6, .5, 1) infinite; }
 .m-cheer svg { animation: cheer .9s ease-in-out infinite; }
@@ -385,6 +389,7 @@ button { font-family: inherit; color: inherit; border: none; background: none; p
 .home-wall-btn { position: absolute; left: 24px; top: 118px; font-size: 26px; z-index: 4; }
 .home-pet { position: absolute; z-index: 5; transition: left 1.4s ease-in-out, top 1.4s ease-in-out; }
 .home-pet.sleep .mascot { transform: rotate(-8deg); }
+.home-pet.sleep .mascot.pp { transform: none; }
 .zzz { position: absolute; right: 6px; top: -10px; font-family: Jua, sans-serif; color: #7c5cc4; pointer-events: none; }
 .zzz span { position: absolute; font-size: 34px; opacity: 0; animation: zzz 2.4s ease-out infinite; }
 .zzz span:nth-child(2) { animation-delay: .8s; font-size: 28px; }

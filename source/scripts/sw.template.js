@@ -3,6 +3,7 @@ const V = 'app-__VERSION__';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const MANIFEST = './voice-manifest.json';
 const ART_MANIFEST = './art/art-manifest.json';
+const LAZY = /\/pets\/[a-z]+\.paint-/;   // 나올 때 받는 그림
 
 async function precacheArt(c) {
   const r = await fetch(ART_MANIFEST, { cache: 'reload' });
@@ -13,6 +14,8 @@ async function precacheArt(c) {
   for (const f of m.files || []) {
     const old = await caches.match(f.u);
     if (old) { await c.put(f.u, old); continue; }
+    // 친구 새 그림(.paint-)은 설치 때 받지 않는다: 그 친구가 화면에 나올 때 받아 저장(아래 fetch). 전에 받아 둔 것은 위에서 옮겨 둠.
+    if (LAZY.test(f.u)) continue;
     const x = await fetch(f.u);
     if (!x.ok) throw new Error('그림 다운로드 실패: ' + f.u);
     await c.put(f.u, x);

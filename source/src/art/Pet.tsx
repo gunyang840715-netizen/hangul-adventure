@@ -4,6 +4,8 @@ import type { JSX } from 'preact';
 import { onSpeaking } from '../engine/audio';
 import { PET, MAX_LEVEL, type Stage, type Slot } from '../data/pets';
 import { PET_PHOTO, PHOTO_BOX } from './petphotos';
+import { paintable, baseState, loadBase, loadMotions, rigOf, PaintPet as Painter, startPet, stopPet, VIEW, type Act } from './petpaint';
+import type { Mat } from './petanim';
 
 export type Mood = 'happy' | 'wow' | 'think' | 'sleep' | 'love';
 export type Motion = 'bob' | 'jump' | 'cheer' | 'wiggle' | 'none' | 'fly' | 'hop';
@@ -60,6 +62,8 @@ interface Props {
   class?: string;
   style?: any;
   flip?: boolean;           // 좌우 뒤집기
+  act?: Act;                // (새 그림) 집 안·놀이터에서 앉기·걷기·달리기·잠·엎드리기 — 없으면 앉은 정면
+  poke?: number;            // (새 그림) 바뀔 때마다 한 번 깡충
 }
 
 /** 자람 정도 0(아주 아기)~1(다 큰 어른): 레벨마다 조금씩 */
@@ -68,18 +72,34 @@ export function growthOf(level?: number, stage: Stage = 'adult') {
   return Math.max(0, Math.min(1, (lv - 1) / (MAX_LEVEL - 1)));
 }
 
-export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}, stage = 'adult', level, talk, autoTalk = true, class: cls = '', style, flip }: Props) {
+/** 새 그림(손그림 수채)을 쓸 수 있으면 true — 받는 중이거나 못 받으면 예전 그림 */
+function usePaintReady(id: string): boolean {
+  const can = paintable(id);
+  const [st, setSt] = useState(() => (can ? baseState(id) : 'fail'));
+  useEffect(() => {
+    if (!can) { setSt('fail'); return; }
+    let live = true;
+    setSt(baseState(id));
+    loadBase(id).then(ok => { if (live) setSt(ok ? 'ok' : 'fail'); });
+    return () => { live = false; };
+  }, [id]);
+  return can && st === 'ok';
+}
+
+export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}, stage = 'adult', level, talk, autoTalk = true, class: cls = '', style, flip, act, poke = 0 }: Props) {
   const [speaking, setSpeaking] = useState(false);
   const [failedPhoto, setFailedPhoto] = useState('');
   const [id] = useState(() => 'pt' + (++uid));
   useEffect(() => (autoTalk ? onSpeaking(setSpeaking) : undefined) as any, [autoTalk]);
   const talking = talk ?? speaking;
   const def = PET[pet] ?? PET.maltese;
+  const painted = usePaintReady(def.id);
   const L = LOOK[def.id];
   const cat = def.species === 'cat';
   const photo = PET_PHOTO[def.id] !== failedPhoto ? PET_PHOTO[def.id] : undefined;
   // 레벨이 오를 때마다 조금씩: 몸이 커지고, 머리·눈 비율은 아기처럼 크다가 점점 어른처럼
   const g = growthOf(level, stage);
+  if (painted) return <PaintedPet pid={def.id} size={size} mood={mood} motion={motion} wear={wear} g={g} stage={stage} talking={talking} cls={cls} style={style} flip={flip} act={act} poke={poke} />;
   const S = 0.6 + 0.4 * g;                 // 몸 크기
   const H = 1.24 - 0.24 * g;               // 몸에 비해 머리 크기 (아기일수록 큼)
   const E = 1.22 - 0.22 * g;               // 눈 크기 (아기일수록 동글동글 큼)
@@ -123,6 +143,77 @@ export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}
           </g>
         </g>
       </svg>
+    </div>
+  );
+}
+
+// ======================= 새 그림(손그림 수채) =======================
+const mtx = (a: ArrayLike<number>) => `matrix(${Array.from(a, v => +v.toFixed(4)).join(' ')})`;
+const VB = `${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`;
+
+/** 정면 그림 한 장을 휘게 그리는 캔버스 + 꾸미기 아이템(예전 SVG 그림을 새 그림의 머리·목·몸·발 위치에 맞춰 얹음).
+ *  연속 동작(걷기 등) 중에는 옆모습 아이템 그림이 아직 없어 아이템을 잠깐 숨긴다. */
+function PaintedPet({ pid, size, mood, motion, wear, g, stage, talking, cls, style, flip, act, poke }:
+  { pid: string; size: number; mood: Mood; motion: Motion; wear: Wear; g: number; stage: Stage; talking: boolean; cls: string; style?: any; flip?: boolean; act?: Act; poke: number }) {
+  const r = rigOf(pid)!;
+  const cv = useRef<HTMLCanvasElement>(null);
+  const rootG = useRef<SVGGElement>(null), headG = useRef<SVGGElement>(null), backG = useRef<SVGGElement>(null), layer = useRef<SVGSVGElement>(null);
+  const inst = useRef<Painter | null>(null);
+  const [cid] = useState(() => 'pp' + (++uid));
+  const now = { mood, motion, talking, g, act, poke };
+  const cur = useRef(now); cur.current = now;
+  useEffect(() => {
+    let shown = '';
+    const p = new Painter({
+      id: pid, canvas: cv.current!,
+      onPose: (pose) => {
+        const vis = pose.sprite ? 'hidden' : '';
+        if (vis !== shown && layer.current) { layer.current.style.visibility = vis; shown = vis; }
+        if (pose.sprite) return;
+        rootG.current?.setAttribute('transform', mtx(pose.root as Mat));
+        backG.current?.setAttribute('transform', mtx(pose.root as Mat));
+        headG.current?.setAttribute('transform', mtx(pose.head as Mat));
+      },
+    });
+    Object.assign(p.inp, cur.current);
+    p.setSize(size);
+    inst.current = p;
+    startPet(p);
+    return () => { stopPet(p); inst.current = null; };
+  }, [pid]);
+  if (inst.current) { Object.assign(inst.current.inp, now); if (inst.current.size !== size) inst.current.setSize(size); }
+  useEffect(() => { if (act !== undefined) loadMotions(pid); }, [pid, act !== undefined]);
+  const A = r.items;
+  return (
+    <div class={`mascot pp ${cls}`} style={{ width: size, height: size, ...style }} data-pet={pid} data-stage={stage} data-grow={g.toFixed(2)} data-paint="1">
+      <div class="pp-in" style={flip ? { transform: 'scaleX(-1)' } : undefined}>
+        {(wear.toy || wear.clothes === 'cape') && <svg class="pp-layer" viewBox={VB}>
+          {wear.toy && <g transform={mtx(A.toy)}><Toy k={wear.toy} /></g>}
+          {wear.clothes === 'cape' && <g ref={backG}><g transform={mtx(A.clothes)}><CapeBack /></g></g>}
+        </svg>}
+        <canvas ref={cv} class="pp-layer" />
+        <svg ref={layer} class="pp-layer" viewBox={VB}>
+          <defs>
+            <clipPath id={`${cid}-body`}><ellipse cx="100" cy="158" rx="46" ry="34" /></clipPath>
+            <linearGradient id={`${cid}-rb`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#ff6b6b" /><stop offset=".25" stop-color="#ffd43b" /><stop offset=".5" stop-color="#69db7c" /><stop offset=".75" stop-color="#4dabf7" /><stop offset="1" stop-color="#b197fc" />
+            </linearGradient>
+          </defs>
+          <g ref={rootG}>
+            {wear.clothes && <g transform={mtx(A.clothes)}><Clothes k={wear.clothes} clip={`url(#${cid}-body)`} /></g>}
+            {wear.shoes && <g transform={mtx(A.shoes)}><Shoes k={wear.shoes} /></g>}
+            {wear.neck && <g transform={mtx(A.neck)}><Neck k={wear.neck} /></g>}
+          </g>
+          <g ref={headG}>
+            <g transform={mtx(A.head)}>
+              {wear.glasses && <Glasses k={wear.glasses} rb={`url(#${cid}-rb)`} />}
+              {wear.hat && <g transform={`translate(0 ${A.hatDy})`}><Hat k={wear.hat} /></g>}
+              {mood === 'love' && <g class="pt-hearts"><text x="150" y="30" font-size="26">❤️</text><text x="34" y="44" font-size="18">💕</text></g>}
+              {mood === 'sleep' && !act && <text x="146" y="34" font-size="24" fill="#6b7aa8" font-weight="bold">z</text>}
+            </g>
+          </g>
+        </svg>
+      </div>
     </div>
   );
 }

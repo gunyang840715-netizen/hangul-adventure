@@ -187,8 +187,8 @@
    그룹·이름은 영문·숫자·하이픈. 그룹별 한 장 상한(scripts/art_check.mts):
    pets 350KB(마리당 부품 합계도 350KB) · items·snacks·words 40KB · furniture·yard·park·effects 70KB · tiles 150KB · builds 500KB ·
    backgrounds 700KB(이름에 .long. 1.2MB, .front. 300KB). art 전체 45MB 이하.
-   → 묶음 1 넣을 때 Claude가 바꿀 것: 연속 동작이 들어가므로 pets 한 장 400KB·마리당 합계 2.5MB, art 전체 60MB.
-     대신 서비스워커는 설치 때 첫 화면 그림만 받고, 친구 그림은 그 친구가 화면에 나올 때 받는다(7번).
+   → 묶음 1에서 바꿈(10-13): 연속 동작이 들어가므로 pets 한 장 400KB·마리당 합계 2.5MB, art 전체 60MB.
+     대신 친구 새 그림(.paint-)은 서비스워커가 설치 때 받지 않고, 그 친구가 화면에 나올 때 받아 저장한다(7번).
 2. art/art-manifest.json: {"files":[{"u":"art/…webp","b":바이트}, …]}
 3. source/src/art/artmap.ts: ART_MAP(그림 키 → 'art/…' 경로)와 artSrc(키) → './art/…'.
    - 그림을 import 하지 않는다(한 파일 빌드가 import한 그림을 index.html 안에 data URI로 넣어 버림 — 빌드로 확인함).
@@ -197,13 +197,14 @@
 4. 표에 없거나 불러오기 실패 → 지금 그림으로(캐릭터는 새 그림 → 사진 머리 → SVG). 일부만 적용돼도 앱이 깨지지 않는다.
 5. 검사(npm run check): art_check(경로·manifest·해시·용량), offline_art_check(서비스워커 설치·재사용·오프라인), id_keep_check.
 6. 개발·빌드 때 scripts/sync_art.mjs가 art/를 source/public/art로 복사한다(npm run dev/build 앞에 자동).
-7. 서비스워커는 지금 설치 때 art-manifest의 그림을 모두 받는다(이미 받은 같은 해시는 재사용, 하나라도 실패하면 설치를 미루고 이전 버전 유지).
-   그림이 커지기 전(묶음 4 배경 전)에 Claude가 '첫 화면 그림만 설치 때, 나머지는 앱이 켜진 뒤'로 바꾼다.
+7. 서비스워커는 설치 때 art-manifest의 그림을 받는다(이미 받은 같은 해시는 재사용, 하나라도 실패하면 설치를 미루고 이전 버전 유지).
+   단 친구 새 그림(art/pets/*.paint-*)은 설치 때 받지 않고 나올 때 받아 저장(전에 받아 둔 것은 새 버전에도 옮김), 앱이 켜지면 고른 강아지·고양이 것은 미리 받는다.
+   그림이 커지기 전(묶음 4 배경 전)에 Claude가 '첫 화면 그림만 설치 때, 나머지는 앱이 켜진 뒤'로 넓힌다.
 8. 후처리: 단색 배경 지우기 후 가장자리 색 번짐(초록·분홍 테두리) 제거, 알파 다듬기, WebP(투명 유지).
 
 ## 10. 기능 범위 (Claude)
 
-- A. 캐릭터 (art/Pet.tsx, 새 art/petrig.ts · art/petanim.ts(움직임) · art/petbrain.ts(행동)) — 원문 A + 추가 요청(진짜 애니메이션·게임처럼)
+- A. 캐릭터 (art/Pet.tsx, 새 art/petpaint.ts(그리기)·petpaint.gen.ts(리그, 자동 생성) · art/petanim.ts(움직임) · art/petbrain.ts(행동)) — 원문 A + 추가 요청(진짜 애니메이션·게임처럼)
   - 그림 두 가지를 섞는다: ① 부품 리그(정면 앉기 — 말하기·듣기·꾸미기), ② 손그림 연속 동작(스프라이트 시트, 초당 10~12장 — 손그림 애니메이션처럼 '2장씩').
     자세가 바뀔 때는 앉기·일어서기·엎드리기 프레임으로 이어서 바꾼다(뚝 끊기지 않게).
   - 부품(원문): 머리·몸통·꼬리·앞다리 2·뒷다리 2·귀 2·감은 눈 덮개·벌린 입. 이음부는 움직여도 틈이 안 보이게 넉넉히 겹치게.

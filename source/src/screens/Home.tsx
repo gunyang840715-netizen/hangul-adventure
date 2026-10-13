@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { burst, centerOf } from '../art/Scene';
 import { Pet } from '../art/Pet';
+import { useWander, canWander } from '../art/petbrain';
 import { MatIcon } from '../art/Build';
 import { FurnArt } from '../art/Home';
 import { say, sfx, newScene } from '../engine/audio';
@@ -89,7 +90,7 @@ function useActivity(ms = 9000) {
   return [act, setAct] as const;
 }
 
-function Zzz() { return <div class="zzz"><span>Z</span><span>z</span><span>z</span></div>; }
+function Zzz({ low }: { low?: boolean }) { return <div class="zzz" style={low ? { top: '42%', right: '14%' } : undefined}><span>Z</span><span>z</span><span>z</span></div>; }
 
 // =====================================================================
 // 집 안
@@ -106,7 +107,14 @@ export function RoomScreen({ place, onBack }: { place: 'doghouse' | 'cathouse'; 
   // 자는 곳: 침대 > 깔개 > 바닥 / 노는 곳: 장난감 옆 > 가운데
   const sleepAt = bed ? [S('bed').x + 120, S('bed').y - 30] : rug ? [S('rug').x + 160, S('rug').y - 60] : [430, 470];
   const playAt = toy ? [S('toy').x - 170, S('toy').y - 120] : [560, 420];
-  const [px, py] = act === 'sleep' ? sleepAt : playAt;
+  const bowl = placed(place, 'bowl');
+  // 새 그림 친구는 방 안을 스스로 돌아다닌다(걷기·달리기·쉬기·밥그릇·장난감), 잘 때는 잠자리로 걸어가 엎드려 잔다
+  const live = canWander(pet.id);
+  const w = useWander({
+    pet: pet.id, size: 230, mode: act, home: { x: playAt[0], y: playAt[1] }, bed: { x: sleepAt[0], y: sleepAt[1] },
+    area: { x0: 110, x1: 860, y0: 380, y1: 468 },
+    spots: [{ x: playAt[0], y: playAt[1] }, ...(bowl ? [{ x: S('bowl').x - 170, y: S('bowl').y - 150 }] : [])],
+  });
   const slotSel = sel ? ROOM_SLOTS.find(s => s.id === sel)! : null;
   const tapPet = () => { sfx.tap(); pet.species === 'dog' ? sfx.bark(1) : sfx.meow(); setAct(a => (a === 'play' ? 'sleep' : 'play')); };
   const order = [...ROOM_SLOTS.filter(s => s.id !== 'wall' && !s.front), ...ROOM_SLOTS.filter(s => s.front)];
@@ -119,9 +127,10 @@ export function RoomScreen({ place, onBack }: { place: 'doghouse' | 'cathouse'; 
         <button class="pill home-wall-btn" onPointerDown={(e) => { e.stopPropagation(); sfx.tap(); setSel('wall'); }}>🎨 벽지</button>
         {order.filter(s => s.front && s.id === 'rug').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
         {order.filter(s => s.front && s.id === 'bed').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
-        <div class={`home-pet ${act}`} style={{ left: px, top: py }} onPointerDown={(e) => { e.stopPropagation(); tapPet(); }} data-act={act}>
-          <Pet pet={pet.id} stage={pet.stage} level={pet.level} wear={pet.wear} size={230} mood={act === 'sleep' ? 'sleep' : 'happy'} motion={act === 'sleep' ? 'none' : 'jump'} autoTalk={false} />
-          {act === 'sleep' && <Zzz />}
+        <div class={`home-pet ${act}`} style={{ left: w.x, top: w.y, ...w.style }} onPointerDown={(e) => { e.stopPropagation(); tapPet(); }} data-act={act} data-move={w.act}>
+          <Pet pet={pet.id} stage={pet.stage} level={pet.level} wear={pet.wear} size={230} mood={act === 'sleep' ? 'sleep' : 'happy'}
+            motion={live ? 'none' : act === 'sleep' ? 'none' : 'jump'} act={live ? w.act : undefined} flip={live ? w.flip : undefined} poke={w.poke} autoTalk={false} />
+          {(live ? w.act === 'sleep' : act === 'sleep') && <Zzz low={live} />}
         </div>
         {order.filter(s => s.front && s.id !== 'rug' && s.id !== 'bed').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
       </div>
@@ -166,12 +175,7 @@ export function ParkScreen({ onBack }: { onBack: () => void }) {
   };
   const [sd, sc] = spots();
   const tapPet = (sp: 'dog' | 'cat') => { sfx.tap(); sp === 'dog' ? sfx.bark(1) : sfx.meow(); setAct(a => (a === 'play' ? 'sleep' : 'play')); };
-  const PetAt = ({ v, s }: { v: PetView; s: Spot }) => (
-    <div class={`park-pet ${s.cls}`} style={{ left: s.x + OFF, top: s.y }} data-act={s.cls} onPointerDown={(e) => { e.stopPropagation(); tapPet(v.species); }}>
-      <Pet pet={v.id} stage={v.stage} level={v.level} wear={v.wear} size={170} mood={s.sleep ? 'sleep' : 'happy'} motion={s.sleep ? 'none' : s.cls === 'walk' ? 'bob' : 'none'} autoTalk={false} />
-      {s.sleep && <Zzz />}
-    </div>
-  );
+  const PetAt = ({ v, s }: { v: PetView; s: Spot }) => <ParkPet v={v} s={s} off={OFF} onTap={() => tapPet(v.species)} />;
   return (
     <div class="screen" onPointerDown={() => setSel(null)} data-park="1">
       <div class="park-scroll" ref={scroller}>
@@ -179,8 +183,8 @@ export function ParkScreen({ onBack }: { onBack: () => void }) {
           <div class="park-sky" /><div class="park-hills" /><div class="park-grass" />
           <svg class="park-fence" viewBox={`0 0 ${PARK_W} 60`} width={PARK_W} height="60">{Array.from({ length: Math.floor(PARK_W / 40) }, (_, i) => <path d={`M${i * 40 + 8} 60 V14 l12 -12 12 12 V60`} fill="#fff" stroke="#e9ecef" stroke-width="3" />)}<path d={`M0 30 H${PARK_W} M0 50 H${PARK_W}`} stroke="#e9ecef" stroke-width="6" /></svg>
           {PARK_SLOTS.filter(s => !s.front).map(s => <SlotView s={s} id={P(s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
-          <PetAt v={dog} s={sd} />
-          <PetAt v={cat} s={sc} />
+          {PetAt({ v: dog, s: sd })}
+          {PetAt({ v: cat, s: sc })}
           {PARK_SLOTS.filter(s => s.front).map(s => <SlotView s={s} id={P(s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
         </div>
       </div>
@@ -195,3 +199,22 @@ export function ParkScreen({ onBack }: { onBack: () => void }) {
   );
 }
 
+/** 놀이터의 친구 하나: 놀이 기구가 있으면 달려가서 타고, 없으면 놀이터를 돌아다니며 놀고, 낮잠 때는 걸어가서 잔다 */
+function ParkPet({ v, s, off, onTap }: { v: PetView; s: { x: number; y: number; cls: string; sleep?: boolean }; off: number; onTap: () => void }) {
+  const ride = s.cls !== 'walk' && s.cls !== 'nap';
+  const live = canWander(v.id);
+  const w = useWander({
+    pet: v.id, size: 170, mode: s.sleep ? 'sleep' : 'play', home: { x: s.x, y: s.y }, bed: { x: s.x, y: s.y },
+    area: { x0: 240, x1: 1160, y0: 420, y1: 505 }, hold: ride ? { x: s.x, y: s.y } : null,
+  });
+  // 놀이 기구 움직임(그네·트램펄린 등)은 도착한 뒤에
+  const arrived = !live || (w.act !== 'walk' && w.act !== 'run' && Math.abs(w.x - s.x) < 2 && Math.abs(w.y - s.y) < 2);
+  const cls = ride ? (arrived ? s.cls : '') : live ? '' : s.cls;
+  return (
+    <div class={`park-pet ${cls}`} style={{ left: w.x + off, top: w.y, ...w.style }} data-act={s.cls} data-move={w.act} onPointerDown={(e) => { e.stopPropagation(); onTap(); }}>
+      <Pet pet={v.id} stage={v.stage} level={v.level} wear={v.wear} size={170} mood={s.sleep ? 'sleep' : 'happy'}
+        motion={live ? 'none' : s.sleep ? 'none' : s.cls === 'walk' ? 'bob' : 'none'} act={live ? w.act : undefined} flip={live ? w.flip : undefined} poke={w.poke} autoTalk={false} />
+      {(live ? w.act === 'sleep' : s.sleep) && <Zzz low={live} />}
+    </div>
+  );
+}

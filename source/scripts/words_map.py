@@ -14,6 +14,10 @@ for w in d['낱말']:
     by_emoji.setdefault(w['이모지'].replace('️', ''), set()).add(w['번호'])
 for a, b in (d.get('같은_그림') or {}).items():
     if b in words: words[a] = words[b]
+# 작업지시 v2(2026-10-15)로 주문한 낱말 그림 17개(친구 녹음 예시 낱말, art-src/9-words/sheet-12·13) — 그림이 들어오기 전에는 앱이 이모지를 보여 줌
+EXTRA = {'리본': 'w173', '무지개': 'w174', '이불': 'w175', '얘들아': 'w176', '왜가리': 'w177', '웨딩드레스': 'w178', '뽀뽀': 'w179', '위아래': 'w180',
+         '짝꿍': 'w181', '동굴': 'w182', '사랑': 'w183', '자두': 'w184', '치카': 'w185', '코피': 'w186', '하품': 'w187', '요술': 'w188', '우산': 'w189'}
+for a, b in EXTRA.items(): words.setdefault(a, b)
 emoji = {e: next(iter(ns)) for e, ns in sorted(by_emoji.items()) if len(ns) == 1}
 out = os.path.join(repo, 'source/src/art/words.gen.ts')
 s = ('// 자동으로 만든 파일 — source/scripts/words_map.py (손으로 고치지 않음)\n'

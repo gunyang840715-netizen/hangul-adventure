@@ -5,12 +5,20 @@
    "b": 36198
   },
   {
+   "u": "art/pets/corgi.paint-eat.c953c147.webp",
+   "b": 82116
+  },
+  {
    "u": "art/pets/corgi.paint-eyes.58ada48e.webp",
    "b": 5266
   },
   {
    "u": "art/pets/corgi.paint-front.1b61b8ba.webp",
    "b": 49834
+  },
+  {
+   "u": "art/pets/corgi.paint-idle.653771ba.webp",
+   "b": 82800
   },
   {
    "u": "art/pets/corgi.paint-jump.d4278e88.webp",
@@ -25,12 +33,24 @@
    "b": 4928
   },
   {
+   "u": "art/pets/corgi.paint-roll.e91ab24c.webp",
+   "b": 120262
+  },
+  {
    "u": "art/pets/corgi.paint-run.9ca5e2c7.webp",
    "b": 126658
   },
   {
+   "u": "art/pets/corgi.paint-scratch.9f4eb4a8.webp",
+   "b": 101552
+  },
+  {
    "u": "art/pets/corgi.paint-sitstand.24a62eac.webp",
    "b": 71448
+  },
+  {
+   "u": "art/pets/corgi.paint-stretch.41504a7a.webp",
+   "b": 77976
   },
   {
    "u": "art/pets/corgi.paint-walk.589fc007.webp",
@@ -41,8 +61,64 @@
    "b": 24496
   },
   {
+   "u": "art/pets/fold.paint-eat.125480a7.webp",
+   "b": 97714
+  },
+  {
+   "u": "art/pets/fold.paint-eyes.51261f88.webp",
+   "b": 6682
+  },
+  {
+   "u": "art/pets/fold.paint-front.245d5111.webp",
+   "b": 52116
+  },
+  {
+   "u": "art/pets/fold.paint-groom.ac68599d.webp",
+   "b": 76456
+  },
+  {
+   "u": "art/pets/fold.paint-idle.cfa2419e.webp",
+   "b": 103866
+  },
+  {
+   "u": "art/pets/fold.paint-jump.fd4d5404.webp",
+   "b": 143420
+  },
+  {
+   "u": "art/pets/fold.paint-liesleep.4755fb7a.webp",
+   "b": 73542
+  },
+  {
+   "u": "art/pets/fold.paint-mouth.cfcce032.webp",
+   "b": 2686
+  },
+  {
+   "u": "art/pets/fold.paint-run.37d061c5.webp",
+   "b": 150988
+  },
+  {
+   "u": "art/pets/fold.paint-scratch.c6a85bcd.webp",
+   "b": 103090
+  },
+  {
+   "u": "art/pets/fold.paint-sitstand.4838b28b.webp",
+   "b": 84824
+  },
+  {
+   "u": "art/pets/fold.paint-stretch.1f1357bc.webp",
+   "b": 101148
+  },
+  {
+   "u": "art/pets/fold.paint-walk.772899bf.webp",
+   "b": 199906
+  },
+  {
    "u": "art/pets/koshort.head.d0a291fb.webp",
    "b": 20416
+  },
+  {
+   "u": "art/pets/koshort.paint-eat.9538dfbe.webp",
+   "b": 82156
   },
   {
    "u": "art/pets/koshort.paint-eyes.5d26aed0.webp",
@@ -51,6 +127,14 @@
   {
    "u": "art/pets/koshort.paint-front.618810e6.webp",
    "b": 45046
+  },
+  {
+   "u": "art/pets/koshort.paint-groom.7e0e8cca.webp",
+   "b": 69206
+  },
+  {
+   "u": "art/pets/koshort.paint-idle.e6672ccb.webp",
+   "b": 87876
   },
   {
    "u": "art/pets/koshort.paint-jump.9c5f2589.webp",
@@ -69,8 +153,16 @@
    "b": 137228
   },
   {
+   "u": "art/pets/koshort.paint-scratch.246bef7f.webp",
+   "b": 104564
+  },
+  {
    "u": "art/pets/koshort.paint-sitstand.99dce922.webp",
    "b": 75402
+  },
+  {
+   "u": "art/pets/koshort.paint-stretch.58b9aa64.webp",
+   "b": 89508
   },
   {
    "u": "art/pets/koshort.paint-walk.189353de.webp",
@@ -81,12 +173,20 @@
    "b": 18746
   },
   {
+   "u": "art/pets/maltese.paint-eat.8f04bb73.webp",
+   "b": 91864
+  },
+  {
    "u": "art/pets/maltese.paint-eyes.f2ac2fdb.webp",
    "b": 4380
   },
   {
    "u": "art/pets/maltese.paint-front.7796a8d1.webp",
    "b": 41960
+  },
+  {
+   "u": "art/pets/maltese.paint-idle.b91e317f.webp",
+   "b": 90240
   },
   {
    "u": "art/pets/maltese.paint-jump.4f247414.webp",
@@ -101,12 +201,24 @@
    "b": 3348
   },
   {
+   "u": "art/pets/maltese.paint-roll.fca5994e.webp",
+   "b": 153714
+  },
+  {
    "u": "art/pets/maltese.paint-run.41e560f8.webp",
    "b": 154566
   },
   {
+   "u": "art/pets/maltese.paint-scratch.572bd127.webp",
+   "b": 95598
+  },
+  {
    "u": "art/pets/maltese.paint-sitstand.340cfbaa.webp",
    "b": 77058
+  },
+  {
+   "u": "art/pets/maltese.paint-stretch.d96ae7c9.webp",
+   "b": 88832
   },
   {
    "u": "art/pets/maltese.paint-walk.d80895f6.webp",
@@ -117,8 +229,64 @@
    "b": 23410
   },
   {
+   "u": "art/pets/persian.paint-eat.7b6feaee.webp",
+   "b": 95286
+  },
+  {
+   "u": "art/pets/persian.paint-eyes.c5ea16ac.webp",
+   "b": 4556
+  },
+  {
+   "u": "art/pets/persian.paint-front.7831618f.webp",
+   "b": 56290
+  },
+  {
+   "u": "art/pets/persian.paint-groom.dd1f6733.webp",
+   "b": 74286
+  },
+  {
+   "u": "art/pets/persian.paint-idle.d49e2f93.webp",
+   "b": 99230
+  },
+  {
+   "u": "art/pets/persian.paint-jump.95a1877c.webp",
+   "b": 130716
+  },
+  {
+   "u": "art/pets/persian.paint-liesleep.2eb9f399.webp",
+   "b": 61284
+  },
+  {
+   "u": "art/pets/persian.paint-mouth.d51ccfff.webp",
+   "b": 2458
+  },
+  {
+   "u": "art/pets/persian.paint-run.35ff4491.webp",
+   "b": 142210
+  },
+  {
+   "u": "art/pets/persian.paint-scratch.5e52904b.webp",
+   "b": 108598
+  },
+  {
+   "u": "art/pets/persian.paint-sitstand.f60d7bd9.webp",
+   "b": 76910
+  },
+  {
+   "u": "art/pets/persian.paint-stretch.ddb79222.webp",
+   "b": 91682
+  },
+  {
+   "u": "art/pets/persian.paint-walk.458f1082.webp",
+   "b": 183406
+  },
+  {
    "u": "art/pets/poodle.head.293d8ea2.webp",
    "b": 25514
+  },
+  {
+   "u": "art/pets/poodle.paint-eat.30eed1af.webp",
+   "b": 88920
   },
   {
    "u": "art/pets/poodle.paint-eyes.28c37131.webp",
@@ -127,6 +295,10 @@
   {
    "u": "art/pets/poodle.paint-front.dc18d278.webp",
    "b": 52620
+  },
+  {
+   "u": "art/pets/poodle.paint-idle.eca14841.webp",
+   "b": 92926
   },
   {
    "u": "art/pets/poodle.paint-jump.358b1d84.webp",
@@ -141,12 +313,24 @@
    "b": 5302
   },
   {
+   "u": "art/pets/poodle.paint-roll.84a1d076.webp",
+   "b": 146140
+  },
+  {
    "u": "art/pets/poodle.paint-run.21313778.webp",
    "b": 168128
   },
   {
+   "u": "art/pets/poodle.paint-scratch.dccb54d2.webp",
+   "b": 108946
+  },
+  {
    "u": "art/pets/poodle.paint-sitstand.64230191.webp",
    "b": 81476
+  },
+  {
+   "u": "art/pets/poodle.paint-stretch.3e15f719.webp",
+   "b": 88800
   },
   {
    "u": "art/pets/poodle.paint-walk.2348d1de.webp",
@@ -157,8 +341,64 @@
    "b": 16112
   },
   {
+   "u": "art/pets/russian.paint-eat.4ef222dd.webp",
+   "b": 81840
+  },
+  {
+   "u": "art/pets/russian.paint-eyes.6de99169.webp",
+   "b": 5518
+  },
+  {
+   "u": "art/pets/russian.paint-front.3afb5521.webp",
+   "b": 45852
+  },
+  {
+   "u": "art/pets/russian.paint-groom.86e97818.webp",
+   "b": 64906
+  },
+  {
+   "u": "art/pets/russian.paint-idle.1d3603a3.webp",
+   "b": 76832
+  },
+  {
+   "u": "art/pets/russian.paint-jump.c4bec3d6.webp",
+   "b": 117112
+  },
+  {
+   "u": "art/pets/russian.paint-liesleep.2becf0df.webp",
+   "b": 64126
+  },
+  {
+   "u": "art/pets/russian.paint-mouth.4a410874.webp",
+   "b": 3840
+  },
+  {
+   "u": "art/pets/russian.paint-run.d4ca745a.webp",
+   "b": 115112
+  },
+  {
+   "u": "art/pets/russian.paint-scratch.bafa9b87.webp",
+   "b": 99564
+  },
+  {
+   "u": "art/pets/russian.paint-sitstand.bf0e133a.webp",
+   "b": 79752
+  },
+  {
+   "u": "art/pets/russian.paint-stretch.d54de707.webp",
+   "b": 74716
+  },
+  {
+   "u": "art/pets/russian.paint-walk.52b544c4.webp",
+   "b": 153902
+  },
+  {
    "u": "art/pets/schnauzer.head.049f84e3.webp",
    "b": 21882
+  },
+  {
+   "u": "art/pets/schnauzer.paint-eat.85bdfb23.webp",
+   "b": 93846
   },
   {
    "u": "art/pets/schnauzer.paint-eyes.5c05059e.webp",
@@ -167,6 +407,10 @@
   {
    "u": "art/pets/schnauzer.paint-front.908845b8.webp",
    "b": 50340
+  },
+  {
+   "u": "art/pets/schnauzer.paint-idle.4be22a99.webp",
+   "b": 83846
   },
   {
    "u": "art/pets/schnauzer.paint-jump.1729b40e.webp",
@@ -181,12 +425,24 @@
    "b": 3418
   },
   {
+   "u": "art/pets/schnauzer.paint-roll.3d8184c2.webp",
+   "b": 122346
+  },
+  {
    "u": "art/pets/schnauzer.paint-run.5f2e9a6e.webp",
    "b": 151798
   },
   {
+   "u": "art/pets/schnauzer.paint-scratch.6d4c3670.webp",
+   "b": 97830
+  },
+  {
    "u": "art/pets/schnauzer.paint-sitstand.a67c2982.webp",
    "b": 75074
+  },
+  {
+   "u": "art/pets/schnauzer.paint-stretch.99a1dd1f.webp",
+   "b": 93308
   },
   {
    "u": "art/pets/schnauzer.paint-walk.b5263798.webp",
@@ -197,12 +453,20 @@
    "b": 28000
   },
   {
+   "u": "art/pets/shiba.paint-eat.4d1697ea.webp",
+   "b": 95014
+  },
+  {
    "u": "art/pets/shiba.paint-eyes.d8ad15de.webp",
    "b": 4766
   },
   {
    "u": "art/pets/shiba.paint-front.fed84e8c.webp",
    "b": 48252
+  },
+  {
+   "u": "art/pets/shiba.paint-idle.37d2cfd3.webp",
+   "b": 96016
   },
   {
    "u": "art/pets/shiba.paint-jump.0bc95a6c.webp",
@@ -221,12 +485,24 @@
    "b": 2930
   },
   {
+   "u": "art/pets/shiba.paint-roll.1481f3e7.webp",
+   "b": 127648
+  },
+  {
    "u": "art/pets/shiba.paint-run.d270a91f.webp",
    "b": 148728
   },
   {
+   "u": "art/pets/shiba.paint-scratch.8c452cff.webp",
+   "b": 100912
+  },
+  {
    "u": "art/pets/shiba.paint-sitstand.8a482f7c.webp",
    "b": 79812
+  },
+  {
+   "u": "art/pets/shiba.paint-stretch.a06d7337.webp",
+   "b": 82848
   },
   {
    "u": "art/pets/shiba.paint-walk.a0a5c5e5.webp",
@@ -235,6 +511,58 @@
   {
    "u": "art/pets/siamese.head.e2d611a3.webp",
    "b": 24216
+  },
+  {
+   "u": "art/pets/siamese.paint-eat.2fe01792.webp",
+   "b": 79284
+  },
+  {
+   "u": "art/pets/siamese.paint-eyes.e8e493f6.webp",
+   "b": 4278
+  },
+  {
+   "u": "art/pets/siamese.paint-front.a28fb322.webp",
+   "b": 45448
+  },
+  {
+   "u": "art/pets/siamese.paint-groom.c86fc903.webp",
+   "b": 55882
+  },
+  {
+   "u": "art/pets/siamese.paint-idle.4f5c9da1.webp",
+   "b": 79002
+  },
+  {
+   "u": "art/pets/siamese.paint-jump.3caf6723.webp",
+   "b": 119508
+  },
+  {
+   "u": "art/pets/siamese.paint-liesleep.7110ed7c.webp",
+   "b": 61416
+  },
+  {
+   "u": "art/pets/siamese.paint-mouth.2203cd7a.webp",
+   "b": 2496
+  },
+  {
+   "u": "art/pets/siamese.paint-run.c5b5fba1.webp",
+   "b": 139892
+  },
+  {
+   "u": "art/pets/siamese.paint-scratch.588ecc28.webp",
+   "b": 102740
+  },
+  {
+   "u": "art/pets/siamese.paint-sitstand.d3498e92.webp",
+   "b": 69696
+  },
+  {
+   "u": "art/pets/siamese.paint-stretch.fb10e375.webp",
+   "b": 84654
+  },
+  {
+   "u": "art/pets/siamese.paint-walk.c6e35690.webp",
+   "b": 198866
   }
  ]
 }

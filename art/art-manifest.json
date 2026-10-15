@@ -1,6 +1,226 @@
 {
  "files": [
   {
+   "u": "art/backgrounds/beach.front.08050121.webp",
+   "b": 168562
+  },
+  {
+   "u": "art/backgrounds/beach.land.60fa00cc.webp",
+   "b": 361438
+  },
+  {
+   "u": "art/backgrounds/beach.sky.69a117a1.webp",
+   "b": 266742
+  },
+  {
+   "u": "art/backgrounds/castle.front.fb3e15be.webp",
+   "b": 101272
+  },
+  {
+   "u": "art/backgrounds/castle.land.cafed810.webp",
+   "b": 553810
+  },
+  {
+   "u": "art/backgrounds/castle.sky.32538392.webp",
+   "b": 341330
+  },
+  {
+   "u": "art/backgrounds/cave.front.188a588b.webp",
+   "b": 60274
+  },
+  {
+   "u": "art/backgrounds/cave.full.76c51bf0.webp",
+   "b": 652504
+  },
+  {
+   "u": "art/backgrounds/library.front.db109ad1.webp",
+   "b": 82558
+  },
+  {
+   "u": "art/backgrounds/library.full.c98ed727.webp",
+   "b": 535958
+  },
+  {
+   "u": "art/backgrounds/map-1.long.1e16facc.webp",
+   "b": 715290
+  },
+  {
+   "u": "art/backgrounds/map-2.long.5164fc25.webp",
+   "b": 794350
+  },
+  {
+   "u": "art/backgrounds/map-3.long.71db26c0.webp",
+   "b": 743598
+  },
+  {
+   "u": "art/backgrounds/meadow.front.47e56541.webp",
+   "b": 90946
+  },
+  {
+   "u": "art/backgrounds/meadow.land.98b5d8c8.webp",
+   "b": 462452
+  },
+  {
+   "u": "art/backgrounds/meadow.sky.8fd2ec0e.webp",
+   "b": 286644
+  },
+  {
+   "u": "art/backgrounds/night.front.8bbe2b83.webp",
+   "b": 102376
+  },
+  {
+   "u": "art/backgrounds/night.land.3aa507d3.webp",
+   "b": 450730
+  },
+  {
+   "u": "art/backgrounds/night.sky.0751e202.webp",
+   "b": 517090
+  },
+  {
+   "u": "art/backgrounds/park.front.long.41def1d4.webp",
+   "b": 167286
+  },
+  {
+   "u": "art/backgrounds/park.land.long.516a9495.webp",
+   "b": 465158
+  },
+  {
+   "u": "art/backgrounds/park.sky.long.d52e73b7.webp",
+   "b": 397974
+  },
+  {
+   "u": "art/backgrounds/river.front.aa52c250.webp",
+   "b": 110480
+  },
+  {
+   "u": "art/backgrounds/river.land.57757d5d.webp",
+   "b": 598416
+  },
+  {
+   "u": "art/backgrounds/river.sky.e943ccc8.webp",
+   "b": 323942
+  },
+  {
+   "u": "art/backgrounds/sky.front.be9c34ad.webp",
+   "b": 101554
+  },
+  {
+   "u": "art/backgrounds/sky.land.fcbf6b92.webp",
+   "b": 395662
+  },
+  {
+   "u": "art/backgrounds/sky.sky.b9edfb1b.webp",
+   "b": 277598
+  },
+  {
+   "u": "art/backgrounds/title.front.6e20e907.webp",
+   "b": 88924
+  },
+  {
+   "u": "art/backgrounds/title.land.fc8d1a1d.webp",
+   "b": 434464
+  },
+  {
+   "u": "art/backgrounds/title.sky.5909998a.webp",
+   "b": 261702
+  },
+  {
+   "u": "art/effects/fx-cloud1.538ccf1e.webp",
+   "b": 12692
+  },
+  {
+   "u": "art/effects/fx-cloud2.9db6eb8e.webp",
+   "b": 10080
+  },
+  {
+   "u": "art/effects/fx-cloud3.9c814c48.webp",
+   "b": 10330
+  },
+  {
+   "u": "art/effects/fx-firefly1.ee16d6dd.webp",
+   "b": 5184
+  },
+  {
+   "u": "art/effects/fx-firefly2.06c4eb9f.webp",
+   "b": 3292
+  },
+  {
+   "u": "art/effects/fx-firefly3.cb0ff249.webp",
+   "b": 670
+  },
+  {
+   "u": "art/effects/fx-flower1.e620c24d.webp",
+   "b": 22382
+  },
+  {
+   "u": "art/effects/fx-flower2.a6f579be.webp",
+   "b": 23832
+  },
+  {
+   "u": "art/effects/fx-flower3.e1899ddb.webp",
+   "b": 23832
+  },
+  {
+   "u": "art/effects/fx-glow1.46733878.webp",
+   "b": 5602
+  },
+  {
+   "u": "art/effects/fx-glow2.0f79f23f.webp",
+   "b": 6464
+  },
+  {
+   "u": "art/effects/fx-leaf1.2c28ea0b.webp",
+   "b": 25320
+  },
+  {
+   "u": "art/effects/fx-leaf2.c8d7bc27.webp",
+   "b": 22262
+  },
+  {
+   "u": "art/effects/fx-leaf3.e37c0daf.webp",
+   "b": 26954
+  },
+  {
+   "u": "art/effects/fx-leaf4.b0ab7d03.webp",
+   "b": 21074
+  },
+  {
+   "u": "art/effects/fx-petal1.09f21b2a.webp",
+   "b": 19558
+  },
+  {
+   "u": "art/effects/fx-petal2.0ab6d6f2.webp",
+   "b": 13604
+  },
+  {
+   "u": "art/effects/fx-petal3.1ff38741.webp",
+   "b": 12876
+  },
+  {
+   "u": "art/effects/fx-ray1.7ad10eaa.webp",
+   "b": 11706
+  },
+  {
+   "u": "art/effects/fx-ray2.b5af21d5.webp",
+   "b": 5416
+  },
+  {
+   "u": "art/effects/fx-ripple1.2bdc1be5.webp",
+   "b": 19540
+  },
+  {
+   "u": "art/effects/fx-ripple2.49153175.webp",
+   "b": 21542
+  },
+  {
+   "u": "art/effects/fx-sparkle1.4d072de0.webp",
+   "b": 4786
+  },
+  {
+   "u": "art/effects/fx-sparkle2.03cd646c.webp",
+   "b": 2660
+  },
+  {
    "u": "art/furniture/bed-basket.84832c12.webp",
    "b": 39246
   },

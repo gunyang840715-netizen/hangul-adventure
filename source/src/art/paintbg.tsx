@@ -92,18 +92,19 @@ export function prefetchArt(keys: string[], delay = 15000) {
 }
 
 // ---------- 은은한 움직임 ----------
-interface Fx { clouds?: number; fall?: string[]; rays?: boolean; flies?: number; twinkle?: number; motes?: number; night?: boolean }
+type DriftFx = 'butterfly' | 'seed' | 'bubble';
+interface Fx { clouds?: number; fall?: string[]; rays?: boolean; flies?: number; twinkle?: number; motes?: number; night?: boolean; drift?: DriftFx[] }
 const FX: Record<string, Fx> = {
   title: { clouds: 3, fall: ['petal1', 'petal2', 'petal3', 'petal1', 'petal2'], rays: true },
-  meadow: { clouds: 3, fall: ['petal1', 'leaf2', 'petal3', 'petal2', 'leaf1'], rays: true },
+  meadow: { clouds: 3, fall: ['petal1', 'leaf2', 'petal3', 'petal2', 'leaf1'], rays: true, drift: ['butterfly', 'seed'] },
   sky: { clouds: 3, fall: ['petal2', 'petal3', 'petal1', 'petal2'], rays: true },
   castle: { clouds: 2, fall: ['petal1', 'petal3', 'leaf2', 'petal2'] },
   beach: { clouds: 3, twinkle: 4 },
   night: { clouds: 2, flies: 10, twinkle: 4, night: true },
-  river: { clouds: 2, fall: ['leaf1', 'leaf2', 'leaf3', 'leaf4'] },
+  river: { clouds: 2, fall: ['leaf1', 'leaf2', 'leaf3', 'leaf4'], drift: ['seed'] },
   library: { motes: 7 },
   cave: { twinkle: 7, motes: 4 },
-  park: { clouds: 3, fall: ['petal1', 'petal2', 'leaf2', 'petal3'] },
+  park: { clouds: 3, fall: ['petal1', 'petal2', 'leaf2', 'petal3'], drift: ['bubble', 'butterfly'] },
   'yard-dog': { clouds: 2, fall: ['petal1', 'leaf2', 'petal3'] },
   'yard-cat': { clouds: 2, fall: ['petal2', 'leaf1', 'petal1'] },
 };
@@ -159,6 +160,14 @@ function Effects({ scene, part }: { scene: string; part: 'sky' | 'mid' }) {
       </div>,
     );
   }
+  (f.drift ?? []).forEach((key, i) => {
+    const src = fxSrc(key);
+    if (!src) return;
+    out.push(<div class={`fx-drift ${key}`} data-fx={key} style={{
+      left: `${i === 0 ? 8 : 84}%`, top: `${key === 'bubble' ? 66 : 48 + i * 12}%`,
+      width: `${(key === 'seed' ? 2 : key === 'bubble' ? 3.4 : 3) * k}%`, animationDelay: `${-i * 5}s`,
+    }}><img src={src} alt="" draggable={false} /></div>);
+  });
   return <>{out}</>;
 }
 

@@ -165,6 +165,14 @@
    "b": 460768
   },
   {
+   "u": "art/effects/fx-bubble.e0ab08db.webp",
+   "b": 28264
+  },
+  {
+   "u": "art/effects/fx-butterfly.fddf4658.webp",
+   "b": 21628
+  },
+  {
    "u": "art/effects/fx-cloud1.538ccf1e.webp",
    "b": 12692
   },
@@ -251,6 +259,10 @@
   {
    "u": "art/effects/fx-ripple2.49153175.webp",
    "b": 21542
+  },
+  {
+   "u": "art/effects/fx-seed.888a2422.webp",
+   "b": 21310
   },
   {
    "u": "art/effects/fx-sparkle1.4d072de0.webp",
@@ -3209,6 +3221,74 @@
    "b": 18192
   },
   {
+   "u": "art/words/w173.994d9400.webp",
+   "b": 22220
+  },
+  {
+   "u": "art/words/w174.85e7884f.webp",
+   "b": 15574
+  },
+  {
+   "u": "art/words/w175.78a2fbc6.webp",
+   "b": 22222
+  },
+  {
+   "u": "art/words/w176.b7b867b6.webp",
+   "b": 20280
+  },
+  {
+   "u": "art/words/w177.52e7cca9.webp",
+   "b": 18354
+  },
+  {
+   "u": "art/words/w178.c7576a74.webp",
+   "b": 16150
+  },
+  {
+   "u": "art/words/w179.b4e0c4a1.webp",
+   "b": 22926
+  },
+  {
+   "u": "art/words/w180.260e4b27.webp",
+   "b": 10826
+  },
+  {
+   "u": "art/words/w181.3248b98f.webp",
+   "b": 36670
+  },
+  {
+   "u": "art/words/w182.3bc6483e.webp",
+   "b": 31572
+  },
+  {
+   "u": "art/words/w183.091f5486.webp",
+   "b": 19170
+  },
+  {
+   "u": "art/words/w184.92644f68.webp",
+   "b": 18504
+  },
+  {
+   "u": "art/words/w185.97c26378.webp",
+   "b": 14102
+  },
+  {
+   "u": "art/words/w186.4c70baf3.webp",
+   "b": 16604
+  },
+  {
+   "u": "art/words/w187.4b009d75.webp",
+   "b": 34776
+  },
+  {
+   "u": "art/words/w188.3dd50970.webp",
+   "b": 24398
+  },
+  {
+   "u": "art/words/w189.44487bd0.webp",
+   "b": 11702
+  },
+  {
    "u": "art/yard/y-bench-flower.f905d2a6.webp",
    "b": 56598
   },
@@ -3447,74 +3527,6 @@
   {
    "u": "art/yard/y-wreath-ribbon.e781af42.webp",
    "b": 40864
-  },
-  {
-   "u": "art/words/w173.994d9400.webp",
-   "b": 22220
-  },
-  {
-   "u": "art/words/w174.85e7884f.webp",
-   "b": 15574
-  },
-  {
-   "u": "art/words/w175.78a2fbc6.webp",
-   "b": 22222
-  },
-  {
-   "u": "art/words/w176.b7b867b6.webp",
-   "b": 20280
-  },
-  {
-   "u": "art/words/w177.52e7cca9.webp",
-   "b": 18354
-  },
-  {
-   "u": "art/words/w178.c7576a74.webp",
-   "b": 16150
-  },
-  {
-   "u": "art/words/w179.b4e0c4a1.webp",
-   "b": 22926
-  },
-  {
-   "u": "art/words/w180.260e4b27.webp",
-   "b": 10826
-  },
-  {
-   "u": "art/words/w181.3248b98f.webp",
-   "b": 36670
-  },
-  {
-   "u": "art/words/w182.3bc6483e.webp",
-   "b": 31572
-  },
-  {
-   "u": "art/words/w183.091f5486.webp",
-   "b": 19170
-  },
-  {
-   "u": "art/words/w184.92644f68.webp",
-   "b": 18504
-  },
-  {
-   "u": "art/words/w185.97c26378.webp",
-   "b": 14102
-  },
-  {
-   "u": "art/words/w186.4c70baf3.webp",
-   "b": 16604
-  },
-  {
-   "u": "art/words/w187.4b009d75.webp",
-   "b": 34776
-  },
-  {
-   "u": "art/words/w188.3dd50970.webp",
-   "b": 24398
-  },
-  {
-   "u": "art/words/w189.44487bd0.webp",
-   "b": 11702
   }
  ]
 }

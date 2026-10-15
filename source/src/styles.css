@@ -493,6 +493,14 @@ button:focus-visible, [role=button]:focus-visible { outline: 4px solid #7048e8; 
 @keyframes twinkleFx { 0%, 100% { opacity: 0; transform: scale(.4) rotate(0); } 50% { opacity: .95; transform: scale(1) rotate(30deg); } }
 .fx-mote { position: absolute; width: 1.4%; mix-blend-mode: screen; animation: moteRise 16s linear infinite; }
 .fx-mote img { width: 100%; display: block; opacity: .65; }
+.fx-drift { position: absolute; pointer-events: none; opacity: .85; animation: fxDrift 15s ease-in-out infinite alternate; }
+.fx-drift img { display: block; width: 100%; }
+.fx-drift.butterfly img { animation: fxWing 1.6s ease-in-out infinite alternate; }
+.fx-drift.seed img { animation: flutter 5s ease-in-out infinite alternate; }
+.fx-drift.bubble { animation: fxBubble 18s ease-in-out infinite; }
+@keyframes fxDrift { from { transform: translate(-14px, 8px); } to { transform: translate(36px, -18px); } }
+@keyframes fxWing { from { transform: scaleX(.65) rotate(-8deg); } to { transform: scaleX(1) rotate(8deg); } }
+@keyframes fxBubble { 0% { transform: translate(0, 35px); opacity: 0; } 15%, 80% { opacity: .65; } 100% { transform: translate(45px, -140px); opacity: 0; } }
 @keyframes moteRise { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: .9; } 85% { opacity: .75; } 100% { transform: translate(70px, -230px); opacity: 0; } }
 .map-art { position: absolute; left: 0; top: 0; height: 100%; opacity: 0; transition: opacity .45s ease; pointer-events: none; }
 .map-art.on { opacity: 1; }

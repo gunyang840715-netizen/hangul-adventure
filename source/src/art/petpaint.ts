@@ -9,7 +9,7 @@
 import { ART_MAP, artSrc } from './artmap';
 import { PAINT_RIG } from './petpaint.gen';
 import { PetAnim, type AnimIn, type Pose, type Mat } from './petanim';
-import { sideFrame, sideArt, sideRig, placeM, mul, SIDE_SLOTS, type M6, type SideSlot } from './petside';
+import { sideFrame, sideArt, sideRig, placeM, mul, SIDE_SLOTS, type SideFrame, type SideSlot } from './petside';
 
 export type { Act } from './petanim';
 type Pt = [number, number];
@@ -297,8 +297,8 @@ export class PaintPet {
     }
   }
   /** 칸 그림에 옷(몸 실루엣 안에만)·목걸이를 입히고 머리·귀를 그 위에 다시 그린 그림. 입힐 것이 없으면 null */
-  private dress(im: HTMLImageElement, m: PaintMotion, key: string, fi: number, sf: { h: M6; b: M6 | null }): HTMLCanvasElement | null {
-    const r = sideRig(this.o.id)!;
+  private dress(im: HTMLImageElement, m: PaintMotion, key: string, fi: number, sf: SideFrame): HTMLCanvasElement | null {
+    const r = sf.r;
     const cl = sf.b ? this.side.clothes : undefined, nk = this.side.neck;
     const clI = cl && IMGS[cl.key]?.img, nkI = nk && IMGS[nk.key]?.img;
     if (!clI && !nkI) return null;
@@ -375,7 +375,7 @@ export class PaintPet {
           for (const sl of ['glasses', 'hat'] as const) {
             const it = this.side[sl], si = it && IMGS[it.key]?.img;
             if (!it || !si) continue;
-            c.save(); c.transform(...mul(sf.h, placeM(sl, sideRig(this.o.id)!, it.box))); c.drawImage(si, 0, 0, 1, 1); c.restore();
+            c.save(); c.transform(...mul(sf.h, placeM(sl, sf.r, it.box))); c.drawImage(si, 0, 0, 1, 1); c.restore();
           }
         }
         c.filter = 'none';

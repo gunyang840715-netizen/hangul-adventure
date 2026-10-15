@@ -49,6 +49,17 @@ CB = {
     'shiba': (100, 155, 305, 278), 'schnauzer': (80, 140, 275, 262), 'russian': (100, 112, 302, 240), 'siamese': (150, 110, 332, 238),
     'fold': (110, 110, 342, 262), 'persian': (125, 178, 318, 300),
 }
+# 특징점이 사라지고 얼굴 비율도 달라지는 칸은 원본 프레임 좌표로 직접 검수한다.
+# 페르시안 먹기 1: 눈을 감고 아래를 보는 얼굴. 기준 idle의 닮음 변환만으로는 안경이 이마에 놓임.
+POSE_ANN = {'persian': {'eat': {1: dict(Hc=(386, 199), Hr=62, E=(366, 275), F=(419, 280),
+    K1=(284, 214), K2=(321, 286), P=[(282, 230), (290, 190), (315, 165), (343, 145),
+    (370, 135), (389, 168), (415, 158), (461, 136), (457, 170), (451, 210), (439, 251),
+    (426, 277), (404, 300), (374, 301), (338, 291), (311, 275), (291, 254)])}}}
+
+def anchors(a):
+    return dict(hc=list(a['Hc']), hr=a['Hr'], e=list(a['E']), f=list(a['F']) if a['F'] else None,
+                k1=list(a['K1']), k2=list(a['K2']), p=[v for xy in a['P'] for v in xy])
+
 # 옆모습 꾸미기를 붙이는 동작과 몸통 회전 범위(도). sitstand는 마지막 칸(정면)을 빼고.
 SIDE_MOTIONS = {'idle': [0], 'walk': [-4, 0, 4], 'run': [-8, -4, 0, 4, 8], 'jump': [-12, -8, -4, 0, 4, 8, 12], 'eat': [0],
                 'sitstand': [-24, -18, -12, -6, 0], 'stretch': [-16, -12, -8, -4, 0, 4, 8]}
@@ -156,7 +167,7 @@ def refine(head, f, p0):
     return p, best[1], best[2]
 
 
-def body_match(pid, ref, f, angs, Hm):
+def body_match(pid, ref, f, angs, Hm, head_points=None):
     """옷 상자 둘레(위·뒤·앞으로 30px 더, 다리는 빼고)의 실루엣 모양을 프레임 실루엣에 맞춘다.
     프레임의 머리(이미 찾은 머리 변환 Hm으로 옮긴 둘레)는 회색(0.5)으로 지워 머리에 맞춰지지 않게.
     반환: [각도, dx, dy](옷 상자 가운데 둘레), 맞지 않는 비율"""
@@ -167,7 +178,7 @@ def body_match(pid, ref, f, angs, Hm):
     A = (ref[..., 3] > 0.5).astype(np.float32)
     hm = cv2.dilate(poly_mask(A.shape, ANN[pid]['P']), np.ones((7, 7), np.uint8)).astype(np.float32) / 255
     Fa = (f[..., 3] > 0.5).astype(np.float32)
-    fh = cv2.dilate(poly_mask(Fa.shape, apply(Hm, ANN[pid]['P'])), np.ones((7, 7), np.uint8)) > 0
+    fh = cv2.dilate(poly_mask(Fa.shape, apply(Hm, ANN[pid]['P']) if head_points is None else head_points), np.ones((7, 7), np.uint8)) > 0
     Fa[fh] = 0.5
     big = cv2.copyMakeBorder(Fa, pad, pad, pad, pad, cv2.BORDER_CONSTANT, value=0)
     offx = (f.shape[1] - W) / 2; offy = f.shape[0] - H   # 프레임은 가운데·바닥선으로 맞춰져 있음
@@ -254,12 +265,18 @@ def track(pid):
             if cand:
                 _, hs[i], j, matches, ncc, iou = max(cand)
                 sc[i] = (matches, round(ncc, 2), round(iou, 2), f'경유{j}')
+        # 직접 검수된 칸만 대체. 다른 실패 칸은 기존처럼 동작 전체를 숨긴다.
+        for i in range(len(hs)):
+            if i in POSE_ANN.get(pid, {}).get(mo, {}):
+                hs[i] = [1.0, 0.0, 0.0, 0.0]; sc[i] = ('원본 기준점 검수',)
         if any(p is None for p in hs):
             log(f'  {pid}-{mo}: 머리를 못 찾은 칸 {[i for i, p in enumerate(hs) if p is None]} → 이 동작은 꾸미기 숨김 {sc}')
             continue
         bs, bsc = [], []
-        for f, p in zip(use, hs):
-            b, e = body_match(pid, ref, f, angs, sim_mat(p)); bs.append(b); bsc.append(round(float(e), 3))
+        for i, (f, p) in enumerate(zip(use, hs)):
+            pose = POSE_ANN.get(pid, {}).get(mo, {}).get(i)
+            mask = None if pose is None else pose['P']
+            b, e = body_match(pid, ref, f, angs, sim_mat(p), mask); bs.append(b); bsc.append(round(float(e), 3))
         # 몸통: 같은 동작 안에서 각도를 부드럽게(이웃 칸 평균 — 프레임마다 흔들리지 않게)
         loop = RIG[pid]['motions'][mo]['loop']
         n = len(bs)
@@ -271,7 +288,8 @@ def track(pid):
             bs = sm
         if max(bsc) > BODY_OK: log(f'  {pid}-{mo}: 몸통 맞춤이 약한 칸 {bsc} → 옷만 숨김'); bs = None
         out[mo] = dict(h=[[round(v, 4) if k == 0 else round(v, 2) for k, v in enumerate(p)] for p in hs],
-                       b=None if bs is None else [[round(v, 2) for v in b] for b in bs], score=sc, bscore=bsc, frames=use)
+                       b=None if bs is None else [[round(v, 2) for v in b] for b in bs], score=sc, bscore=bsc, frames=use,
+                       a=[POSE_ANN.get(pid, {}).get(mo, {}).get(i) for i in range(len(use))])
     return ref, out
 
 
@@ -331,6 +349,7 @@ def qa_sheet(pid, ref, out, items):
             h, w = f.shape[:2]
             base = Image.fromarray((np.clip(f, 0, 1) * 255).astype(np.uint8), 'RGBA')
             Hm = sim_mat(d['h'][i])
+            pa = d['a'][i] or a
             if d['b'] is not None:
                 Bm = body_mat(pid, d['b'][i])
                 cl = items.get('clothes')
@@ -339,7 +358,7 @@ def qa_sheet(pid, ref, out, items):
                     T = mat3(Bm.flatten()[[0, 3, 1, 4, 2, 5]]) @ mat3(place('clothes', a, CB[pid], box)) @ np.diag([1 / im.size[0], 1 / im.size[1], 1])
                     layer = im.transform((w, h), Image.AFFINE, tuple(np.linalg.inv(T)[:2].flatten()), resample=Image.BILINEAR)
                     la = np.asarray(layer).astype(np.float32) / 255; ba = np.asarray(base).astype(np.float32) / 255
-                    hm = poly_mask((h, w), apply(Hm, a['P'])) > 0
+                    hm = poly_mask((h, w), apply(Hm, pa['P'])) > 0
                     k = la[..., 3] * ba[..., 3] * (~hm)
                     comp = ba.copy(); comp[..., :3] = la[..., :3] * k[..., None] + ba[..., :3] * (1 - k[..., None])
                     base = Image.fromarray((comp * 255).astype(np.uint8), 'RGBA')
@@ -347,9 +366,14 @@ def qa_sheet(pid, ref, out, items):
             for slot in ('neck', 'glasses', 'hat'):
                 if slot not in items: continue
                 im, box = items[slot]
-                T = np.array([[1, 0, 0], [0, 1, 60], [0, 0, 1.0]]) @ np.vstack([Hm, [0, 0, 1]]) @ mat3(place(slot, a, CB[pid], box)) @ np.diag([1 / im.size[0], 1 / im.size[1], 1])
+                T = np.array([[1, 0, 0], [0, 1, 60], [0, 0, 1.0]]) @ np.vstack([Hm, [0, 0, 1]]) @ mat3(place(slot, pa, CB[pid], box)) @ np.diag([1 / im.size[0], 1 / im.size[1], 1])
                 layer = im.transform((w, h + 60), Image.AFFINE, tuple(np.linalg.inv(T)[:2].flatten()), resample=Image.BILINEAR)
                 canvas.alpha_composite(layer)
+                if slot == 'neck':
+                    # 앱 dress()처럼 목걸이 위로 턱·귀를 다시 그린다.
+                    original = (np.clip(f, 0, 1) * 255).astype(np.uint8).copy()
+                    original[..., 3] = np.where(poly_mask((h, w), apply(Hm, pa['P'])) > 0, original[..., 3], 0)
+                    canvas.alpha_composite(Image.fromarray(original, 'RGBA'), (0, 60))
             dr = ImageDraw.Draw(canvas); dr.text((3, 3), f'{mo}{i}', fill=(0, 0, 0, 255))
             tiles.append(canvas.convert('RGB').resize((w // 2, (h + 60) // 2)))
     if not tiles: return
@@ -374,7 +398,8 @@ def main():
         log(pid)
         ref, out = track(pid)
         a = ANN[pid]
-        motion_data = {mo: dict(h=d['h'], **({'b': d['b']} if d['b'] is not None else {})) for mo, d in out.items()}
+        motion_data = {mo: dict(h=d['h'], **({'b': d['b']} if d['b'] is not None else {}),
+                               **({'a': [anchors(a) if a else None for a in d['a']]} if any(d['a']) else {})) for mo, d in out.items()}
         if MOTIONS and pid in rigs:
             rigs[pid]['m'].update(motion_data)
         else:

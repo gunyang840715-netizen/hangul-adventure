@@ -9,12 +9,16 @@ import { PET_SIDE } from './petside.gen';
 import { ITEM_SIDE } from './itemside.gen';
 
 type P2 = [number, number];
-export interface SideRig {
+/** 고개를 숙여 얼굴 비율까지 달라지는 칸은 원본 그림에서 직접 검수한 기준점을 사용. */
+export interface SideAnchors {
   hc: P2; hr: number; e: P2; f: P2 | null; k1: P2; k2: P2;
   p: number[];                                   // 머리 둘레 [x, y, x, y, …]
-  cb: [number, number, number, number];          // 옷 상자 x0 y0 x1 y1
-  m: Record<string, { h: number[][]; b?: number[][] }>;
 }
+export interface SideRig extends SideAnchors {
+  cb: [number, number, number, number];          // 옷 상자 x0 y0 x1 y1
+  m: Record<string, { h: number[][]; b?: number[][]; a?: (SideAnchors | null)[] }>;
+}
+export interface SideFrame { h: M6; b: M6 | null; r: SideRig }
 /** 2D 변환 [a b c d e f] — x' = a x + c y + e, y' = b x + d y + f (캔버스 setTransform·SVG matrix와 같은 순서) */
 export type M6 = [number, number, number, number, number, number];
 export type SideSlot = 'hat' | 'glasses' | 'neck' | 'clothes';
@@ -78,10 +82,11 @@ export function placeM(slot: SideSlot, r: SideRig, box: [number, number, number,
 
 export const sideRig = (pid: string): SideRig | undefined => PET_SIDE[pid];
 /** 그 동작의 그 칸에 옆모습 꾸미기를 붙일 수 있으면 [머리 변환, 몸통 변환(없으면 옷 숨김)] */
-export function sideFrame(pid: string, key: string, frame: number): { h: M6; b: M6 | null } | null {
+export function sideFrame(pid: string, key: string, frame: number): SideFrame | null {
   const r = PET_SIDE[pid], m = r?.m[key];
   if (!r || !m || frame < 0 || frame >= m.h.length) return null;
-  return { h: headM(m.h[frame]), b: m.b ? bodyM(r, m.b[frame]) : null };
+  const anchors = m.a?.[frame];
+  return { h: headM(m.h[frame]), b: m.b ? bodyM(r, m.b[frame]) : null, r: anchors ? { ...r, ...anchors } : r };
 }
 /** 아이템 id(slot:key)의 옆모습 그림 키·정사각형 안 물건 자리 */
 export function sideArt(id: string): { key: string; box: [number, number, number, number] } | null {

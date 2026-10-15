@@ -96,7 +96,10 @@ def cells(I, grid):
     return out
 
 
-def to_square(J, size, align):
+BOX = {}     # id → 정사각형 안 그림이 있는 곳 (0~1: x0, y0, x1, y1)
+
+
+def to_square(J, size, align, id_=None):
     """꼭 맞게 자른 그림 → size x size 정사각형(비율 유지, 2% 여백)"""
     h, w = J.shape[:2]
     pad = 0.02
@@ -111,6 +114,7 @@ def to_square(J, size, align):
     x = (size - nw) // 2
     y = {'bottom': size - int(size * pad) - nh, 'top': int(size * pad), 'center': (size - nh) // 2}[align]
     S[y:y + nh, x:x + nw] = R
+    if id_: BOX[id_] = (x / size, y / size, (x + nw) / size, (y + nh) / size)
     return S
 
 
@@ -144,6 +148,56 @@ def put(group, name, data):
     return rel
 
 
+# 꾸미기 아이템을 친구에게 씌우는 자리 — 옛 200칸 그림 좌표(눈 (78,93)·(122,93), 머리 꼭대기 y42, 목 y146,
+# 몸 타원 (100,158) 46x34, 앞발 (80,186)·(120,186), 장난감 (24,176)). 앱은 이 좌표를 새 그림의 머리·목·몸·발에 맞춰 옮긴다(petpaint.gen.ts items).
+#   종류: (그림 너비 목표, 높이 상한, 기준점 x, 기준 y, 기준 쪽)
+PLACE = {
+    'hat': (92, 86, 100, 58, 'bottom'),        # 챙(아래)이 머리 꼭대기보다 조금 아래
+    'glasses': (100, 56, 100, 93, 'center'),   # 두 눈 가운데
+    'neck': (86, 70, 100, 132, 'top'),         # 목선(위)부터
+    'clothes': (106, 62, 100, 126, 'top'),     # 목 아래부터 몸통(앞발은 보이게)
+    'shoes': (118, 60, 100, 201, 'bottom'),    # 앞발 바닥 — 한 쌍 그림이라 두 짝이 두 앞발에 오도록 넓게
+    'toy': (64, 56, 10, 201, 'bottom'),        # 몸 왼쪽 바닥(친구 앞에 그림)
+}
+
+
+# 물건마다 다르게(너비 목표, 높이 상한, 기준 y) — 깊이 쓰는 모자는 머리를 덮게 아래로, 얹는 것(왕관·리본)은 작게 위로
+ITEM_FIT = {
+    'hat:bow': (80, 70, 66), 'hat:crown': (74, 60, 64), 'hat:tiara': (78, 50, 66), 'hat:flower': (98, 50, 68), 'hat:bunny': (86, 94, 72),
+    'hat:party': (62, 86, 62), 'hat:cap': (106, 70, 76), 'hat:beanie': (104, 86, 80), 'hat:frog': (106, 88, 80), 'hat:santa': (108, 86, 78),
+    'hat:chef': (94, 86, 74), 'hat:fire': (108, 82, 78), 'hat:police': (104, 70, 76), 'hat:pirate': (114, 72, 76), 'hat:beret': (100, 62, 74),
+    'hat:berry': (102, 86, 78), 'hat:wizard': (114, 104, 74), 'hat:straw': (128, 72, 74), 'hat:sunhat': (128, 72, 74), 'hat:astro': (106, 104, 82),
+    # (너비, 높이 상한, 기준 y, 기준 x, 기준 쪽)
+    'glasses:mask': (118, 64, 92, 108, 'center'),          # 깃털이 오른쪽에 있어 눈구멍이 눈에 오게 오른쪽으로
+    'glasses:monocle': (40, 70, 80, 123, 'top'),           # 오른쪽 눈에 하나, 줄은 아래로
+    'clothes:cape': (120, 72, 120, 100, 'top'),            # 어깨에 두른 망토(앞에)
+    'clothes:raincoat': (110, 70, 120, 100, 'top'),        # 모자(후드)가 있어 조금 위에서
+}
+
+
+def place_of(id_):
+    slot = id_.split(':')[0]
+    W, Hmax, ax, ay, side = PLACE[slot]
+    if id_ in ITEM_FIT:
+        f = ITEM_FIT[id_]; W, Hmax, ay = f[:3]
+        if len(f) > 3: ax, side = f[3], f[4]
+    x0, y0, x1, y1 = BOX[id_]
+    cw, ch = x1 - x0, y1 - y0
+    s = min(W / cw, Hmax / ch)                 # 정사각형 한 변(옛 좌표)
+    x = ax - (x0 + x1) / 2 * s
+    y = {'top': ay - y0 * s, 'bottom': ay - y1 * s, 'center': ay - (y0 + y1) / 2 * s}[side]
+    return [round(x, 1), round(y, 1), round(s, 1)]
+
+
+def write_items_gen():
+    p = os.path.join(REPO, 'source/src/art/items.gen.ts')
+    out = {i: {'b': [round(v, 3) for v in BOX[i]], 'p': place_of(i)} for i in sorted(BOX)}
+    head = ('// 자동으로 만든 파일 — source/scripts/art_sheets.py items (손으로 고치지 않음)\n'
+            '// 꾸미기 아이템 새 그림: b = 정사각형 그림 안에서 물건이 있는 곳(0~1), p = 친구에게 씌울 자리 [x, y, 한 변](옛 200칸 좌표)\n')
+    open(p, 'w', encoding='utf-8').write(head + 'export const ITEM_ART: Record<string, { b: [number, number, number, number]; p: [number, number, number] }> = '
+                                         + json.dumps(out, ensure_ascii=False) + ';\n')
+
+
 def update_artmap(amap, prefix):
     p = os.path.join(REPO, 'source/src/art/artmap.ts')
     s = open(p, encoding='utf-8').read()
@@ -170,7 +224,7 @@ def main():
         for c, id_ in cmap.items():
             J = got.get(int(c))
             if J is None: log(f'  {id_}: 그림 없음(칸 {c})'); continue
-            S = to_tight(J, size) if MODE == 'furniture' else to_square(J, size, align_of(id_))
+            S = to_tight(J, size) if MODE == 'furniture' else to_square(J, size, align_of(id_), id_)
             data, q = webp(S, limit)
             k, name = key_of(id_)
             amap[k] = put(group, name, data)
@@ -187,6 +241,7 @@ def main():
     man['files'] = [{'u': u, 'b': b} for u, b in sorted(files.items())]
     json.dump(man, open(man_p, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     update_artmap(amap, {'snacks': 'snack.', 'items': 'item.', 'furniture': 'furn.'}[MODE])
+    if MODE == 'items': write_items_gen()
     tot = sum(os.path.getsize(os.path.join(REPO, v)) for v in amap.values())
     log(f'끝: {len(amap)}장, {tot // 1024} KB')
     if QA and qa:

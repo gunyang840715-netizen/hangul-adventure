@@ -118,6 +118,21 @@ export const ITEM_LIST: ItemDef[] = [
   I('toy', 'ball', '공', 'dog'), I('toy', 'yarn', '털실 뭉치', 'cat'), I('toy', 'duck', '오리 인형', 'dog'), I('toy', 'mouse', '쥐 인형', 'cat'),
   I('toy', 'frisbee', '원반', 'dog'), I('toy', 'teddy', '곰 인형'), I('toy', 'feather', '깃털 낚싯대', 'cat'), I('toy', 'bone', '뼈다귀 인형', 'dog'),
   I('toy', 'rope', '밧줄 장난감', 'dog'), I('toy', 'fish', '물고기 인형', 'cat'),
+  // ---- 묶음 2 새 아이템 (10-15, 뒤에 추가만) — 이름 녹음이 없어 받을 때·입힐 때는 칭찬 말로(COLLAB 11) ----
+  I('hat', 'pirate', '해적 모자', 'dog'), I('hat', 'police', '경찰 모자', 'dog'), I('hat', 'astro', '우주인 헬멧', 'dog'), I('hat', 'beret', '베레모', 'cat'),
+  I('hat', 'tiara', '반짝이 티아라', 'cat'), I('hat', 'sunhat', '챙 넓은 꽃모자', 'cat'), I('hat', 'frog', '개구리 모자'), I('hat', 'santa', '산타 모자'),
+  I('glasses', 'goggle', '수영 물안경', 'dog'), I('glasses', 'ski', '스키 고글', 'dog'), I('glasses', 'flower', '꽃 안경', 'cat'), I('glasses', 'butterfly', '나비 안경', 'cat'),
+  I('glasses', 'mask', '반짝이 가면', 'cat'), I('glasses', 'monocle', '탐정 외알 안경'), I('glasses', 'clown', '빨간 코 안경'),
+  I('neck', 'tie', '넥타이', 'dog'), I('neck', 'tag', '뼈다귀 이름표', 'dog'), I('neck', 'whistle', '호루라기', 'dog'), I('neck', 'star', '별 목걸이', 'cat'),
+  I('neck', 'clover', '네잎클로버 목걸이', 'cat'), I('neck', 'shell', '조개 목걸이', 'cat'), I('neck', 'medal', '금메달'), I('neck', 'bib', '턱받이'),
+  I('clothes', 'hoodie', '곰돌이 후드티', 'dog'), I('clothes', 'police', '경찰 조끼', 'dog'), I('clothes', 'soccer', '축구 유니폼', 'dog'), I('clothes', 'padding', '오리털 패딩', 'dog'),
+  I('clothes', 'princess', '공주 드레스', 'cat'), I('clothes', 'apron', '앞치마', 'cat'), I('clothes', 'fairy', '요정 날개 원피스', 'cat'), I('clothes', 'cardigan', '꽃 가디건', 'cat'),
+  I('clothes', 'sailor', '세일러복'), I('clothes', 'pajama', '별무늬 잠옷'),
+  I('shoes', 'light', '반짝이 불빛 운동화', 'dog'), I('shoes', 'skate', '롤러스케이트', 'dog'), I('shoes', 'hiking', '등산화', 'dog'), I('shoes', 'slipper', '토끼 실내화', 'cat'),
+  I('shoes', 'rain', '개구리 장화', 'cat'), I('shoes', 'ruby', '빨간 구두', 'cat'), I('shoes', 'sandal', '샌들'),
+  I('toy', 'car', '장난감 자동차', 'dog'), I('toy', 'stick', '나뭇가지', 'dog'), I('toy', 'tennis', '테니스공', 'dog'), I('toy', 'squeaky', '삑삑이 닭 인형', 'dog'),
+  I('toy', 'butterfly', '나비 장난감', 'cat'), I('toy', 'box', '종이 상자', 'cat'), I('toy', 'catnip', '캣닢 쿠션', 'cat'),
+  I('toy', 'balloon', '풍선'), I('toy', 'kite', '연'), I('toy', 'bubble', '비눗방울'), I('toy', 'pinwheel', '바람개비'), I('toy', 'boat', '종이배'),
 ];
 export const itemFits = (it: ItemDef, sp: Species) => it.for === 'both' || it.for === sp;
 export const ITEM: Record<string, ItemDef> = Object.fromEntries(ITEM_LIST.map(i => [i.id, i]));

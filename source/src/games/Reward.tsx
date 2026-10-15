@@ -8,7 +8,7 @@ import { addStars, addOwned, setLastItem, starsTotal, nextDrop, addSnack } from 
 import { ITEM } from '../data/pets';
 import { gotLine } from '../data/voice';
 import { randomSnack } from '../engine/gifts';
-import { useScene, type GameProps } from './common';
+import { useScene, nameLine, type GameProps } from './common';
 import { pair } from './Buddies';
 
 export function Reward({ onDone }: GameProps<'reward'>) {
@@ -40,7 +40,7 @@ export function Reward({ onDone }: GameProps<'reward'>) {
     if (item) {
       const it = ITEM[item];
       // 자동으로 입히지 않음: 아이가 우리 집에서 직접 꾸며 줌
-      await sayAll([gotLine(it.name), '우리 집에서 직접 입혀 줄 수 있어!', '별도 세 개 받았어!']);
+      await sayAll([nameLine(gotLine(it.name)), '우리 집에서 직접 입혀 줄 수 있어!', '별도 세 개 받았어!']);
     } else {
       await sayAll(['간식을 세 개 받았어!', '별도 세 개 받았어!']);
     }

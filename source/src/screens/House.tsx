@@ -9,6 +9,7 @@ import {
 } from '../engine/store';
 import { PETS, SNACKS, SNACK, CLASSIC_SNACKS, SLOTS, SLOT_NAME, SLOT_ICON, ITEM_LIST, ITEM, STAGE_NAME, levelProgress, stageOf, itemFits, MAX_LEVEL, type Species, type Slot } from '../data/pets';
 import { helloLine, breedLine, dressLine, growLine, stageLine } from '../data/voice';
+import { nameLine } from '../games/common';
 
 function Room() {
   return (
@@ -210,7 +211,7 @@ export function Dress({ onBack }: { onBack: () => void }) {
     sfx.pop(); const [x, y] = centerOf(e.currentTarget); burst(x, y);
     const on = v.wear[slot] === it.key;
     setWear(v.id, { ...v.wear, [slot]: on ? undefined : it.key });
-    if (!on) say(it.name);
+    if (!on) say(nameLine(it.name));                 // 새 아이템은 이름 녹음이 없어 칭찬 말로
   };
   const pickPet = (x: Species) => {
     if (x === sp) return;
@@ -237,7 +238,7 @@ export function Dress({ onBack }: { onBack: () => void }) {
             </button>
           ))}
         </div>
-        <div style={{ position: 'absolute', left: 540, top: 200, display: 'grid', gridTemplateColumns: 'repeat(4, 160px)', gap: 16 }}>
+        <div class="wardrobe-grid" style={{ position: 'absolute', left: 540, top: 200, display: 'grid', gridTemplateColumns: 'repeat(4, 160px)', gap: 16, maxHeight: 520, overflowY: 'auto', padding: '4px 8px 8px 4px' }}>
           {items.map(it => {
             const has = owned(it.id);
             const on = v.wear[slot] === it.key;

@@ -34,7 +34,8 @@ assert.equal(P.DROP_ORDER.length, P.ITEM_LIST.length, '받는 순서에 빠진 �
 assert.deepEqual([...P.DROP_ORDER].sort(), [...items].sort(), '받는 순서와 아이템 목록이 다름');
 const combo: Record<string, number> = {};
 for (const it of P.ITEM_LIST) combo[it.slot + '/' + it.for] = (combo[it.slot + '/' + it.for] || 0) + 1;
-for (const [k, n] of Object.entries(combo)) assert.ok(n <= 20, `한 종류(${k})가 20개를 넘음: ${n}`);
+// 받는 순서는 개수와 상관없이 끝난다(위 검사). 옷장은 스크롤 — 사용자 요청(10-15)으로 옷을 강아지·고양이 20개씩 더해 상한 30
+for (const [k, n] of Object.entries(combo)) assert.ok(n <= 30, `한 종류(${k})가 30개를 넘음: ${n}`);
 
 // 간식: 점수 1~3, 선물 비율표에 들어 있어야 실제로 나온다
 const w = new Map(SNACK_WEIGHT);

@@ -69,7 +69,7 @@
    자리의 위치·크기(x·y·w·h)는 새 배경에 맞게 옮겨도 된다(저장에 영향 없음).
 4. 새 저장 칸을 만들지 않는다. 마당은 기존 deco·decoT·bought(setDeco·buyFurn)로 장소 'doghouse-out'·'cathouse-out'에 저장하고,
    집 색깔도 마당의 한 자리('y-color')로 저장한다. (확인함: 기존 merge.js로 새 장소·아이템·간식·가구를 합치는 시험 통과, 합치는 순서와 무관)
-5. 같은 slot + for(dog/cat/both) 조합의 아이템은 20개 이하(id_keep_check가 확인). 받는 순서(DROP_ORDER)의 반복 상한 문제는 고쳤다.
+5. 같은 slot + for(dog/cat/both) 조합의 아이템은 30개 이하(id_keep_check가 확인 — 10-15 사용자 요청으로 옷을 강아지·고양이 20개씩 더하며 20→30). 받는 순서(DROP_ORDER)는 개수와 상관없이 끝난다.
 6. 맨 위 index.html·sw.js·manifest.webmanifest는 직접 고치지 않는다(Actions가 만든다). 아이콘 파일·기존 voice.*.json 수정 금지.
    voice-manifest.json은 새 녹음 조각을 files 끝에 추가할 때만 고친다.
 7. export된 컴포넌트 이름·props 유지: Pet, Hat, Glasses, Neck, Clothes, Shoes, Toy, ItemIcon, SnackIcon, FurnArt, BuildArt, MatIcon, Backdrop, LibraryBack 등.
@@ -238,6 +238,7 @@
   - 검사(원문): 사방 4% 이상 여백, 귀·꼬리 포함 잘린 곳 없음, 원문 설명(7-4)과 털색 일치.
     마리마다 미리보기 GIF(숨쉬기·깜빡임·꼬리·걷기·달리기·점프·잠)를 review/에 만들어 대화에 보여 준다.
 - B. 꾸미기 아이템 (data/pets.ts ITEM_LIST, Pet.tsx 아이템 그림): 48 → 약 100 (모자 20, 옷 18, 안경 12, 목걸이 16, 신발 12, 장난감 22).
+  + 10-15 사용자 요청: 옷 강아지용 20·고양이용 20 추가(GPT 시트 clothes-dog-extra-NN·clothes-cat-extra-NN, 앞·옆) → 140.
   기존 id 뒤에 추가만. 아이템은 리그 기준점에 붙어 부품과 같이 움직인다(모자·안경=머리, 목걸이·옷=몸통, 신발=앞발). 마리별 보정값.
   미리보기: 마리마다 슬롯별로 하나씩 입힌 모습 한 장.
 - C. 간식 (data/pets.ts SNACKS, Pet.tsx SnackIcon, engine/gifts.ts SNACK_WEIGHT): 6 → 약 20(강아지용·고양이용·같이 골고루), points 1~3, 새 간식은 SNACK_WEIGHT에도.

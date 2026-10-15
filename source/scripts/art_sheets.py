@@ -16,6 +16,7 @@
 #   python3 source/scripts/art_sheets.py park      <art-src/7-park 폴더>   <저장소 맨 위>   (놀이터 기구 — furn.<자리>.<이름>)
 #   python3 source/scripts/art_sheets.py words     <art-src/9-words 폴더>  <저장소 맨 위>   (낱말 그림 — word.<번호>)
 # 시트마다 같은 이름의 .json({"1": "id", …} — 왼쪽 위부터 오른쪽으로)이 있어야 한다. 같은 시트의 -vN이 있으면 가장 큰 N을 쓴다.
+# 꾸미기는 sheet-NN 말고 사용자 요청으로 더한 옷 시트(clothes-dog-extra-NN · clothes-cat-extra-NN)도 함께 읽는다.
 import sys, os, re, json, glob, hashlib, io
 import numpy as np, cv2
 from PIL import Image
@@ -62,8 +63,9 @@ def align_of(id_):
 def latest_sheets():
     """sheet-NN(-side)?(-vM)?.png 중 같은 시트는 가장 큰 vM. → [(png, json)]"""
     out = {}
-    for f in glob.glob(os.path.join(SRC, 'sheet-*.png')):
-        m = re.match(r'(sheet-\d+(?:-side)?)(?:-v(\d+))?\.png$', os.path.basename(f))
+    # 시트: sheet-NN · 사용자 요청 옷 추가(10-15) clothes-dog-extra-NN · clothes-cat-extra-NN
+    for f in glob.glob(os.path.join(SRC, '*.png')):
+        m = re.match(r'((?:sheet|clothes-(?:dog|cat)-extra)-\d+(?:-side)?)(?:-v(\d+))?\.png$', os.path.basename(f))
         if not m: continue
         base, v = m.group(1), int(m.group(2) or 1)
         if base.endswith('-side'): continue                       # 옆모습 시트는 아직 쓰지 않음(옆모습 동작에 붙일 때)
@@ -86,15 +88,26 @@ def cells(I, grid):
     n, lab, st, cen = cv2.connectedComponentsWithStats(m, 8)
     cw, ch = W / grid, H / grid
     tiny = 0.0012 * cw * ch
+    cell = lambda cx, cy: int(min(grid - 1, max(0, cx) // cw)) + int(min(grid - 1, max(0, cy) // ch)) * grid + 1
+    # 넓혀서 이으면 서로 거의 닿은 이웃 칸 물건이 한 덩어리가 된다(옷 추가 시트) → 안 넓힌 덩어리 중 큰 것이
+    # 여러 칸에 있으면 그 덩어리를 가장 가까운 큰 덩어리 쪽으로 나눈다(나머지 시트는 예전과 똑같이)
+    m0 = (a > 0.06).astype(np.uint8)
+    n0, lab0, st0, cen0 = cv2.connectedComponentsWithStats(m0, 8)
     groups = {}
     for i in range(1, n):
         if st[i, 4] < tiny: continue
-        cx, cy = cen[i]
-        c = int(min(grid - 1, cx // cw)) + int(min(grid - 1, cy // ch)) * grid + 1
-        groups.setdefault(c, []).append(i)
+        comp = lab == i
+        subs = [j for j in np.unique(lab0[comp]) if j and st0[j, 4] >= 0.08 * cw * ch]
+        if len({cell(*cen0[j]) for j in subs}) <= 1:
+            groups.setdefault(cell(*cen[i]), []).append(comp)
+            continue
+        d = np.stack([cv2.distanceTransform((lab0 != j).astype(np.uint8), cv2.DIST_L2, 3) for j in subs])
+        near = np.argmin(d, axis=0)
+        for k, j in enumerate(subs):
+            groups.setdefault(cell(*cen0[j]), []).append(comp & (near == k))
     out = {}
-    for c, ids in groups.items():
-        mask = np.isin(lab, ids)
+    for c, parts in groups.items():
+        mask = np.logical_or.reduce(parts)
         ys, xs = np.where(mask & (a > 0.02))
         if len(xs) == 0: continue
         x0, x1, y0, y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
@@ -180,6 +193,8 @@ ITEM_FIT = {
     'glasses:monocle': (40, 70, 80, 123, 'top'),           # 오른쪽 눈에 하나, 줄은 아래로
     'clothes:cape': (120, 72, 120, 100, 'top'),            # 어깨에 두른 망토(앞에)
     'clothes:raincoat': (110, 70, 120, 100, 'top'),        # 모자(후드)가 있어 조금 위에서
+    'clothes:dog-extra-beekeeper': (110, 72, 119, 100, 'top'),     # 후드 달린 옷(사용자 요청 옷 추가)
+    'clothes:dog-extra-dragon-tunic': (110, 72, 119, 100, 'top'),
 }
 
 

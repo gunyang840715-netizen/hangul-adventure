@@ -133,6 +133,17 @@ export const ITEM_LIST: ItemDef[] = [
   I('toy', 'car', '장난감 자동차', 'dog'), I('toy', 'stick', '나뭇가지', 'dog'), I('toy', 'tennis', '테니스공', 'dog'), I('toy', 'squeaky', '삑삑이 닭 인형', 'dog'),
   I('toy', 'butterfly', '나비 장난감', 'cat'), I('toy', 'box', '종이 상자', 'cat'), I('toy', 'catnip', '캣닢 쿠션', 'cat'),
   I('toy', 'balloon', '풍선'), I('toy', 'kite', '연'), I('toy', 'bubble', '비눗방울'), I('toy', 'pinwheel', '바람개비'), I('toy', 'boat', '종이배'),
+  // ---- 사용자 요청 옷 추가 (10-15, 강아지 20 · 고양이 20 — 뒤에 추가만, 이름 녹음 없음 → 칭찬 말로) ----
+  I('clothes', 'dog-extra-firefighter', '소방관 작업복', 'dog'), I('clothes', 'dog-extra-aviator', '비행사 점퍼', 'dog'), I('clothes', 'dog-extra-explorer', '탐험가 조끼', 'dog'), I('clothes', 'dog-extra-conductor', '기관사 제복', 'dog'),
+  I('clothes', 'dog-extra-chef-coat', '요리사 조리복', 'dog'), I('clothes', 'dog-extra-gardener', '정원사 작업복', 'dog'), I('clothes', 'dog-extra-postman', '우편배달 재킷', 'dog'), I('clothes', 'dog-extra-angler', '낚시 조끼', 'dog'),
+  I('clothes', 'dog-extra-sherpa', '보송 양털 조끼', 'dog'), I('clothes', 'dog-extra-duffle', '토글 단추 코트', 'dog'), I('clothes', 'dog-extra-denim-chore', '청 작업 재킷', 'dog'), I('clothes', 'dog-extra-argyle', '마름모 니트 조끼', 'dog'),
+  I('clothes', 'dog-extra-rugby', '럭비 카라 셔츠', 'dog'), I('clothes', 'dog-extra-baseball', '야구 단추 셔츠', 'dog'), I('clothes', 'dog-extra-karate', '태권도 도복', 'dog'), I('clothes', 'dog-extra-formal-waistcoat', '연회용 벨벳 조끼', 'dog'),
+  I('clothes', 'dog-extra-nordic-poncho', '북유럽 무늬 판초', 'dog'), I('clothes', 'dog-extra-dragon-tunic', '꼬마 용 의상', 'dog'), I('clothes', 'dog-extra-watermelon', '수박 여름 올인원', 'dog'), I('clothes', 'dog-extra-beekeeper', '양봉가 보호복', 'dog'),
+  I('clothes', 'cat-extra-astronomer', '별 관측 조끼', 'cat'), I('clothes', 'cat-extra-library-pinafore', '도서관 골덴 원피스', 'cat'), I('clothes', 'cat-extra-painter-smock', '화가 작업 셔츠', 'cat'), I('clothes', 'cat-extra-tea-dress', '홍차 찻자리 원피스', 'cat'),
+  I('clothes', 'cat-extra-shell-tunic', '조개 칼라 튜닉', 'cat'), I('clothes', 'cat-extra-cloud-capelet', '구름 솜 케이프', 'cat'), I('clothes', 'cat-extra-strawberry-sundress', '딸기 나들이 원피스', 'cat'), I('clothes', 'cat-extra-lavender-bolero', '라벤더 짧은 볼레로', 'cat'),
+  I('clothes', 'cat-extra-rose-corset', '장미 레이스 조끼', 'cat'), I('clothes', 'cat-extra-moon-robe', '초승달 잠옷 가운', 'cat'), I('clothes', 'cat-extra-gingham-smock', '체크 피크닉 스목', 'cat'), I('clothes', 'cat-extra-bluebell', '초롱꽃 원피스', 'cat'),
+  I('clothes', 'cat-extra-maple', '단풍 산책 조끼', 'cat'), I('clothes', 'cat-extra-snowflake-coat', '눈꽃 겨울 망토 코트', 'cat'), I('clothes', 'cat-extra-velvet-tux', '벨벳 턱시도', 'cat'), I('clothes', 'cat-extra-pearl-twinset', '진주 단추 니트 세트', 'cat'),
+  I('clothes', 'cat-extra-lemon-romper', '레몬 여름 롬퍼', 'cat'), I('clothes', 'cat-extra-pumpkin', '호박 축제 의상', 'cat'), I('clothes', 'cat-extra-mushroom', '버섯 숲 튜닉', 'cat'), I('clothes', 'cat-extra-sakura-jacket', '벚꽃 누빔 재킷', 'cat'),
 ];
 export const itemFits = (it: ItemDef, sp: Species) => it.for === 'both' || it.for === sp;
 export const ITEM: Record<string, ItemDef> = Object.fromEntries(ITEM_LIST.map(i => [i.id, i]));

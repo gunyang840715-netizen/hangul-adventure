@@ -258,8 +258,8 @@ export function guideFor(r: number, reps: number): Guide {
 const GUIDE_LINE: Partial<Record<Guide, string>> = { faint: '이번엔 흐린 선만 보고 써 봐!', none: '이제 혼자 써 봐! 그림자가 없어!' };
 
 /**
- * 한 글자를 reps번 쓰기 (한 세트). 글자 공부에서는 세 세트(10번씩, 사이사이 놀이)로 모두 30번:
- *  1세트: 10번 모두 위치·순서 안내 / 2세트: 안내 5 + 그림자 5 / 3세트: 안내 1 + 그림자 6 + 혼자 3
+ * 한 글자를 reps번 쓰기 (한 세트). 새 글자는 네 세트(10번씩, 사이사이 놀이)로 모두 40번:
+ *  1세트: 안내 10 / 2세트: 안내 5 + 그림자 5 / 3세트: 안내 1 + 그림자 6 + 혼자 3 / 4세트: 혼자 10
  * 말하는 동안에도 바로 쓸 수 있다 (쓰기 시작하면 하던 말은 그대로 두고, 한 번 다 쓰면 말을 끊고 숫자 세기)
  */
 export function TraceSet({ step, onDone, outfit }: GameProps<'traceSet'>) {
@@ -328,7 +328,7 @@ export function TraceSet({ step, onDone, outfit }: GameProps<'traceSet'>) {
       <Backdrop theme="library" />
       <div class="layer">
         <Buddies size={162} mood={mood} motion={mood === 'wow' ? 'jump' : 'bob'} reading />
-        {/* 글자별 도장판 (세 세트면 30칸: 앞 세트에서 쓴 만큼 채워져 있음) */}
+        {/* 글자별 도장판 (새 글자는 네 세트 40칸: 앞 세트에서 쓴 만큼 채워져 있음) */}
         <div style={{ position: 'absolute', left: 950, top: total > 15 ? 96 : 120, display: 'flex', flexDirection: 'column', gap: 14 }}>
           {step.items.map(ch => (
             <div class="stamp-card" data-current={ch === cur.ch ? 1 : 0}>
@@ -337,7 +337,7 @@ export function TraceSet({ step, onDone, outfit }: GameProps<'traceSet'>) {
             </div>
           ))}
         </div>
-        <div class="pill" style={{ position: 'absolute', left: 36, top: 120, fontSize: 30 }}>
+        <div class="pill trace-instruction" style={{ position: 'absolute', left: 36, top: 120, fontSize: 30 }}>
           {guide === 'full' ? '✏️ 따라 쓰기' : guide === 'faint' ? '👀 그림자 보고 쓰기' : '🧠 혼자 쓰기'}
           <Speaker style={{ width: 60, height: 60, fontSize: 30 }} onClick={() => sayCue(cur.ch)} />
         </div>

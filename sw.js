@@ -1,11 +1,11 @@
 // 뭉치와 냥이의 글자 모험 — 인터넷이 없어도 열리게 저장해 두기
-const V = 'app-c6af83567f';
+const V = 'app-5a3d32a892';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const MANIFEST = './voice-manifest.json';
 const ART_MANIFEST = './art/art-manifest.json';
-// 나올 때 받는 그림: 친구 새 그림(.paint-) · 손그림 배경(첫 화면 title·모험 지도 map-는 설치 때 받음)
+// 나올 때 받는 그림: 친구 새 그림(.paint-) · 손그림 배경(첫 화면 title·모험 지도 map-는 설치 때 받음) · 꾸미기 옆모습(-side, 입은 것만)
 // (원문: 첫 화면에 필요한 그림만 먼저 불러오고 나머지는 필요할 때 불러온다 — 받은 것은 아래 fetch에서 저장해 인터넷 없이도 나옴)
-const LAZY = /\/(pets\/[a-z]+\.paint-|backgrounds\/(?!title\.|map-))/;
+const LAZY = /\/(pets\/[a-z]+\.paint-|backgrounds\/(?!title\.|map-)|items\/[a-z0-9-]+-side\.)/;
 
 async function precacheArt(c) {
   const r = await fetch(ART_MANIFEST, { cache: 'reload' });

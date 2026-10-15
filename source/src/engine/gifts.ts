@@ -8,7 +8,10 @@ const GAMES = new Set(['hunt', 'bubble', 'mole', 'memory', 'feed', 'hop', 'blend
 const TRACE = new Set(['traceSet', 'trace']);
 
 /** 간식이 선물로 나올 비율 (새 간식은 여기에도 넣어야 실제로 나온다 — id_keep_check가 확인) */
-export const SNACK_WEIGHT: [string, number][] = [['bone', 3], ['fish', 3], ['cookie', 2], ['milk', 2], ['meat', 1], ['churu', 1]];
+export const SNACK_WEIGHT: [string, number][] = [['bone', 3], ['fish', 3], ['cookie', 2], ['milk', 2], ['meat', 1], ['churu', 1],
+  // 새 간식(10-15): 1점 = 2, 2점 = 1, 케이크(3점) = 1
+  ['sweetpotato', 2], ['carrot', 2], ['shrimp', 2], ['catgrass', 2], ['apple', 2], ['watermelon', 2], ['cheese', 2],
+  ['jerky', 1], ['chicken', 1], ['tuna', 1], ['salmon', 1], ['egg', 1], ['dogcake', 1], ['catcake', 1]];
 export function randomSnack(): string {
   const tot = SNACK_WEIGHT.reduce((a, [, w]) => a + w, 0);
   let r = Math.random() * tot;

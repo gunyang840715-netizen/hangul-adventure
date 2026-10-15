@@ -10,6 +10,7 @@ import type { Gift } from '../engine/gifts';
 import { pair } from './Buddies';
 import { MatIcon } from '../art/Build';
 import { MAT_LINE, MAT_NAME } from '../data/voice';
+import { nameLine } from './common';
 
 export const giftLine = (g: Gift) => g.kind === 'mat' ? MAT_LINE : `${eul(g.kind === 'snack' ? SNACK[g.id].name : ITEM[g.id].name)} 받았어!`;
 
@@ -25,7 +26,7 @@ export function GiftPop({ gift, onDone }: { gift: Gift; onDone: () => void }) {
       sfx.sparkle(); burst(640, 330, 'star');
       buddy({ t: 'big' });
       await wait(250);
-      await say(giftLine(gift));
+      await say(nameLine(giftLine(gift)));
       if (item && sc === sceneId()) await say('우리 집에서 직접 입혀 줄 수 있어!');
       if (gift.kind === 'mat' && sc === sceneId()) await say('우리 집에서 집을 지어 줄 수 있어!');
       await wait(700);

@@ -69,7 +69,24 @@ export const SNACKS: SnackDef[] = [
   { id: 'churu', name: '츄르', for: 'cat', points: 2 },
   { id: 'cookie', name: '쿠키', for: 'both', points: 1 },
   { id: 'milk', name: '우유', for: 'both', points: 1 },
+  // 묶음 3 새 간식 (10-15, 뒤에 추가만) — 이름 녹음이 없어 받을 때는 칭찬 말로(COLLAB 11)
+  { id: 'jerky', name: '육포', for: 'dog', points: 2 },
+  { id: 'sweetpotato', name: '고구마', for: 'dog', points: 1 },
+  { id: 'chicken', name: '닭가슴살', for: 'dog', points: 2 },
+  { id: 'carrot', name: '당근', for: 'dog', points: 1 },
+  { id: 'dogcake', name: '강아지 케이크', for: 'dog', points: 3 },
+  { id: 'tuna', name: '참치', for: 'cat', points: 2 },
+  { id: 'salmon', name: '연어', for: 'cat', points: 2 },
+  { id: 'shrimp', name: '새우', for: 'cat', points: 1 },
+  { id: 'catcake', name: '고양이 케이크', for: 'cat', points: 3 },
+  { id: 'catgrass', name: '캣그라스', for: 'cat', points: 1 },
+  { id: 'apple', name: '사과', for: 'both', points: 1 },
+  { id: 'watermelon', name: '수박', for: 'both', points: 1 },
+  { id: 'egg', name: '삶은 달걀', for: 'both', points: 2 },
+  { id: 'cheese', name: '치즈', for: 'both', points: 1 },
 ];
+/** 처음부터 있던 간식 6가지 — 간식 바구니가 비었을 때 자리로 보여 줌 */
+export const CLASSIC_SNACKS = ['bone', 'meat', 'fish', 'churu', 'cookie', 'milk'];
 export const SNACK: Record<string, SnackDef> = Object.fromEntries(SNACKS.map(s => [s.id, s]));
 
 // ---------------- 꾸미기 아이템 ----------------

@@ -1,6 +1,6 @@
 // 게임 공통 도우미
 import { useEffect, useRef } from 'preact/hooks';
-import { newScene, say, sayAll, sfx, wait, stopVoice } from '../engine/audio';
+import { newScene, say, sayAll, sfx, wait, stopVoice, hasPack, hasClip } from '../engine/audio';
 import { buddy } from '../engine/bus';
 import { pick, josa } from '../lib/hangul';
 import { JAMO } from '../data/jamo';
@@ -19,6 +19,8 @@ export interface GameProps<T extends Step['t'] = Step['t']> {
 
 export const PRAISE = ['딩동댕!', '정답이야!', '우와, 잘했어!', '최고야!', '멋져!', '대단해!', '맞았어!', '짝짝짝!'];
 export const RETRY = ['다시 해 볼까?', '괜찮아, 한 번 더!', '다시 찾아 볼까?'];
+/** 녹음이 없는 새 이름(간식·꾸미기 아이템)이 든 말은 기기 음성 대신 칭찬 한마디로 — 이름은 화면 글자로 (COLLAB 11) */
+export const nameLine = (line: string) => (!hasPack() || hasClip(line) ? line : pick(PRAISE));
 /** 틀렸을 때: 상냥하고 부드럽게 (아이가 속상하지 않게) */
 export const GENTLE = ['괜찮아~ 다시 찾아 보자!', '괜찮아, 천천히 다시 찾아 볼까?', '아깝다~ 다시 한번 찾아 보자!'];
 export const gentle = (lines: string[] = GENTLE) => say(pick(lines));

@@ -6,6 +6,7 @@ import { PET, MAX_LEVEL, type Stage, type Slot } from '../data/pets';
 import { PET_PHOTO, PHOTO_BOX } from './petphotos';
 import { paintable, baseState, loadBase, loadMotions, rigOf, PaintPet as Painter, startPet, stopPet, VIEW, type Act } from './petpaint';
 import type { Mat } from './petanim';
+import { artSrc } from './artmap';
 
 export type Mood = 'happy' | 'wow' | 'think' | 'sleep' | 'love';
 export type Motion = 'bob' | 'jump' | 'cheer' | 'wiggle' | 'none' | 'fly' | 'hop';
@@ -608,10 +609,18 @@ export function ItemIcon({ id, size = 100 }: { id: string; size?: number }) {
 }
 
 // ======================= 간식 =======================
+/** 새 그림(WebP, 정사각형)이 있으면 그것을 (x,y,w,h)에, 없거나 못 받으면 예전 SVG(children) */
+export function Raster({ k, x, y, w, h, children }: { k: string; x: number; y: number; w: number; h: number; children?: any }) {
+  const src = artSrc(k);
+  const [bad, setBad] = useState(false);
+  if (!src || bad) return children ?? null;
+  return <image href={src} x={x} y={y} width={w} height={h} preserveAspectRatio="xMidYMid meet" onError={() => setBad(true)} />;
+}
+
 export function SnackIcon({ id, size = 80 }: { id: string; size?: number }) {
   return (
     <svg viewBox="-40 -40 80 80" width={size} height={size} style={{ overflow: 'visible' }}>
-      {(() => {
+      <Raster k={`snack.${id}`} x={-40} y={-40} w={80} h={80}>{(() => {
         switch (id) {
           case 'bone': return <g transform="rotate(-20)"><path d="M-26 -10 a9 9 0 1 1 9 -3 L17 -13 a9 9 0 1 1 9 3 a9 9 0 1 1 -9 15 L-17 5 a9 9 0 1 1 -9 -3 a9 9 0 0 1 0 -12 z" fill="#fff4e6" stroke="#d9a066" stroke-width="3.5" stroke-linejoin="round" /></g>;
           case 'meat': return <g transform="rotate(-25)"><ellipse cx="-6" cy="0" rx="22" ry="17" fill="#e8590c" stroke="#a63e0a" stroke-width="3" /><ellipse cx="-10" cy="-4" rx="12" ry="8" fill="#ff922b" /><rect x="12" y="-4" width="20" height="8" rx="3" fill="#fff4e6" stroke="#d9a066" stroke-width="2.5" /><circle cx="32" cy="-5" r="5" fill="#fff4e6" stroke="#d9a066" stroke-width="2.5" /><circle cx="32" cy="5" r="5" fill="#fff4e6" stroke="#d9a066" stroke-width="2.5" /></g>;
@@ -621,7 +630,7 @@ export function SnackIcon({ id, size = 80 }: { id: string; size?: number }) {
           case 'milk': return <g><path d="M-14 -14 L -8 -26 H 8 L 14 -14 V 26 a4 4 0 0 1 -4 4 H -10 a4 4 0 0 1 -4 -4 Z" fill="#fff" stroke="#74c0fc" stroke-width="3" stroke-linejoin="round" /><rect x="-14" y="0" width="28" height="14" fill="#a5d8ff" /><rect x="-9" y="-32" width="18" height="7" rx="2" fill="#4dabf7" /><path d="M-6 6 h12" stroke="#fff" stroke-width="2.5" /></g>;
         }
         return null;
-      })()}
+      })()}</Raster>
     </svg>
   );
 }

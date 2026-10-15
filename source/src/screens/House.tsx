@@ -7,7 +7,7 @@ import { buddy } from '../engine/bus';
 import {
   load, petView, petInfo, feed, snackCount, choosePet, setLead, setWear, onChange, matsLeft, type PetView,
 } from '../engine/store';
-import { PETS, SNACKS, SNACK, SLOTS, SLOT_NAME, SLOT_ICON, ITEM_LIST, ITEM, STAGE_NAME, levelProgress, stageOf, itemFits, MAX_LEVEL, type Species, type Slot } from '../data/pets';
+import { PETS, SNACKS, SNACK, CLASSIC_SNACKS, SLOTS, SLOT_NAME, SLOT_ICON, ITEM_LIST, ITEM, STAGE_NAME, levelProgress, stageOf, itemFits, MAX_LEVEL, type Species, type Slot } from '../data/pets';
 import { helloLine, breedLine, dressLine, growLine, stageLine } from '../data/voice';
 
 function Room() {
@@ -17,6 +17,13 @@ function Room() {
       <div class="room-floor" />
     </div>
   );
+}
+
+/** 간식 바구니: 가진 간식 먼저(간식이 20가지라 다 보이면 너무 많음), 6칸이 안 되면 처음부터 있던 간식을 빈 칸으로 채움 */
+function trayList() {
+  const have = SNACKS.filter(sn => snackCount(sn.id) > 0);
+  const pad = CLASSIC_SNACKS.map(id => SNACK[id]).filter(sn => !have.includes(sn));
+  return have.length >= 6 ? have : [...have, ...pad.slice(0, 6 - have.length)];
 }
 
 function useRefresh() {
@@ -147,7 +154,7 @@ export function House({ onBack, onDress, onAdopt, onBuild }: { onBack: () => voi
         </div>
         {/* 간식 바구니 */}
         <div class="snack-tray">
-          {SNACKS.map(sn => {
+          {trayList().map(sn => {
             const n = snackCount(sn.id);
             return (
               <button class={`snack-slot ${n ? '' : 'empty'}`} data-snack={sn.id} data-n={n} onClick={(e) => giveSnack(sn.id, e)}>

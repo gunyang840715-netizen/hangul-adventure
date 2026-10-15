@@ -1,5 +1,14 @@
 // 기존 그림 원본의 내용 해시 경로. 없는 그림은 기존 SVG로 그린다.
 export const ART_MAP: Record<string, string> = {
+  "snack.apple": "art/snacks/apple.603d7b25.webp",
+  "snack.bone": "art/snacks/bone.307f39d8.webp",
+  "snack.carrot": "art/snacks/carrot.09c1c437.webp",
+  "snack.catcake": "art/snacks/catcake.76d28c7c.webp",
+  "snack.catgrass": "art/snacks/catgrass.4581ec52.webp",
+  "snack.cheese": "art/snacks/cheese.ad9d140d.webp",
+  "snack.chicken": "art/snacks/chicken.8cbf3362.webp",
+  "snack.churu": "art/snacks/churu.959f1e2c.webp",
+  "snack.cookie": "art/snacks/cookie.1ba5e978.webp",
   "pet.corgi.head": "art/pets/corgi.head.812b6aae.webp",
   "pet.corgi.paint-eat": "art/pets/corgi.paint-eat.c953c147.webp",
   "pet.corgi.paint-eyes": "art/pets/corgi.paint-eyes.58ada48e.webp",
@@ -14,6 +23,9 @@ export const ART_MAP: Record<string, string> = {
   "pet.corgi.paint-sitstand": "art/pets/corgi.paint-sitstand.24a62eac.webp",
   "pet.corgi.paint-stretch": "art/pets/corgi.paint-stretch.41504a7a.webp",
   "pet.corgi.paint-walk": "art/pets/corgi.paint-walk.589fc007.webp",
+  "snack.dogcake": "art/snacks/dogcake.686a7c20.webp",
+  "snack.egg": "art/snacks/egg.300fe97e.webp",
+  "snack.fish": "art/snacks/fish.e5cea5f9.webp",
   "pet.fold.head": "art/pets/fold.head.13aaa400.webp",
   "pet.fold.paint-eat": "art/pets/fold.paint-eat.125480a7.webp",
   "pet.fold.paint-eyes": "art/pets/fold.paint-eyes.51261f88.webp",
@@ -28,6 +40,7 @@ export const ART_MAP: Record<string, string> = {
   "pet.fold.paint-sitstand": "art/pets/fold.paint-sitstand.4838b28b.webp",
   "pet.fold.paint-stretch": "art/pets/fold.paint-stretch.1f1357bc.webp",
   "pet.fold.paint-walk": "art/pets/fold.paint-walk.772899bf.webp",
+  "snack.jerky": "art/snacks/jerky.51627235.webp",
   "pet.koshort.head": "art/pets/koshort.head.d0a291fb.webp",
   "pet.koshort.paint-eat": "art/pets/koshort.paint-eat.9538dfbe.webp",
   "pet.koshort.paint-eyes": "art/pets/koshort.paint-eyes.5d26aed0.webp",
@@ -56,6 +69,8 @@ export const ART_MAP: Record<string, string> = {
   "pet.maltese.paint-sitstand": "art/pets/maltese.paint-sitstand.340cfbaa.webp",
   "pet.maltese.paint-stretch": "art/pets/maltese.paint-stretch.d96ae7c9.webp",
   "pet.maltese.paint-walk": "art/pets/maltese.paint-walk.d80895f6.webp",
+  "snack.meat": "art/snacks/meat.f153b802.webp",
+  "snack.milk": "art/snacks/milk.884fbc68.webp",
   "pet.persian.head": "art/pets/persian.head.3fae2f50.webp",
   "pet.persian.paint-eat": "art/pets/persian.paint-eat.7b6feaee.webp",
   "pet.persian.paint-eyes": "art/pets/persian.paint-eyes.c5ea16ac.webp",
@@ -98,6 +113,7 @@ export const ART_MAP: Record<string, string> = {
   "pet.russian.paint-sitstand": "art/pets/russian.paint-sitstand.bf0e133a.webp",
   "pet.russian.paint-stretch": "art/pets/russian.paint-stretch.d54de707.webp",
   "pet.russian.paint-walk": "art/pets/russian.paint-walk.52b544c4.webp",
+  "snack.salmon": "art/snacks/salmon.5809183f.webp",
   "pet.schnauzer.head": "art/pets/schnauzer.head.049f84e3.webp",
   "pet.schnauzer.paint-eat": "art/pets/schnauzer.paint-eat.85bdfb23.webp",
   "pet.schnauzer.paint-eyes": "art/pets/schnauzer.paint-eyes.5c05059e.webp",
@@ -127,6 +143,7 @@ export const ART_MAP: Record<string, string> = {
   "pet.shiba.paint-sitstand": "art/pets/shiba.paint-sitstand.8a482f7c.webp",
   "pet.shiba.paint-stretch": "art/pets/shiba.paint-stretch.a06d7337.webp",
   "pet.shiba.paint-walk": "art/pets/shiba.paint-walk.a0a5c5e5.webp",
+  "snack.shrimp": "art/snacks/shrimp.8aa8811c.webp",
   "pet.siamese.head": "art/pets/siamese.head.e2d611a3.webp",
   "pet.siamese.paint-eat": "art/pets/siamese.paint-eat.2fe01792.webp",
   "pet.siamese.paint-eyes": "art/pets/siamese.paint-eyes.e8e493f6.webp",
@@ -140,7 +157,10 @@ export const ART_MAP: Record<string, string> = {
   "pet.siamese.paint-scratch": "art/pets/siamese.paint-scratch.588ecc28.webp",
   "pet.siamese.paint-sitstand": "art/pets/siamese.paint-sitstand.d3498e92.webp",
   "pet.siamese.paint-stretch": "art/pets/siamese.paint-stretch.fb10e375.webp",
-  "pet.siamese.paint-walk": "art/pets/siamese.paint-walk.c6e35690.webp"
+  "pet.siamese.paint-walk": "art/pets/siamese.paint-walk.c6e35690.webp",
+  "snack.sweetpotato": "art/snacks/sweetpotato.873c67b2.webp",
+  "snack.tuna": "art/snacks/tuna.535ce722.webp",
+  "snack.watermelon": "art/snacks/watermelon.61147b2d.webp"
 };
 
 export function artSrc(id: string): string | undefined {

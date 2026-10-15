@@ -305,7 +305,9 @@ button { font-family: inherit; color: inherit; border: none; background: none; p
 .grow-bar { height: 18px; border-radius: 999px; background: #f1e6f7; overflow: hidden; }
 .grow-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #ffa8c9, #ff6fa8); transition: width .8s cubic-bezier(.3,1.4,.5,1); }
 .lead-badge { position: absolute; right: -18px; top: -20px; background: #ffd43b; color: #7a4a00; font-size: 20px; padding: 4px 12px; border-radius: 999px; box-shadow: 0 3px 0 #e0a800; }
-.snack-tray { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 14px; background: rgba(255,255,255,.82); padding: 12px 18px; border-radius: 36px; box-shadow: var(--shadow); }
+.snack-tray { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 14px; background: rgba(255,255,255,.82); padding: 12px 18px; border-radius: 36px; box-shadow: var(--shadow); max-width: 1080px; overflow-x: auto; scrollbar-width: none; }
+.snack-tray::-webkit-scrollbar { display: none; }
+.snack-slot { flex: 0 0 auto; }
 .snack-slot { position: relative; width: 116px; height: 108px; border-radius: 26px; background: #fff8e6; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 0 #f0d9a8; }
 .snack-slot:active { transform: scale(.94); }
 .snack-slot.empty { filter: grayscale(1); opacity: .45; }

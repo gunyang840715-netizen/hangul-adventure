@@ -410,7 +410,8 @@ async function speak(text: string, opt: { rate?: number; pitch?: number; interru
   (window as any).__SAID__?.push(text);
   if ((window as any).__FAST__) { await wait(40); return; }
   const my = ++seq;
-  const rate = (opt.rate ?? 1) * (load().settings.voiceRate || 1);
+  const requestedRate = (opt.rate ?? 1) * (load().settings.voiceRate || 1);
+  const rate = Number.isFinite(requestedRate) ? Math.max(0.5, Math.min(2, requestedRate)) : 1;
   const recording = await clip(text).catch(() => null);
   const buf = recording?.buffer;
   if (!buf && isVoiceKey(text)) return;          // 쓸 수 없는 녹음 키: 조용히 넘어감
@@ -423,6 +424,7 @@ async function speak(text: string, opt: { rate?: number; pitch?: number; interru
       const ac = audioCtx();
       const src = ac.createBufferSource();
       src.buffer = buf;
+      src.playbackRate.value = rate;
       const levelGain = ac.createGain(); levelGain.gain.value = recording!.gain;
       src.connect(levelGain); levelGain.connect(voiceGain);
       const fin = () => {
@@ -440,7 +442,7 @@ async function speak(text: string, opt: { rate?: number; pitch?: number; interru
       src.onended = fin;
       try { src.start(); } catch { fin(); return; }
       // 앱을 다시 열었을 때 소리 장치가 멈춰 있으면 '끝남' 신호가 안 와서 다음으로 못 넘어감 → 길이만큼 기다린 뒤 넘어가기
-      if (!done) timer = setTimeout(fin, buf.duration * 1000 + (ac.state === 'running' ? 1200 : 400));
+      if (!done) timer = setTimeout(fin, buf.duration * 1000 / rate + (ac.state === 'running' ? 1200 : 400));
     });
   }
   return new Promise(res => {

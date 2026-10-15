@@ -9,7 +9,7 @@ import { JAMO } from '../data/jamo';
 import { LESSONS, UNITS, wordsFor, knownAfter } from '../data/curriculum';
 import { say, sayAll, sfx, hasPack, newScene, packLoad, onPackLoad, voiceJob, onVoiceJob, voiceCount } from '../engine/audio';
 import {
-  load, exportCode, importCode, reset, resetProgress, isStorageOk, today, replaceAll, onChange, dev,
+  load, exportCode, importCode, reset, resetProgress, isStorageOk, storageNeedsRecovery, today, replaceAll, onChange, dev,
   setName, setSettings, giveExtraMinutes, giveExtraLesson, history, remainingMs, getResume,
   todayMs, todayLessons, todayExtraMin, todayExtraLessons, starsTotal, adventuresTotal, snackTotal, petView, type State,
 } from '../engine/store';
@@ -166,6 +166,7 @@ export function Book({ onBack }: { onBack: () => void }) {
 
 // ---------- 부모 설정 ----------
 const SYNC_ERR: [RegExp, string][] = [
+  [/local_read/, '이 기기의 기존 기록을 먼저 복구해 주세요'],
   [/bad_code/, '연동 코드가 서버와 다릅니다'],
   [/old_server/, '서버 코드가 옛 버전입니다 — 새 서버 코드로 바꾸고 "새 버전"으로 다시 배포해 주세요'],
   [/no_url/, '서버 주소가 없습니다'],
@@ -258,7 +259,9 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
         <h2 style={{ margin: 0 }}>부모 설정</h2>
         <button class="opt" style={{ marginLeft: 'auto', fontSize: 22 }} onClick={onClose}>닫기 ✕</button>
       </div>
-      {!isStorageOk() && <p style={{ color: '#c92a2a' }}>⚠️ 이 브라우저에서 진도가 저장되지 않고 있습니다. 연동을 켜 두거나 '백업 코드'로 진도를 옮겨 두세요.</p>}
+      {!isStorageOk() && <p style={{ color: '#c92a2a' }}>{storageNeedsRecovery()
+        ? '⚠️ 기존 기록을 읽지 못해 원본을 보존하고 저장·연동을 잠시 멈췄습니다. 앱을 다시 열거나 보관한 정상 백업 코드로 복원해 주세요.'
+        : "⚠️ 이 브라우저에서 진도가 저장되지 않고 있습니다. 연동을 켜 두거나 '백업 코드'로 진도를 옮겨 두세요."}</p>}
 
       <h3>오늘</h3>
       <div class="row">사용 {min}분{limit ? ` / ${limit}분` : ' (제한 없음)'} · 새 단계 {todayLessons()}/{s.settings.newPerDay + todayExtraLessons()}개 · 현재 {Math.min(s.lessonIdx + 1, LESSONS.length)}/{LESSONS.length}단계 ({UNITS[lesson.unit - 1].name} · {lesson.title})</div>
@@ -270,7 +273,7 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
 
       <h3>초기화</h3>
       <div class="row">
-        <button class="opt" style={{ color: '#c92a2a' }} onClick={() => setAsk('progress')}>공부 진도만 처음부터</button>
+        <button class="opt" disabled={storageNeedsRecovery()} style={{ color: '#c92a2a' }} onClick={() => setAsk('progress')}>공부 진도만 처음부터</button>
         <button class="opt" style={{ color: '#c92a2a' }} onClick={() => setAsk('all')}>전체 초기화</button>
         <span style={{ fontSize: 16, color: '#868e96' }}>진도만: 1단계부터 다시 (강아지·고양이·꾸미기·간식·별은 그대로) · 전체: 모두 처음으로 (이름·설정·연동은 그대로). 연동된 다른 기기도 같이 바뀝니다.</span>
       </div>
@@ -317,7 +320,7 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
 
       <h3>단계 이동</h3>
       <div class="row">
-        <select style={{ fontSize: 20, padding: 8 }} onChange={(e: any) => jumpTo(+e.target.value)} value={Math.min(s.lessonIdx, LESSONS.length - 1)}>
+        <select disabled={storageNeedsRecovery()} style={{ fontSize: 20, padding: 8 }} onChange={(e: any) => jumpTo(+e.target.value)} value={Math.min(s.lessonIdx, LESSONS.length - 1)}>
           {LESSONS.map((l, i) => <option value={i}>{i + 1}. {UNITS[l.unit - 1].name} · {l.title}</option>)}
         </select>
         <span style={{ fontSize: 16, color: '#868e96' }}>앞 단계 글자는 '익힌 것'으로 처리됩니다.</span>
@@ -328,7 +331,7 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
       </div>
 
       <h3>진도 백업</h3>
-      <div class="row"><button class="opt" onClick={() => { setCode(exportCode()); setMsg('아래 코드를 복사해 두세요.'); }}>백업 코드 만들기</button>
+      <div class="row"><button class="opt" disabled={storageNeedsRecovery()} onClick={() => { setCode(exportCode()); setMsg('아래 코드를 복사해 두세요.'); }}>백업 코드 만들기</button>
         <button class="opt" onClick={() => { const ok = importCode(code); if (ok) { setNameIn(load().name); done('불러왔습니다.'); } else setMsg('코드가 올바르지 않습니다.'); }}>코드로 불러오기</button>
         <button class="opt" onClick={copyBackup}>복사</button></div>
       <textarea value={code} onInput={(e: any) => setCode(e.target.value)} placeholder="백업 코드 (예전 '몽글이' 앱의 백업 코드도 불러올 수 있습니다)" />

@@ -1,6 +1,6 @@
 // 두 기기 진도 연동 + 새 음성 받기 (구글 Apps Script 서버)
 import { BACKEND_URL } from '../config';
-import { load, absorb, setName, dev } from './store';
+import { load, absorb, setName, dev, storageNeedsRecovery } from './store';
 
 const LS_CODE = 'hangul-sync-code';
 const LS_URL = 'hangul-sync-url';
@@ -52,6 +52,11 @@ export async function call(body: any, timeoutMs = 25000): Promise<any> {
 let inflight: Promise<boolean> | null = null;
 export function syncNow(): Promise<boolean> {
   if (!syncEnabled() || !navigator.onLine) return Promise.resolve(false);
+  load();
+  if (storageNeedsRecovery()) {
+    note({ ok: false, busy: false, error: 'local_read' });
+    return Promise.resolve(false);
+  }
   if (inflight) return inflight;
   note({ busy: true });
   inflight = (async () => {

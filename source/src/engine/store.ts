@@ -106,6 +106,7 @@ export function fresh(): State {
 
 let mem: State | null = null;
 let storageOk = true;
+let readRecovery = false; // 읽지 못한 원본은 명시적인 백업 복원·초기화 전까지 보존.
 const listeners = new Set<() => void>();
 export function onChange(f: () => void) { listeners.add(f); return () => { listeners.delete(f); }; }
 function emit() { listeners.forEach(f => f()); }
@@ -169,8 +170,9 @@ export function load(): State {
   try {
     const raw = localStorage.getItem(KEY) ?? localStorage.getItem(OLD_KEY);
     if (raw) o = JSON.parse(raw);
-  } catch { storageOk = false; }
-  mem = normalize(o);
+  } catch { storageOk = false; readRecovery = true; }
+  try { mem = normalize(o); }
+  catch { storageOk = false; readRecovery = true; mem = fresh(); }
   return mem;
 }
 
@@ -178,7 +180,7 @@ let saveTimer = 0;
 /** 앱 닫기·백그라운드 전환 전에 대기 중인 진도를 즉시 기록. 저장 형식은 그대로. */
 export function flushSave() {
   clearTimeout(saveTimer);
-  if (!mem) return;
+  if (!mem || readRecovery) return;
   try { localStorage.setItem(KEY, JSON.stringify(mem)); storageOk = true; } catch { storageOk = false; }
 }
 export function save(now = false) {
@@ -189,6 +191,7 @@ export function save(now = false) {
 }
 
 export function isStorageOk() { return storageOk; }
+export function storageNeedsRecovery() { return readRecovery; }
 
 /** 다른 기기에서 받은 상태(들)를 합치기 */
 export function absorb(...remote: any[]) {
@@ -200,8 +203,10 @@ export function absorb(...remote: any[]) {
 }
 
 /** 부모 조작(초기화·단계 이동·백업 불러오기): 새 epoch로 두 기기 모두 이 상태를 따르게 */
-export function replaceAll(s: State) {
+export function replaceAll(s: State, recover = false) {
+  if (readRecovery && !recover) return;
   mem = normalize(s);
+  readRecovery = false;
   mem.epoch = Date.now();
   save(true);
 }
@@ -212,11 +217,12 @@ export function reset() {
   const s = fresh();
   s.name = cur.name; s.nameT = Date.now();
   s.settings = { ...cur.settings }; s.settingsT = Date.now();
-  replaceAll(s);
+  replaceAll(s, true);
 }
 
 /** 공부 진도만 처음으로: 단계·글자 기록·이어하기만 지우고 강아지·고양이·꾸미기·간식·별은 그대로 */
 export function resetProgress() {
+  if (readRecovery) return; // 기존 친구·보상을 읽지 못했으므로 진도만 초기화할 수 없음.
   const n: State = JSON.parse(JSON.stringify(load()));
   const now = Date.now();
   n.lessonIdx = 0; n.items = {}; n.lessonsByDay = {}; n.extraLessons = {};
@@ -229,13 +235,15 @@ export function resetProgress() {
 }
 
 export function exportCode(): string {
-  return btoa(unescape(encodeURIComponent(JSON.stringify(load()))));
+  const s = load();
+  if (readRecovery) return ''; // 읽지 못한 원본 대신 초기 상태를 정상 백업처럼 내보내지 않기.
+  return btoa(unescape(encodeURIComponent(JSON.stringify(s))));
 }
 
 export function importCode(code: string): boolean {
   try {
     const o = JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
-    if (isBackupPayload(o)) { replaceAll(normalize(o)); return true; }
+    if (isBackupPayload(o)) { replaceAll(normalize(o), true); return true; }
   } catch { /* 무시 */ }
   return false;
 }

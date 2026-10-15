@@ -41,6 +41,7 @@ class AC {
   createBuffer(c: number, len: number, sr: number) { return new BufferMock(c, len, sr); }
   createBufferSource() {
     const s: any = new NodeMock();
+    s.playbackRate = { value: 1 };
     s.stop = () => {}; // 모바일에서 onended가 오지 않아도 중단 Promise는 끝나야 함
     s.start = () => { if (autoEnd) queueMicrotask(() => s.onended?.()); };
     sources.push(s); return s;
@@ -54,7 +55,7 @@ class AC {
 }
 g.AudioContext = AC;
 const audio = await import('../src/engine/audio');
-const { setLead } = await import('../src/engine/store');
+const { setLead, setSettings } = await import('../src/engine/store');
 assert.equal(audio.recordedLevel(make(0)).silent, true);
 assert.equal(audio.recordedLevel(make(.00001)).silent, true);
 assert.equal(audio.recordedLevel(make(.004)).gain, 30);
@@ -81,6 +82,20 @@ assert.ok(quiet.disconnected && quiet.next.disconnected);
 assert.equal(compressors[0].threshold.value, -3);
 assert.equal(compressors[0].ratio.value, 20);
 assert.equal(quiet.next.next.next, compressors[0]);
+setSettings({ voiceRate: .85 });
+await audio.say('조용한 검사');
+assert.equal(sources.at(-1).playbackRate.value, .85, '부모 느리게 설정은 녹음 음성에도 적용');
+setSettings({ voiceRate: 1.15 });
+await audio.say('조용한 검사');
+assert.equal(sources.at(-1).playbackRate.value, 1.15, '부모 빠르게 설정은 녹음 음성에도 적용');
+setSettings({ voiceRate: 1 });
+await audio.say('조용한 검사', { rate: .8 });
+assert.equal(sources.at(-1).playbackRate.value, .8, '안내별 속도 지정 유지');
+setSettings({ voiceRate: 999 }); await audio.say('조용한 검사');
+assert.equal(sources.at(-1).playbackRate.value, 2, '잘못된 과속 설정 상한');
+setSettings({ voiceRate: -1 }); await audio.say('조용한 검사');
+assert.equal(sources.at(-1).playbackRate.value, .5, '잘못된 음수 설정에서도 재생 가능');
+setSettings({ voiceRate: 1 });
 g.__VOICE__['스테레오 검사'] = b64('stereo');
 await audio.say('스테레오 검사');
 assert.equal(sources.at(-1).buffer.length, 545);
@@ -103,10 +118,19 @@ setLead('dog'); assert.equal(audio.hasClip('대표 친구 검사'), true);
 Math.random = originalRandom;
 
 autoEnd = false;
+const realTimeout = g.setTimeout;
+let deadline = 0;
+g.setTimeout = (fn: (...args: any[]) => void, ms: number, ...args: any[]) => {
+  if (ms > 400) deadline = ms;
+  return realTimeout(fn, ms, ...args);
+};
+setSettings({ voiceRate: .85 });
 let settled = false;
 const pending = audio.say('조용한 검사').then(() => { settled = true; });
 await new Promise(r => setTimeout(r, 0));
+assert.ok(Math.abs(deadline - (sources.at(-1).buffer.duration * 1000 / .85 + 1200)) < 1, '느린 재생은 느려진 길이만큼 안내 완료 대기');
 audio.stopVoice(); await pending;
+g.setTimeout = realTimeout; setSettings({ voiceRate: 1 });
 assert.ok(settled);
 assert.ok(sources.at(-1).disconnected);
 // 아주 작은 녹음: 말소리 대부분이 −45dBFS 아래여도 크기를 제대로 잰다 (가장 큰 구간 기준 30dB 안쪽 평균)
@@ -131,4 +155,4 @@ await audio.say('dog::faint-ex');
 assert.deepEqual(spoken, [], '녹음 키를 글자로 읽으면 안 됨');
 await audio.say('녹음 없는 새 문장');
 assert.deepEqual(spoken, ['녹음 없는 새 문장'], '녹음 없는 보통 문장은 지금처럼 기기 음성');
-console.log('녹음 음량·조각 병합·무음 재선택·중단 검사 통과');
+console.log('녹음 음량·조각 병합·무음 재선택·속도 설정·중단 검사 통과');

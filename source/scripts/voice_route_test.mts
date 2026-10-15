@@ -17,7 +17,7 @@ class AC {
   state = 'running'; currentTime = 0; destination = {};
   createGain() { return { gain: { value: 0, setValueAtTime() {}, linearRampToValueAtTime() {}, cancelScheduledValues() {} }, connect() {} }; }
   createDynamicsCompressor() { return { threshold: {}, knee: {}, ratio: {}, attack: {}, release: {}, connect() {} }; }
-  createBufferSource() { const s: any = { connect() {}, stop() {}, start() { setTimeout(() => s.onended?.(), 0); } }; return s; }
+  createBufferSource() { const s: any = { playbackRate: { value: 1 }, connect() {}, stop() {}, start() { setTimeout(() => s.onended?.(), 0); } }; return s; }
   createBuffer() { return buf(); }
   async decodeAudioData(ab: ArrayBuffer) { played.push(byBytes.get(Buffer.from(ab).toString('latin1')) || '(알 수 없음)'); return buf(); }
   resume() { return Promise.resolve(); }

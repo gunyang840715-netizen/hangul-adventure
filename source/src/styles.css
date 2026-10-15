@@ -389,6 +389,9 @@ button { font-family: inherit; color: inherit; border: none; background: none; p
 .slot-plus { display: flex; flex-direction: column; align-items: center; color: #9c6fc4; font-size: 54px; line-height: 1; }
 .slot-plus small { font-size: 22px; margin-top: 4px; }
 .home-wall-btn { position: absolute; left: 24px; top: 118px; font-size: 26px; z-index: 4; }
+.home-floor-btn { position: absolute; left: 24px; top: 186px; font-size: 26px; z-index: 4; }
+.room-tile { position: absolute; inset: 0; background-repeat: repeat; background-size: 256px auto; }
+.room-tile.floor { background-size: 300px auto; background-position: 0 0; }
 .home-pet { position: absolute; z-index: 5; transition: left 1.4s ease-in-out, top 1.4s ease-in-out; }
 .home-pet.sleep .mascot { transform: rotate(-8deg); }
 .home-pet.sleep .mascot.pp { transform: none; }

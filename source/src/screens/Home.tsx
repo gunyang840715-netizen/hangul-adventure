@@ -6,10 +6,10 @@ import { burst, centerOf } from '../art/Scene';
 import { Pet, growthOf } from '../art/Pet';
 import { useWander, canWander } from '../art/petbrain';
 import { MatIcon } from '../art/Build';
-import { FurnArt } from '../art/Home';
+import { FurnPic, tileSrc } from '../art/Home';
 import { say, sfx, newScene } from '../engine/audio';
 import { petView, matsLeft, onChange, decoOf, setDeco, buyFurn, isBought, type PetView } from '../engine/store';
-import { ROOM_SLOTS, PARK_SLOTS, PARK_W, FURN_BY, optionsFor, DEFAULT_DECO, type SlotDef, type Place } from '../data/home';
+import { ROOM_SLOTS, PARK_SLOTS, PARK_W, FURN_BY, optionsFor, DEFAULT_DECO, FULL_SLOTS, type SlotDef, type Place } from '../data/home';
 import { HOME_DECO, PARK_DECO } from '../data/voice';
 
 function useRefresh() {
@@ -29,7 +29,7 @@ function SlotView({ s, id, edit, sel, onTap, dx = 0 }: { s: SlotDef; id?: string
   return (
     <div class={`home-slot ${sel ? 'sel' : ''} ${id ? '' : 'empty'}`} data-slot={s.id} data-furn={id ?? ''}
       style={{ left: s.x + dx, top: s.y, width: s.w, height: s.h }} onPointerDown={(e) => { e.stopPropagation(); onTap(); }}>
-      {id ? <svg viewBox={`0 0 ${s.vb[0]} ${s.vb[1]}`} width={s.w} height={s.h} style={{ overflow: 'visible' }}><FurnArt id={id} /></svg>
+      {id ? <svg viewBox={`0 0 ${s.vb[0]} ${s.vb[1]}`} width={s.w} height={s.h} style={{ overflow: 'visible' }}><FurnPic id={id} vb={s.vb} /></svg>
         : <div class="slot-plus">＋<small>{s.name}</small></div>}
     </div>
   );
@@ -50,7 +50,7 @@ function Tray({ place, slot, onClose }: { place: Place; slot: SlotDef; onClose: 
     } else sfx.pop();
     const [x, y] = centerOf(e.currentTarget); burst(x, y);
     // 같은 것을 다시 누르면 빼기 (벽지·창문은 빼지 않음)
-    if (cur === id && slot.id !== 'wall' && slot.id !== 'window') setDeco(place, slot.id, null);
+    if (cur === id && !FULL_SLOTS.includes(slot.id) && slot.id !== 'window') setDeco(place, slot.id, null);
     else setDeco(place, slot.id, id);
   };
   return (
@@ -60,11 +60,12 @@ function Tray({ place, slot, onClose }: { place: Place; slot: SlotDef; onClose: 
         {opts.map(o => {
           const own = o.free || isBought(o.id);
           const on = cur === o.id;
-          const vb = slot.id === 'wall' ? [120, 90] : slot.vb;
+          const full = FULL_SLOTS.includes(slot.id);
+          const vb: [number, number] = full ? [120, 90] : slot.vb;
           return (
             <button class={`tray-item ${on ? 'on' : ''} ${own ? 'own' : ''}`} data-opt={o.id} data-own={own ? 1 : 0} onClick={(e) => choose(o.id, e)}>
               <svg viewBox={`0 0 ${vb[0]} ${vb[1]}`} width="150" height="110" style={{ overflow: 'visible' }}>
-                {slot.id === 'wall' ? <WallSwatch id={o.id} /> : <FurnArt id={o.id} />}
+                {full ? <TileSwatch id={o.id} /> : <FurnPic id={o.id} vb={vb} />}
               </svg>
               <span class="tray-name">{o.name}</span>
               {!own && <span class="tray-cost"><MatIcon size={30} />1</span>}
@@ -75,6 +76,15 @@ function Tray({ place, slot, onClose }: { place: Place; slot: SlotDef; onClose: 
       </div>
     </div>
   );
+}
+
+/** 벽지·바닥 고르기 칸: 새 무늬 그림, 없으면 예전 무늬 */
+function TileSwatch({ id }: { id: string }) {
+  const src = tileSrc(id);
+  if (!src) return id.startsWith('floor:') ? <rect width="120" height="90" rx="10" fill="#e9b886" /> : <WallSwatch id={id} />;
+  return <g><clipPath id={`ts-${id.replace(':', '-')}`}><rect width="120" height="90" rx="10" /></clipPath>
+    <image href={src} width="120" height="90" preserveAspectRatio="xMidYMid slice" clip-path={`url(#ts-${id.replace(':', '-')})`} />
+    <rect width="120" height="90" rx="10" fill="none" stroke="#00000018" stroke-width="2" /></g>;
 }
 
 function WallSwatch({ id }: { id: string }) {
@@ -102,6 +112,8 @@ export function RoomScreen({ place, onBack }: { place: 'doghouse' | 'cathouse'; 
   const pet: PetView = petView(place === 'doghouse' ? 'dog' : 'cat');
   useEffect(() => { newScene(); say(HOME_DECO); }, []);
   const wall = placed(place, 'wall') ?? 'wall:dots';
+  const floor = placed(place, 'floor') ?? 'floor:wood';
+  const wallT = tileSrc(wall), floorT = tileSrc(floor);
   const bed = placed(place, 'bed'), toy = placed(place, 'toy'), rug = placed(place, 'rug');
   const S = (id: string) => ROOM_SLOTS.find(s => s.id === id)!;
   // 자는 곳: 침대 > 깔개 > 바닥 / 노는 곳: 장난감 옆 > 가운데
@@ -119,14 +131,15 @@ export function RoomScreen({ place, onBack }: { place: 'doghouse' | 'cathouse'; 
   });
   const slotSel = sel ? ROOM_SLOTS.find(s => s.id === sel)! : null;
   const tapPet = () => { sfx.tap(); pet.species === 'dog' ? sfx.bark(1) : sfx.meow(); setAct(a => (a === 'play' ? 'sleep' : 'play')); };
-  const order = [...ROOM_SLOTS.filter(s => s.id !== 'wall' && !s.front), ...ROOM_SLOTS.filter(s => s.front)];
+  const order = [...ROOM_SLOTS.filter(s => !FULL_SLOTS.includes(s.id) && !s.front), ...ROOM_SLOTS.filter(s => s.front)];
   return (
     <div class="screen" onPointerDown={() => setSel(null)} data-room={place}>
-      <div class={`room-wall ${wall.replace(':', '-')}`} />
-      <div class="room-floor" />
+      <div class={`room-wall ${wall.replace(':', '-')}`}>{wallT && <div class="room-tile" style={{ backgroundImage: `url(${wallT})` }} />}</div>
+      <div class="room-floor">{floorT && <div class="room-tile floor" style={{ backgroundImage: `url(${floorT})` }} />}</div>
       <div class="layer">
         {order.filter(s => !s.front).map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
         <button class="pill home-wall-btn" onPointerDown={(e) => { e.stopPropagation(); sfx.tap(); setSel('wall'); }}>🎨 벽지</button>
+        <button class="pill home-floor-btn" onPointerDown={(e) => { e.stopPropagation(); sfx.tap(); setSel('floor'); }}>🪵 바닥</button>
         {order.filter(s => s.front && s.id === 'rug').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
         {order.filter(s => s.front && s.id === 'bed').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
         <div class={`home-pet ${act}`} style={{ left: w.x, top: w.y, ...w.style }} onTransitionEnd={w.onArrive} onPointerDown={(e) => { e.stopPropagation(); tapPet(); }} data-act={act} data-move={w.act}>

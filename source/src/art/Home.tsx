@@ -1,5 +1,8 @@
 // 집 안 가구 · 큰 놀이터 기구 그림 (자리마다 viewBox 안에 그림. data/home.ts의 SlotDef.vb와 같은 크기)
+// 새 그림(art/furniture, 묶음 5)이 있으면 그것을, 없거나 못 받으면 아래 SVG 그림을 쓴다(FurnPic).
 import type { JSX } from 'preact';
+import { useState } from 'preact/hooks';
+import { artSrc } from './artmap';
 
 const O = '#7a5238';       // 나무 테두리
 const ART: Record<string, () => JSX.Element> = {
@@ -293,4 +296,17 @@ export function FurnArt({ id }: { id: string }) {
   const f = ART[id];
   return f ? f() : <g />;
 }
-export const hasArt = (id: string) => !!ART[id];
+export const hasArt = (id: string) => !!ART[id] || !!artSrc(furnKey(id));
+
+const furnKey = (id: string) => { const [slot, key] = id.split(':'); return `furn.${slot}.${key}`; };
+/** 자리 상자 안에서 그림을 붙이는 쪽: 매다는 것은 위, 벽에 거는 것은 가운데, 나머지(바닥에 놓는 것)는 아래 */
+const FURN_ALIGN: Record<string, string> = { mobile: 'xMidYMin', walldeco: 'xMidYMin', window: 'xMidYMid', frame: 'xMidYMid', clock: 'xMidYMid', shelf: 'xMidYMid' };
+/** 가구 그림: 새 그림(WebP)을 자리 상자(vb)에 비율을 지켜 맞춰 넣음. 없거나 못 받으면 예전 SVG */
+export function FurnPic({ id, vb }: { id: string; vb: [number, number] }) {
+  const src = artSrc(furnKey(id));
+  const [bad, setBad] = useState(false);
+  if (!src || bad) return <FurnArt id={id} />;
+  return <image href={src} x={0} y={0} width={vb[0]} height={vb[1]} preserveAspectRatio={`${FURN_ALIGN[id.split(':')[0]] ?? 'xMidYMax'} meet`} onError={() => setBad(true)} />;
+}
+/** 벽지·바닥 무늬 그림 주소 (없으면 undefined → CSS 무늬) */
+export const tileSrc = (id: string) => artSrc(`tile.${id.replace(':', '-')}`);

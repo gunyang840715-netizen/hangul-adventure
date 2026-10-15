@@ -26,7 +26,7 @@ QA = os.environ.get('SHEET_QA')
 CONF = {
     'snacks': dict(group='snacks', size=256, limit=40000, grid=4),
     'items': dict(group='items', size=256, limit=40000, grid=4),
-    'furniture': dict(group='furniture', size=512, limit=70000, grid=3),
+    'furniture': dict(group='furniture', size=640, limit=70000, grid=3),   # 가구는 정사각형 X(꼭 맞게 자른 그대로) — 앱이 자리 상자에 비율 맞춰 넣음
 }[MODE]
 
 # 정사각형 안에서 놓는 쪽(세로): 'bottom' | 'top' | 'center'
@@ -114,6 +114,18 @@ def to_square(J, size, align):
     return S
 
 
+def to_tight(J, size):
+    """꼭 맞게 자른 그대로, 긴 변 size 이하"""
+    h, w = J.shape[:2]
+    k = min(1.0, size / max(h, w))
+    if k >= 1: return J
+    P = J.copy(); P[..., :3] *= P[..., 3:4]
+    R = cv2.resize(P, (max(1, int(round(w * k))), max(1, int(round(h * k)))), interpolation=cv2.INTER_AREA)
+    a = R[..., 3:4]
+    R[..., :3] = np.where(a > 1e-4, R[..., :3] / np.maximum(a, 1e-4), 0)
+    return R
+
+
 def webp(arr, limit):
     im8 = np.clip(arr * 255 + 0.5, 0, 255).astype(np.uint8)
     im8[im8[..., 3] == 0, :3] = 0
@@ -158,7 +170,7 @@ def main():
         for c, id_ in cmap.items():
             J = got.get(int(c))
             if J is None: log(f'  {id_}: 그림 없음(칸 {c})'); continue
-            S = to_square(J, size, align_of(id_))
+            S = to_tight(J, size) if MODE == 'furniture' else to_square(J, size, align_of(id_))
             data, q = webp(S, limit)
             k, name = key_of(id_)
             amap[k] = put(group, name, data)

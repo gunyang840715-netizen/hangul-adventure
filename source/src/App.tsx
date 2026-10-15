@@ -87,9 +87,9 @@ type Screen = 'title' | 'map' | 'session' | 'book' | 'house' | 'dress' | 'adopt'
 const GALLERY = /[?&]gallery=/.test(location.search);
 const ICON = /[?&]icon=/.test(location.search);
 /** 사용 시간을 세는 화면 */
-const COUNTED: Screen[] = ['map', 'session', 'book', 'house', 'dress', 'adopt'];
+const COUNTED: Screen[] = ['map', 'session', 'book', 'house', 'dress', 'adopt', 'build', 'room', 'park', 'yard'];
 /** 시간이 다 되면 바로 잠자기로 가는 화면 */
-const IDLE: Screen[] = ['map', 'book', 'house', 'dress', 'adopt', 'build', 'room', 'park'];
+const IDLE: Screen[] = ['map', 'book', 'house', 'dress', 'adopt', 'build', 'room', 'park', 'yard'];
 
 interface Sess { steps: Step[]; idx: number; replay: boolean; play?: boolean; startAt?: number; resumed?: boolean; review?: boolean; after?: () => void }
 

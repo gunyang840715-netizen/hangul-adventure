@@ -214,8 +214,13 @@ export function reset() {
 /** 공부 진도만 처음으로: 단계·글자 기록·이어하기만 지우고 강아지·고양이·꾸미기·간식·별은 그대로 */
 export function resetProgress() {
   const n: State = JSON.parse(JSON.stringify(load()));
+  const now = Date.now();
   n.lessonIdx = 0; n.items = {}; n.lessonsByDay = {}; n.extraLessons = {};
-  n.resume = null; n.resumeT = Date.now();
+  n.resume = null; n.resumeT = now;
+  // 부모가 진도를 초기화할 때만 시험 기록도 비움. 앱 업데이트·일반 실행에서는 그대로 보존.
+  n.lastPass = null; n.lastPassT = now;
+  n.reviewDay = -1; n.reviewDayT = now;
+  n.hold = null; n.holdT = now;
   replaceAll(n);
 }
 

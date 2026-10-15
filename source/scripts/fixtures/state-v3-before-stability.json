@@ -1,0 +1,201 @@
+{
+  "v": 3,
+  "epoch": 100,
+  "curVer": 2,
+  "name": "친구",
+  "nameT": 100,
+  "lessonIdx": 1,
+  "items": {
+    "j:ㅏ": {
+      "box": 3,
+      "due": 20742,
+      "seen": 6,
+      "right": 5,
+      "wrong": 1,
+      "last": 20740
+    }
+  },
+  "stars": {
+    "phone": 12,
+    "tablet": 7
+  },
+  "adventures": {
+    "phone": 2,
+    "tablet": 1
+  },
+  "usage": {
+    "20740": {
+      "phone": 600000,
+      "tablet": 300000
+    }
+  },
+  "lessonsByDay": {
+    "20740": {
+      "phone": 1
+    }
+  },
+  "extraMin": {
+    "20740": {
+      "tablet": 10
+    }
+  },
+  "extraLessons": {
+    "20740": {
+      "phone": 1
+    }
+  },
+  "owned": [
+    "hat:crown",
+    "neck:bell"
+  ],
+  "settings": {
+    "dailyMin": 45,
+    "newPerDay": 2,
+    "music": false,
+    "voiceRate": 0.85,
+    "traceReps": 5,
+    "testPass": 60
+  },
+  "settingsT": 110,
+  "dog": "corgi",
+  "cat": "fold",
+  "lead": "cat",
+  "petsT": 120,
+  "wear": {
+    "corgi": {
+      "hat": "crown"
+    },
+    "fold": {
+      "neck": "bell"
+    }
+  },
+  "wearT": {
+    "corgi": 130,
+    "fold": 130
+  },
+  "growth": {
+    "corgi": {
+      "phone": 9
+    },
+    "fold": {
+      "tablet": 4
+    }
+  },
+  "snacks": {
+    "bone": {
+      "phone": 4
+    },
+    "churu": {
+      "tablet": 3
+    }
+  },
+  "eaten": {
+    "bone": {
+      "phone": 1
+    }
+  },
+  "games": {
+    "phone": 10,
+    "tablet": 5
+  },
+  "mats": {
+    "phone": 12,
+    "tablet": 8
+  },
+  "built": {
+    "doghouse": {
+      "phone": 8
+    },
+    "cathouse": {
+      "tablet": 3
+    }
+  },
+  "resume": {
+    "lessonIdx": 0,
+    "replay": false,
+    "stepIdx": 1,
+    "steps": [
+      {
+        "t": "intro",
+        "ch": "ㅏ"
+      },
+      {
+        "t": "traceSet",
+        "items": [
+          "ㅏ"
+        ],
+        "reps": 10,
+        "level": 1,
+        "part": 0,
+        "parts": 4,
+        "guides": [
+          "full",
+          "full",
+          "full",
+          "full",
+          "full",
+          "full",
+          "full",
+          "full",
+          "full",
+          "full"
+        ]
+      },
+      {
+        "t": "dictation",
+        "items": [
+          "ㅏ"
+        ],
+        "order": [
+          "ㅏ"
+        ],
+        "mode": "lesson"
+      }
+    ],
+    "at": 170
+  },
+  "resumeT": 170,
+  "lastPass": {
+    "lesson": 0,
+    "day": 20740,
+    "items": [
+      "ㅏ",
+      "ㅓ",
+      "ㄱ",
+      "ㄴ"
+    ]
+  },
+  "lastPassT": 150,
+  "reviewDay": 20740,
+  "reviewDayT": 150,
+  "hold": {
+    "lesson": 0
+  },
+  "holdT": 160,
+  "lostSnacks": {
+    "bone": {
+      "phone": 1
+    }
+  },
+  "lostMats": {
+    "phone": 1
+  },
+  "itemGot": {
+    "hat:crown": 130,
+    "neck:bell": 130
+  },
+  "itemLost": {},
+  "bought": {
+    "y-color:pink": 140
+  },
+  "deco": {
+    "doghouse-out": {
+      "y-color": "y-color:pink"
+    }
+  },
+  "decoT": {
+    "doghouse-out": 140
+  },
+  "lastItem": "hat:crown",
+  "lastItemT": 130
+}

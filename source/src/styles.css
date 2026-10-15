@@ -110,6 +110,19 @@ button { font-family: inherit; color: inherit; border: none; background: none; p
 
 .speaker { width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, #ffd43b, #ffa94d); color: #fff; font-size: 44px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 0 #e8890c, 0 10px 20px rgba(230, 140, 20, .3); }
 .speaker:active { transform: translateY(4px); box-shadow: 0 2px 0 #e8890c; }
+/* 무대 축소 후에도 실제 화면에서 48px 이상의 듣기·이동 버튼을 유지. */
+.iconbtn, .speaker { min-width: var(--touch-min, 48px); min-height: var(--touch-min, 48px); flex-shrink: 0; }
+button { min-width: var(--touch-min, 48px); min-height: var(--touch-min, 48px); }
+button:focus-visible, [role=button]:focus-visible { outline: 4px solid #7048e8; outline-offset: 4px; }
+.app-recovery { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; text-align: center; background: #fff0fa; }
+.app-recovery h1 { font-size: clamp(24px, 5vw, 44px); margin: 0; }
+.app-recovery p { font-size: 24px; }
+.home-pet[role=button], .park-pet[role=button] { touch-action: none; cursor: grab; }
+[data-dragging="1"] { cursor: grabbing; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+  .trace-box circle:has(animateMotion) { visibility: hidden; }
+}
 
 /* ---------- 반짝이 ---------- */
 .burst-layer { position: absolute; inset: 0; pointer-events: none; z-index: 100; }

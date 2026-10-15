@@ -69,7 +69,7 @@ export function TraceBoard({ ch, guide, onDone, onMood, quiet, test, onMiss }: B
   const [shake, setShake] = useState(false);
   const [hint, setHint] = useState(false);        // 기억 모드에서 두 번 틀리면 시작점 보여 주기
   const cv = useRef<HTMLCanvasElement>(null);
-  const st = useRef({ active: false, s: 0, last: null as Pt | null, hue: 0, lastWarn: 0, miss: 0, strokeMiss: 0 });
+  const st = useRef({ active: false, pointer: null as number | null, s: 0, last: null as Pt | null, hue: 0, lastWarn: 0, miss: 0, strokeMiss: 0 });
 
   useEffect(() => {
     const c = cv.current!;
@@ -103,7 +103,7 @@ export function TraceBoard({ ch, guide, onDone, onMood, quiet, test, onMiss }: B
   const finishStroke = () => {
     const s = strokes[idx];
     const S = st.current;
-    S.active = false; S.strokeMiss = 0;
+    S.active = false; S.pointer = null; S.strokeMiss = 0;
     clear();
     sfx.stroke();
     const end = s[s.length - 1];
@@ -119,20 +119,20 @@ export function TraceBoard({ ch, guide, onDone, onMood, quiet, test, onMiss }: B
   };
 
   const down = (e: PointerEvent) => {
-    if (done) return;
+    if (done || st.current.active || e.isPrimary === false || e.button !== 0) return;
     (e.target as Element).setPointerCapture?.(e.pointerId);
     const s = strokes[idx];
     const L = strokeLen(s);
     const q = toLetter(e);
     const pr = project(s, q, 0, Math.min(L * 0.25, 18));
     if (!pr || pr.d > TOL + (guide === 'none' ? 10 : 4)) { warn(guide === 'full' ? '초록 점에서 시작해 봐!' : '어디서 시작하는지 기억해 봐!'); return; }
-    st.current.active = true; st.current.s = pr.s; st.current.last = q;
+    st.current.active = true; st.current.pointer = e.pointerId; st.current.s = pr.s; st.current.last = q;
     sfx.scribble();
   };
 
   const move = (e: PointerEvent) => {
     const S = st.current;
-    if (!S.active || done) return;
+    if (!S.active || done || S.pointer !== e.pointerId) return;
     const s = strokes[idx];
     const L = strokeLen(s);
     const q = toLetter(e);
@@ -157,13 +157,18 @@ export function TraceBoard({ ch, guide, onDone, onMood, quiet, test, onMiss }: B
     if (S.s >= L - Math.min(6, L * 0.08)) finishStroke();
   };
 
-  const up = () => {
+  const up = (e: PointerEvent) => {
     const S = st.current;
-    if (!S.active || done) return;
+    if (!S.active || done || S.pointer !== e.pointerId) return;
     const L = strokeLen(strokes[idx]);
     if (S.s >= L * 0.82) { finishStroke(); return; }
     S.active = false; clear();
     warn('끝까지 쭉 그어 봐!');
+  };
+  // 전화·화면 회전 등으로 입력이 취소되면 성공·오답으로 세지 않고 같은 획부터 재시도.
+  const cancel = (e: PointerEvent) => {
+    if (st.current.pointer !== e.pointerId) return;
+    st.current.active = false; st.current.pointer = null; clear();
   };
 
   const cur = strokes[idx];
@@ -204,7 +209,7 @@ export function TraceBoard({ ch, guide, onDone, onMood, quiet, test, onMiss }: B
         )}
       </svg>
       {done && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div class="glyph-bounce"><LetterGlyph ch={ch} size={579} face={!isSyl} color={color} width={W} /></div></div>}
-      <canvas ref={cv} onPointerDown={down as any} onPointerMove={move as any} onPointerUp={up} onPointerCancel={up} />
+      <canvas ref={cv} onPointerDown={down as any} onPointerMove={move as any} onPointerUp={up as any} onPointerCancel={cancel as any} />
     </div>
   );
 }

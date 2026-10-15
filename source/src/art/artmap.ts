@@ -861,7 +861,24 @@ export const ART_MAP: Record<string, string> = {
   "bg.yard-cat.sky": "art/backgrounds/yard-cat.sky.2ad9b129.webp",
   "bg.yard-dog.front": "art/backgrounds/yard-dog.front.0f70f95c.webp",
   "bg.yard-dog.land": "art/backgrounds/yard-dog.land.24c15ab1.webp",
-  "bg.yard-dog.sky": "art/backgrounds/yard-dog.sky.b47b168f.webp"
+  "bg.yard-dog.sky": "art/backgrounds/yard-dog.sky.b47b168f.webp",
+  "word.w173": "art/words/w173.994d9400.webp",
+  "word.w174": "art/words/w174.85e7884f.webp",
+  "word.w175": "art/words/w175.78a2fbc6.webp",
+  "word.w176": "art/words/w176.b7b867b6.webp",
+  "word.w177": "art/words/w177.52e7cca9.webp",
+  "word.w178": "art/words/w178.c7576a74.webp",
+  "word.w179": "art/words/w179.b4e0c4a1.webp",
+  "word.w180": "art/words/w180.260e4b27.webp",
+  "word.w181": "art/words/w181.3248b98f.webp",
+  "word.w182": "art/words/w182.3bc6483e.webp",
+  "word.w183": "art/words/w183.091f5486.webp",
+  "word.w184": "art/words/w184.92644f68.webp",
+  "word.w185": "art/words/w185.97c26378.webp",
+  "word.w186": "art/words/w186.4c70baf3.webp",
+  "word.w187": "art/words/w187.4b009d75.webp",
+  "word.w188": "art/words/w188.3dd50970.webp",
+  "word.w189": "art/words/w189.44487bd0.webp"
 };
 
 export function artSrc(id: string): string | undefined {

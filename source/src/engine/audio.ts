@@ -1,6 +1,7 @@
 // 소리: 녹음 음성팩(있으면) → 없으면 기기 내장 음성. 효과음·배경음은 직접 합성.
 import { load } from './store';
 import { buddy } from './bus';
+import { AudioBufferCache } from './audioCache';
 
 /** 캐릭터 목소리 묶음: 앱 문장 → 녹음 키 목록 (d=강아지 유라, c=고양이 명쾌한, f=그 목소리로 고정) */
 type CharPool = { d?: string[]; c?: string[]; f?: 'd' | 'c' };
@@ -38,7 +39,8 @@ export function unlock() {
 }
 
 // ---------------- 음성 ----------------
-const decoded = new Map<string, AudioBuffer>();
+const decoded = new AudioBufferCache();
+const decoding = new Map<string, Promise<AudioBuffer | null>>();
 const levels = new Map<string, { gain: number; silent: boolean }>();
 const unavailable = new Set<string>();
 let current: AudioBufferSourceNode | null = null;
@@ -242,7 +244,15 @@ const isVoiceKey = (t: string) => /^(dog|cat)::/.test(t.trim());
 
 async function decodedClip(id: string, b64: string): Promise<AudioBuffer | null> {
   if (unavailable.has(id)) return null;
-  if (decoded.has(id)) return decoded.get(id)!;
+  const cached = decoded.get(id);
+  if (cached) return cached;
+  const pending = decoding.get(id);
+  if (pending) return pending;
+  const job = decodeClip(id, b64);
+  decoding.set(id, job);
+  try { return await job; } finally { decoding.delete(id); }
+}
+async function decodeClip(id: string, b64: string): Promise<AudioBuffer | null> {
   try {
     const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
     const raw = await audioCtx().decodeAudioData(bin.buffer);

@@ -174,13 +174,16 @@ export function load(): State {
 }
 
 let saveTimer = 0;
+/** 앱 닫기·백그라운드 전환 전에 대기 중인 진도를 즉시 기록. 저장 형식은 그대로. */
+export function flushSave() {
+  clearTimeout(saveTimer);
+  if (!mem) return;
+  try { localStorage.setItem(KEY, JSON.stringify(mem)); storageOk = true; } catch { storageOk = false; }
+}
 export function save(now = false) {
   if (!mem) return;
-  const doSave = () => {
-    try { localStorage.setItem(KEY, JSON.stringify(mem)); storageOk = true; } catch { storageOk = false; }
-  };
   clearTimeout(saveTimer);
-  if (now) doSave(); else saveTimer = window.setTimeout(doSave, 300);
+  if (now) flushSave(); else saveTimer = window.setTimeout(flushSave, 300);
   emit();
 }
 
@@ -436,6 +439,7 @@ export function setClockActive(on: boolean) { active = on; }
 if (typeof document !== 'undefined') document.addEventListener('pointerdown', () => { lastTouch = Date.now(); }, true);
 export function startClock(onTick?: () => void) {
   let lastT = performance.now();
+  let savedAt = lastT;
   clearInterval(tick);
   tick = window.setInterval(() => {
     const now = performance.now();
@@ -444,7 +448,7 @@ export function startClock(onTick?: () => void) {
     if (document.visibilityState === 'visible' && active && Date.now() - lastTouch < 180000) {
       const s = load();
       bumpDay(s.usage, Math.round(dt));
-      if (Math.random() < 0.1) { try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch { /* 없음 */ } }
+      if (now - savedAt >= 5000) { flushSave(); savedAt = now; }
     }
     onTick?.();
   }, 1000);

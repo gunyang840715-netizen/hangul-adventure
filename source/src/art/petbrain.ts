@@ -21,6 +21,7 @@ export interface WanderOpts {
   grow?: number;          // 그림 배율(자람: 0.6 + 0.4·growthOf) — 먹을 때 코끝 위치 계산용
   hold?: Spot | null;     // 정해진 자리(놀이 기구 등)에 가서 머물기 — 있으면 돌아다니지 않음
   restAct?: Act;          // hold에서의 자세(기본 앉기)
+  touch?: Spot | null;    // 손가락으로 직접 옮기는 자리(저장하지 않음)
 }
 export interface WanderState { x: number; y: number; act: Act; flip: boolean; poke: number; style: Record<string, string> }
 /** 화면이 움직이는 상자에 onTransitionEnd={w.onArrive}로 붙인다 — 도착한 뒤에 다음 동작(먹기 등)을 시작하려고
@@ -55,6 +56,11 @@ export function useWander(o: WanderOpts): Wander {
     const set = (p: Partial<WanderState>) => setSt(s => ({ ...s, ...p }));
     const fire = () => { const f = pending.current; pending.current = null; if (f) { clear(); f(); } };
     endRef.current = (e: Event) => { if (e.target === e.currentTarget && pending.current) fire(); };
+    if (o.touch) {
+      pending.current = null;
+      set({ x: o.touch.x, y: o.touch.y, act: 'sit', style: { transition: 'none' } });
+      return clear;
+    }
     if (!live) {
       // 예전처럼: 정해진 자리로(1.4초 부드럽게)
       const at = o.hold ?? (o.mode === 'sleep' ? o.bed : o.home);
@@ -133,6 +139,6 @@ export function useWander(o: WanderOpts): Wander {
     if (waking && can('stretch')) later(300, () => { set({ act: 'stretch' }); lastKind.current = 'stretch'; later(rnd(3400, 4200), next); });
     else later(cur.current.act === 'sleep' && o.mode === 'play' ? 300 : 600, next);
     return () => { clear(); pending.current = null; };
-  }, [live, o.mode, o.hold?.x, o.hold?.y, o.pet]);
+  }, [live, o.mode, o.hold?.x, o.hold?.y, o.pet, o.touch?.x, o.touch?.y]);
   return { ...st, onArrive };
 }

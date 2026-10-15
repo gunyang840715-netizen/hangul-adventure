@@ -218,6 +218,13 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
   const [nameIn, setNameIn] = useState(s.name);
   const [ask, setAsk] = useState<null | 'progress' | 'all'>(null);
   const done = (m: string) => { setMsg(m); syncSoon(400); force(x => x + 1); };
+  const copyBackup = async () => {
+    if (!code) { setMsg('먼저 백업 코드를 만들어 주세요.'); return; }
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('clipboard');
+      await navigator.clipboard.writeText(code); setMsg('복사했습니다.');
+    } catch { setMsg('자동으로 복사하지 못했어요. 아래 백업 코드를 길게 눌러 복사해 주세요.'); }
+  };
   const min = Math.round(todayMs() / 60000);
   const lesson = LESSONS[Math.min(s.lessonIdx, LESSONS.length - 1)];
   const limit = s.settings.dailyMin ? s.settings.dailyMin + todayExtraMin() : 0;
@@ -323,7 +330,7 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
       <h3>진도 백업</h3>
       <div class="row"><button class="opt" onClick={() => { setCode(exportCode()); setMsg('아래 코드를 복사해 두세요.'); }}>백업 코드 만들기</button>
         <button class="opt" onClick={() => { const ok = importCode(code); if (ok) { setNameIn(load().name); done('불러왔습니다.'); } else setMsg('코드가 올바르지 않습니다.'); }}>코드로 불러오기</button>
-        <button class="opt" onClick={() => { navigator.clipboard?.writeText(code).then(() => setMsg('복사했습니다.')); }}>복사</button></div>
+        <button class="opt" onClick={copyBackup}>복사</button></div>
       <textarea value={code} onInput={(e: any) => setCode(e.target.value)} placeholder="백업 코드 (예전 '몽글이' 앱의 백업 코드도 불러올 수 있습니다)" />
 
       {msg && <p style={{ color: '#5f3dc4', position: 'sticky', bottom: 0, background: '#f3efff', padding: 12, borderRadius: 10 }}>{msg}</p>}

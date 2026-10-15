@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { burst, centerOf } from '../art/Scene';
 import { Pet, growthOf } from '../art/Pet';
 import { useWander, canWander } from '../art/petbrain';
+import { usePetTouch } from '../art/pettouch';
 import { BuildArt, MatIcon } from '../art/Build';
 import { FurnPic, tileSrc } from '../art/Home';
 import { PaintedBg, useArtSwap } from '../art/paintbg';
@@ -137,8 +138,10 @@ export function RoomScreen({ place, onBack }: { place: 'doghouse' | 'cathouse'; 
   const bowl = placed(place, 'bowl');
   // 새 그림 친구는 방 안을 스스로 돌아다닌다(걷기·달리기·쉬기·밥그릇·장난감), 잘 때는 잠자리로 걸어가 엎드려 잔다
   const live = canWander(pet.id);
+  const touch = usePetTouch({ area: { x0: 110, x1: 860, y0: 380, y1: 468 }, onTap: () => tapPet() });
   const w = useWander({
     pet: pet.id, size: 230, mode: act, home: { x: playAt[0], y: playAt[1] }, bed: { x: sleepAt[0], y: sleepAt[1] },
+    touch: touch.target,
     area: { x0: 110, x1: 860, y0: 380, y1: 468 },
     spots: [{ x: playAt[0], y: playAt[1] }],
     bowl: bowl ? { x: S('bowl').x, y: S('bowl').y, w: S('bowl').w, h: S('bowl').h } : null,
@@ -157,10 +160,10 @@ export function RoomScreen({ place, onBack }: { place: 'doghouse' | 'cathouse'; 
         <button class="pill home-floor-btn" onPointerDown={(e) => { e.stopPropagation(); sfx.tap(); setSel('floor'); }}>🪵 바닥</button>
         {order.filter(s => s.front && s.id === 'rug').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
         {order.filter(s => s.front && s.id === 'bed').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
-        <div class={`home-pet ${act}`} style={{ left: w.x, top: w.y, ...w.style }} onTransitionEnd={w.onArrive} onPointerDown={(e) => { e.stopPropagation(); tapPet(); }} data-act={act} data-move={w.act}>
-          <Pet pet={pet.id} stage={pet.stage} level={pet.level} wear={pet.wear} size={230} mood={act === 'sleep' ? 'sleep' : 'happy'}
+        <div class={`home-pet ${act}`} style={{ left: w.x, top: w.y, ...w.style }} onTransitionEnd={w.onArrive} {...touch.bind} role="button" tabIndex={0} aria-label={`${pet.name}와 놀기`} data-petting={touch.petting ? 1 : 0} data-dragging={touch.dragging ? 1 : 0} data-act={act} data-move={w.act}>
+          <Pet pet={pet.id} stage={pet.stage} level={pet.level} wear={pet.wear} size={230} mood={touch.petting ? 'love' : act === 'sleep' ? 'sleep' : 'happy'}
             motion={live ? 'none' : act === 'sleep' ? 'none' : 'jump'} act={live ? w.act : undefined} flip={live ? w.flip : undefined} poke={w.poke} autoTalk={false} />
-          {(live ? w.act === 'sleep' : act === 'sleep') && <Zzz low={live} />}
+          {!touch.active && (live ? w.act === 'sleep' : act === 'sleep') && <Zzz low={live} />}
         </div>
         {order.filter(s => s.front && s.id !== 'rug' && s.id !== 'bed').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
       </div>
@@ -235,18 +238,20 @@ export function ParkScreen({ onBack }: { onBack: () => void }) {
 function ParkPet({ v, s, off, onTap }: { v: PetView; s: { x: number; y: number; cls: string; sleep?: boolean }; off: number; onTap: () => void }) {
   const ride = s.cls !== 'walk' && s.cls !== 'nap';
   const live = canWander(v.id);
+  const touch = usePetTouch({ area: { x0: 240, x1: 1160, y0: 420, y1: 505 }, onTap, offsetX: off });
   const w = useWander({
     pet: v.id, size: 170, mode: s.sleep ? 'sleep' : 'play', home: { x: s.x, y: s.y }, bed: { x: s.x, y: s.y },
+    touch: touch.target,
     area: { x0: 240, x1: 1160, y0: 420, y1: 505 }, hold: ride ? { x: s.x, y: s.y } : null,
   });
   // 놀이 기구 움직임(그네·트램펄린 등)은 도착한 뒤에
   const arrived = !live || (w.act !== 'walk' && w.act !== 'run' && Math.abs(w.x - s.x) < 2 && Math.abs(w.y - s.y) < 2);
-  const cls = ride ? (arrived ? s.cls : '') : live ? '' : s.cls;
+  const cls = touch.active ? '' : ride ? (arrived ? s.cls : '') : live ? '' : s.cls;
   return (
-    <div class={`park-pet ${cls}`} style={{ left: w.x + off, top: w.y, ...w.style }} onTransitionEnd={w.onArrive} data-act={s.cls} data-move={w.act} onPointerDown={(e) => { e.stopPropagation(); onTap(); }}>
-      <Pet pet={v.id} stage={v.stage} level={v.level} wear={v.wear} size={170} mood={s.sleep ? 'sleep' : 'happy'}
+    <div class={`park-pet ${cls}`} style={{ left: w.x + off, top: w.y, ...w.style }} onTransitionEnd={w.onArrive} data-act={s.cls} data-move={w.act} {...touch.bind} role="button" tabIndex={0} aria-label={`${v.name}와 놀기`} data-petting={touch.petting ? 1 : 0} data-dragging={touch.dragging ? 1 : 0}>
+      <Pet pet={v.id} stage={v.stage} level={v.level} wear={v.wear} size={170} mood={touch.petting ? 'love' : s.sleep ? 'sleep' : 'happy'}
         motion={live ? 'none' : s.sleep ? 'none' : s.cls === 'walk' ? 'bob' : 'none'} act={live ? w.act : undefined} flip={live ? w.flip : undefined} poke={w.poke} autoTalk={false} />
-      {(live ? w.act === 'sleep' : s.sleep) && <Zzz low={live} />}
+      {!touch.active && (live ? w.act === 'sleep' : s.sleep) && <Zzz low={live} />}
     </div>
   );
 }
@@ -286,8 +291,10 @@ export function YardScreen({ house, onBack }: { house: 'doghouse' | 'cathouse'; 
   // 잠은 집 앞 방석 위에서, 놀 때는 마당 잔디를 돌아다님(집 짓기 화면과 같은 자리라 방석 위치가 같다)
   const bed = house === 'doghouse' ? { x: 418, y: 452 } : { x: 412, y: 482 };
   const live = canWander(pet.id);
+  const touch = usePetTouch({ area: { x0: 120, x1: 1050, y0: 548, y1: 612 }, onTap: () => tapPet() });
   const w = useWander({
     pet: pet.id, size: 200, mode: act, home: { x: 560, y: 560 }, bed,
+    touch: touch.target,
     area: { x0: 120, x1: 1050, y0: 548, y1: 612 },
     spots: [{ x: 880, y: 560 }, { x: 240, y: 560 }],
     grow: 0.6 + 0.4 * growthOf(pet.level, pet.stage),
@@ -304,10 +311,10 @@ export function YardScreen({ house, onBack }: { house: 'doghouse' | 'cathouse'; 
         </div>
         <button class="pill home-wall-btn" data-yard-color="1" onPointerDown={(e) => { e.stopPropagation(); sfx.tap(); setSel('y-color'); }}>🎨 집 색</button>
         {slots.filter(sl => sl.front && !YARD_FULL.includes(sl.id)).map(sl => <SlotView s={sl} id={placed(place, sl.id)} edit sel={sel === sl.id} onTap={tap(sl.id)} />)}
-        <div class={`home-pet ${act}`} style={{ left: w.x, top: w.y, ...w.style }} onTransitionEnd={w.onArrive} onPointerDown={(e) => { e.stopPropagation(); tapPet(); }} data-act={act} data-move={w.act}>
-          <Pet pet={pet.id} stage={pet.stage} level={pet.level} wear={pet.wear} size={200} mood={act === 'sleep' ? 'sleep' : 'happy'}
+        <div class={`home-pet ${act}`} style={{ left: w.x, top: w.y, ...w.style }} onTransitionEnd={w.onArrive} {...touch.bind} role="button" tabIndex={0} aria-label={`${pet.name}와 놀기`} data-petting={touch.petting ? 1 : 0} data-dragging={touch.dragging ? 1 : 0} data-act={act} data-move={w.act}>
+          <Pet pet={pet.id} stage={pet.stage} level={pet.level} wear={pet.wear} size={200} mood={touch.petting ? 'love' : act === 'sleep' ? 'sleep' : 'happy'}
             motion={live ? 'none' : act === 'sleep' ? 'none' : 'bob'} act={live ? w.act : undefined} flip={live ? w.flip : undefined} poke={w.poke} autoTalk={false} />
-          {(live ? w.act === 'sleep' : act === 'sleep') && <Zzz low={live} />}
+          {!touch.active && (live ? w.act === 'sleep' : act === 'sleep') && <Zzz low={live} />}
         </div>
       </div>
       <div class="topbar">

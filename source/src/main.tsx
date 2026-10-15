@@ -3,6 +3,8 @@ import './font.css';
 import './styles.css';
 import { App } from './App';
 import { boot } from './engine/boot';
+import { flushSave } from './engine/store';
+import { AppBoundary } from './screens/Recovery';
 
 if (/[?&]fast=1/.test(location.search)) { (window as any).__FAST__ = true; (window as any).__SAID__ = []; }
 
@@ -30,6 +32,7 @@ function fit() {
   st.style.transform = `scale(${scale})`;
   st.style.setProperty('--side', side + 'px');
   st.style.setProperty('--top', top + 'px');
+  st.style.setProperty('--touch-min', (48 / scale) + 'px');
   (window as any).__STAGE__ = { w: W, h: H, scale, side, top };
 }
 (window as any).__FIT__ = fit;
@@ -38,9 +41,10 @@ window.visualViewport?.addEventListener('resize', fit);
 window.addEventListener('orientationchange', () => setTimeout(fit, 300));
 document.addEventListener('fullscreenchange', () => setTimeout(fit, 100));
 document.addEventListener('focusout', () => setTimeout(fit, 300));
+window.addEventListener('pagehide', flushSave);
 
 boot();
-render(<App />, document.getElementById('root')!);
+render(<AppBoundary><App /></AppBoundary>, document.getElementById('root')!);
 fit();
 
 // 앱 설치(홈 화면) 방식일 때: 인터넷이 없어도 열리도록
@@ -55,7 +59,7 @@ window.addEventListener('appinstalled', () => { (window as any).__INSTALL__ = nu
 // 2) 오래(20분 넘게) 다른 앱에 있다가 돌아오면 처음부터 새로 불러오기 (멈춘 화면·옛 버전 방지, 하던 곳은 저장돼 있어 그 자리부터)
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
+  if (document.visibilityState === 'hidden') { flushSave(); hiddenAt = Date.now(); return; }
   if (hiddenAt && Date.now() - hiddenAt > 20 * 60000 && !/[?&](fast|gallery|icon)=/.test(location.search)) { location.reload(); return; }
   navigator.serviceWorker?.getRegistration().then(r => r?.update()).catch(() => { /* 무시 */ });
   setTimeout(fit, 200);

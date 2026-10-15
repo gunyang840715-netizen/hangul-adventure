@@ -58,8 +58,11 @@ export function useArtReady(srcs: string[] | null | undefined): boolean {
     if (srcs.every(s => ready.has(s))) { setOk(true); return; }
     let alive = true;
     setOk(false);
-    Promise.all(srcs.map(preload)).then(r => { if (alive && r.every(Boolean)) setOk(true); });
-    return () => { alive = false; };
+    const check = () => Promise.all(srcs.map(preload)).then(r => { if (alive) setOk(r.every(Boolean)); });
+    const retry = () => { srcs.forEach(src => failed.delete(src)); check(); };
+    check();
+    window.addEventListener('online', retry);
+    return () => { alive = false; window.removeEventListener('online', retry); };
   }, [key]);
   return ok;
 }

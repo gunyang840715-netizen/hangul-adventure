@@ -34,7 +34,7 @@
 
 ## 검사 실행
 
-`npm run check`에 기존 검사와 `continuity_check.mts`, `reliability_check.mts`, `backup_check.mts`, `side_rig_check.mts`, `learning_rules_check.mts`, `storage_read_check.mts`, `remote_state_check.mts`가 포함된다. 브라우저 검사는 `scripts/qa/vite.config.ts`로 별도 빌드한 `scripts/qa/runner.html`을 연다. 검사는 실제 폰/태블릿이나 서버에 쓰지 않고 별도 로컬 환경에서 수행한다.
+`npm run check`에 기존 검사와 `continuity_check.mts`, `reliability_check.mts`, `backup_check.mts`, `side_rig_check.mts`, `learning_rules_check.mts`, `storage_read_check.mts`, `remote_state_check.mts`, `pet_loading_check.mts`가 포함된다. 브라우저 검사는 `scripts/qa/vite.config.ts`로 별도 빌드한 `scripts/qa/runner.html`을 연다. 검사는 실제 폰/태블릿이나 서버에 쓰지 않고 별도 로컬 환경에서 수행한다.
 
 ## 10월 16일 추가 개선
 
@@ -56,3 +56,6 @@
 - **페르시안 먹기 꾸미기:** 기존 그림의 눈 감는 칸에서 자동 머리 추적이 실패했다. 탐색을 넓힌 후보도 안경이 이마에 놓여 제외하고, 이 칸의 실제 눈·머리·목·머리 둘레를 직접 검수한 기준점으로 지정했다. 나머지 3칸은 기존 추적 기준을 통과한다. 기존 66동작·334프레임 좌표를 보존하고 먹기 4프레임만 추가했다(현재 67동작·338프레임). 실제 PaintPet 렌더러로 4칸의 모자·안경·목걸이·옷을 확인했다. 원본 그림·기록 형식 변경 없음.
 - **꾸미기 검수 일치:** Python 미리보기도 실제 앱처럼 목걸이 위에 턱·귀를 다시 그린다. `HANGUL_QA_PAGE=side`는 학습 저장/연동을 쓰지 않고 실제 렌더러의 각 칸을 고정해 확인한다. 좌표 검사에 직접 지정한 기준점의 범위·변환 중복 방지·기존 몸통 상자 보존 검사를 추가했다.
 - 추가 복구 지점: 프로젝트 상위 `backups/before-persian-side-20261016`.
+
+- **느린 통신 중 꾸미기 유지:** 동작 그림을 아직 받지 못해 정면 그림을 대신 그리면서도 정면 꾸미기는 숨기는 오류를 재현·수정했다. 이제 실제 그린 그림에 맞춰 꾸미기 표시를 전환한다. 다운로드 대기·실패 중 정면 모자/안경/옷을 유지하고, 그림 복구 후 옆모습 꾸미기로 돌아오는 것을 실제 PaintPet에 가상 이미지 로딩을 연결해 검사했다. 저장·동작 타이밍·원화는 변경하지 않았다.
+- 추가 복구 지점: 프로젝트 상위 `backups/before-pet-loading-20261016`.

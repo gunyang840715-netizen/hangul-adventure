@@ -338,14 +338,15 @@ export class PaintPet {
   }
   frame(dt: number) {
     this.inp.reduce = !!reduceMQ?.matches;
-    const pose = this.anim.step(dt, this.inp);
-    if (this.visible) this.draw(pose);
+    let pose = this.anim.step(dt, this.inp);
+    // 동작 그림을 기다리는 동안 실제로는 정면 그림을 그린다. 정면 꾸미기도 함께 유지.
+    if (this.visible && !this.draw(pose) && pose.sprite) pose = { ...pose, sprite: null };
     // WebGL 없이 통째로 그릴 때는 머리가 따로 돌지 않으니 머리 아이템도 몸을 따라가게
     this.o.onPose?.(getGL() ? pose : { ...pose, head: pose.root });
   }
-  private draw(pose: Pose) {
+  private draw(pose: Pose): boolean {
     const c = this.ctx, r = PAINT_RIG[this.o.id];
-    if (!c || !r) return;
+    if (!c || !r) return false;
     const px = this.px;
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.clearRect(0, 0, this.cw, this.ch);
@@ -379,18 +380,18 @@ export class PaintPet {
           }
         }
         c.filter = 'none';
-        return;
+        return true;
       }
       // 연속 동작 그림이 아직 없으면 정면 그림으로
     }
     if (glDraw(this.o.id, pose, this.cw, this.ch)) {
       c.setTransform(1, 0, 0, 1, 0, 0);
       c.drawImage(glc, 0, glc.height - this.ch, this.cw, this.ch, 0, 0, this.cw, this.ch);
-      return;
+      return false;
     }
     // WebGL이 없을 때: 통째로 움직이고 눈·입 덮개만 겹침
     const f = IMGS[`pet.${this.o.id}.paint-front`]?.img;
-    if (!f) return;
+    if (!f) return false;
     toCanvas(); c.transform(...pose.root);
     if (pose.dim < 1) c.filter = `brightness(${pose.dim})`;
     c.drawImage(f, 0, 0, TEX, TEX);
@@ -401,6 +402,7 @@ export class PaintPet {
     };
     over('eyes', r.eyesBox, pose.eyes); over('mouth', r.mouthBox, pose.mouth);
     c.filter = 'none';
+    return false;
   }
   destroy() { this.io?.disconnect(); }
 }

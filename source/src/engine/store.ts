@@ -169,7 +169,11 @@ export function load(): State {
   let o: any = null;
   try {
     const raw = localStorage.getItem(KEY) ?? localStorage.getItem(OLD_KEY);
-    if (raw) o = JSON.parse(raw);
+    if (raw !== null) {
+      const parsed = JSON.parse(raw);
+      if (!isBackupPayload(parsed)) throw new Error('bad_local_state');
+      o = parsed;
+    }
   } catch { storageOk = false; readRecovery = true; }
   try { mem = normalize(o); }
   catch { storageOk = false; readRecovery = true; mem = fresh(); }

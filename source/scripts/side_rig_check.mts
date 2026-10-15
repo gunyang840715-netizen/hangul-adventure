@@ -49,4 +49,7 @@ for (let i = 0; i < PAINT_RIG.persian.motions.eat.n; i++) assert.ok(sideFrame('p
 const closedEyes = sideFrame('persian', 'eat', 1)!;
 assert.deepEqual(closedEyes.r.e, [366, 275], '눈을 감는 칸의 안경은 이마 대신 실제 눈 위치를 사용');
 for (const id of ['hat:straw', 'glasses:round', 'neck:scarf']) assert.ok(finite(placeM(id.split(':')[0] as any, closedEyes.r, ITEM_SIDE[id]), 6));
+for (const pid of ['corgi', 'russian', 'siamese', 'fold']) {
+  for (let i = 0; i < PAINT_RIG[pid].motions.scratch.n; i++) assert.ok(sideFrame(pid, 'scratch', i)?.b, `귀 긁기 꾸미기 ${pid}/${i}`);
+}
 console.log(`꾸미기 좌표 ${Object.keys(PET_SIDE).length}마리 · ${motions}동작 · ${frames}프레임 검사 통과`);

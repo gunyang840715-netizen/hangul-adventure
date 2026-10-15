@@ -62,7 +62,7 @@ def anchors(a):
 
 # 옆모습 꾸미기를 붙이는 동작과 몸통 회전 범위(도). sitstand는 마지막 칸(정면)을 빼고.
 SIDE_MOTIONS = {'idle': [0], 'walk': [-4, 0, 4], 'run': [-8, -4, 0, 4, 8], 'jump': [-12, -8, -4, 0, 4, 8, 12], 'eat': [0],
-                'sitstand': [-24, -18, -12, -6, 0], 'stretch': [-16, -12, -8, -4, 0, 4, 8]}
+                'sitstand': [-24, -18, -12, -6, 0], 'stretch': [-16, -12, -8, -4, 0, 4, 8], 'scratch': [0]}
 if MOTIONS - SIDE_MOTIONS.keys(): raise ValueError('지원하지 않는 동작: ' + ','.join(sorted(MOTIONS - SIDE_MOTIONS.keys())))
 NCC_OK, IOU_OK, BODY_OK = 0.42, 0.72, 0.30
 

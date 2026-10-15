@@ -167,6 +167,7 @@ export function Book({ onBack }: { onBack: () => void }) {
 // ---------- 부모 설정 ----------
 const SYNC_ERR: [RegExp, string][] = [
   [/local_read/, '이 기기의 기존 기록을 먼저 복구해 주세요'],
+  [/bad_state/, '받은 기록을 확인할 수 없어 이 기기의 기록을 그대로 보관했어요'],
   [/bad_code/, '연동 코드가 서버와 다릅니다'],
   [/old_server/, '서버 코드가 옛 버전입니다 — 새 서버 코드로 바꾸고 "새 버전"으로 다시 배포해 주세요'],
   [/no_url/, '서버 주소가 없습니다'],

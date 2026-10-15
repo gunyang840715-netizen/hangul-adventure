@@ -1,4 +1,4 @@
-// 불러오기 전에만 검증한다. 저장 형식·기기 연동·옛 백업의 기본값 보완은 바꾸지 않는다.
+// 외부에서 받은 기록을 적용하기 전에 검증한다. 저장 형식·옛 백업의 기본값 보완은 유지한다.
 type Obj = Record<string, any>;
 const obj = (v: unknown): v is Obj => !!v && typeof v === 'object' && !Array.isArray(v);
 const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0;
@@ -37,4 +37,10 @@ export function isBackupPayload(o: unknown): boolean {
   if (o.reviewDay !== undefined && o.reviewDay !== -1 && !index(o.reviewDay)) return false;
   if (!['epoch', 'nameT', 'settingsT', 'petsT', 'lastItemT', 'resumeT', 'lastPassT', 'reviewDayT', 'holdT'].every(k => o[k] === undefined || num(o[k]))) return false;
   return true;
+}
+
+/** 기기 연동은 백업과 달리 전체 상태를 주고받는다. v2부터 있던 공통 필드를 확인. */
+export function isSyncPayload(o: unknown): boolean {
+  return obj(o) && (o.v === 2 || o.v === 3) && isBackupPayload(o) &&
+    ['stars', 'adventures', 'usage', 'lessonsByDay', 'settings'].every(k => obj(o[k])) && strings(o.owned);
 }

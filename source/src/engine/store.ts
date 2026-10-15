@@ -4,7 +4,7 @@
 import { mergeState, sumMap } from '../../shared/merge.js';
 import { PET, DEFAULT_PETS, SNACK, DROP_ORDER, OLD_ITEM, ITEM, BUILDS, BUILD, levelOf, stageOf, type Species, type Slot } from '../data/pets';
 import { CURRICULUM_VER, migrateLessonIdx } from '../data/curriculum';
-import { isBackupPayload } from './backup';
+import { isBackupPayload, isSyncPayload } from './backup';
 
 export interface ItemStat { box: number; due: number; seen: number; right: number; wrong: number; last: number }
 
@@ -195,11 +195,15 @@ export function storageNeedsRecovery() { return readRecovery; }
 
 /** 다른 기기에서 받은 상태(들)를 합치기 */
 export function absorb(...remote: any[]) {
+  // 한 응답 전체를 먼저 확인해 부분 병합·손상 상태에 의한 초기화를 막는다.
+  if (remote.some(r => !isSyncPayload(r))) return false;
   const before = JSON.stringify(load());
+  if (readRecovery) return false;
   let m: any = load();
-  for (const r of remote) if (r && (r.v === 2 || r.v === 3)) m = mergeState(m, normalize(r));
+  for (const r of remote) m = mergeState(m, normalize(r));
   mem = normalize(m);
   if (JSON.stringify(mem) !== before) save(true);
+  return true;
 }
 
 /** 부모 조작(초기화·단계 이동·백업 불러오기): 새 epoch로 두 기기 모두 이 상태를 따르게 */

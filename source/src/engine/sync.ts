@@ -64,7 +64,7 @@ export function syncNow(): Promise<boolean> {
       const j = await call({ a: 'sync3', dev: dev(), state: load() });
       // 옛 서버 코드면 받은 진도를 쓰지 않는다
       if (!j.ver || j.ver < 3 || !Array.isArray(j.states)) throw new Error('old_server');
-      absorb(...j.states);
+      if (!absorb(...j.states)) throw new Error('bad_state');
       note({ ok: true, at: Date.now(), error: undefined, busy: false });
       return true;
     } catch (e: any) {

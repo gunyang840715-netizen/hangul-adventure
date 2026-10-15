@@ -7,6 +7,7 @@ import { say, sayAll, sfx, petEx, clipUsable } from '../engine/audio';
 import { introduce } from '../engine/srs';
 import { josa } from '../lib/hangul';
 import { Buddies } from './Buddies';
+import { WordPic } from '../art/WordPic';
 import { useScene, type GameProps } from './common';
 import { introName, introSound, introExample, CUE_GAP } from '../data/voice';
 
@@ -79,7 +80,7 @@ export function Intro({ step, onDone, outfit }: GameProps<'intro'>) {
         {(phase === 'example' || phase === 'tap') && (
           <div class="card slide-up" style={{ position: 'absolute', right: 40, top: 150, width: 220, height: 260, flexDirection: 'column', gap: 6 }}
             onClick={() => { sfx.tap(); if (pe) say(pe.k); else say(j.ex.word); }}>
-            <div style={{ fontSize: 120 }}>{exEmoji}</div>
+            <WordPic word={exWord} emoji={exEmoji} size={150} />
             <div style={{ fontSize: 44 }}><b style={{ color: j.color, fontWeight: 'normal' }}>{exWord.split(' ').pop()![0]}</b>{exWord.split(' ').pop()!.slice(1)}</div>
           </div>
         )}

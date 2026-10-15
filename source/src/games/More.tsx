@@ -10,6 +10,7 @@ import { record } from '../engine/srs';
 import { decompose, hasHangul } from '../lib/hangul';
 import { JAMO } from '../data/jamo';
 import { Buddies, pair } from './Buddies';
+import { WordPic } from '../art/WordPic';
 import { useScene, praise, spoken, cue, sayCue, spread, CUE_GAP, Dots, Speaker, gentle, useTurn, type GameProps, penalty } from './common';
 import { askLines } from '../data/voice';
 
@@ -365,7 +366,7 @@ export function Memory({ step, onDone, outfit }: GameProps<'memory'>) {
               <div class={`flip ${up ? 'up' : ''} ${matched.includes(i) ? 'done' : ''}`} data-pair={c.id} data-up={up ? 1 : 0} onPointerDown={(e) => flip(i, e)}>
                 <div class="flip-in">
                   <div class="flip-back"><span>🐾</span></div>
-                  <div class={`flip-face ${c.kind === 'sound' ? 'sound' : ''}`} style={{ fontSize: c.kind === 'pic' || c.kind === 'sound' ? 96 : c.face.length > 2 ? 52 : 86 }}>{c.face}</div>
+                  <div class={`flip-face ${c.kind === 'sound' ? 'sound' : ''}`} style={{ fontSize: c.kind === 'pic' || c.kind === 'sound' ? 96 : c.face.length > 2 ? 52 : 86 }}>{c.kind === 'pic' ? <WordPic word={c.id} emoji={c.face} size={140} /> : c.face}</div>
                 </div>
               </div>
             );

@@ -32,7 +32,7 @@ CONF = {
     'furniture': dict(group='furniture', size=640, limit=70000, grid=3),   # 가구는 정사각형 X(꼭 맞게 자른 그대로) — 앱이 자리 상자에 비율 맞춰 넣음
     'yard': dict(group='yard', size=640, limit=70000, grid=3),
     'park': dict(group='park', size=720, limit=70000, grid=3),
-    'words': dict(group='words', size=256, limit=40000, grid=4),
+    'words': dict(group='words', size=320, limit=40000, grid=4),
 }[MODE]
 TIGHT = MODE in ('furniture', 'yard', 'park')
 

@@ -3,6 +3,7 @@ import { appTitle } from '../lib/appTitle';
 import { useEffect, useState } from 'preact/hooks';
 import { Backdrop, burst, centerOf } from '../art/Scene';
 import { Buddy } from '../games/Buddies';
+import { WordPic } from '../art/WordPic';
 import { LetterGlyph } from '../art/LetterGlyph';
 import { JAMO } from '../data/jamo';
 import { LESSONS, UNITS, wordsFor, knownAfter } from '../data/curriculum';
@@ -142,7 +143,7 @@ export function Book({ onBack }: { onBack: () => void }) {
               <LetterGlyph ch={sel} size={300} class="glyph-bounce" />
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                 <div style={{ fontSize: 60 }}>{JAMO[sel].name}</div>
-                <div style={{ fontSize: 110 }}>{JAMO[sel].ex.emoji}</div>
+                <WordPic word={JAMO[sel].ex.word} emoji={JAMO[sel].ex.emoji} size={130} />
                 <div style={{ fontSize: 40 }}>{JAMO[sel].ex.word}</div>
               </div>
             </div>
@@ -153,7 +154,7 @@ export function Book({ onBack }: { onBack: () => void }) {
           {words.length === 0 && <div class="pill" style={{ fontSize: 34 }}>자음을 배우면 낱말을 읽을 수 있어!</div>}
           {words.map(w => (
             <button class="card" style={{ width: 170, height: 170, flexDirection: 'column' }} onClick={(e) => { sfx.tap(); const [x, y] = centerOf(e.currentTarget); burst(x, y); say(w.text); }}>
-              <div style={{ fontSize: 76 }}>{w.emoji}</div><div style={{ fontSize: 36 }}>{w.text}</div>
+              <WordPic word={w.text} emoji={w.emoji} size={100} /><div style={{ fontSize: 36 }}>{w.text}</div>
             </button>
           ))}
         </div>

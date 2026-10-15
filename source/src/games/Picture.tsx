@@ -5,6 +5,7 @@ import { say, sfx } from '../engine/audio';
 import { record } from '../engine/srs';
 import { shuffle } from '../lib/hangul';
 import { Buddies } from './Buddies';
+import { WordPic } from '../art/WordPic';
 import { useScene, praise, Dots, Speaker, gentle, useTurn, type GameProps, penalty } from './common';
 
 export function Picture({ step, onDone, outfit }: GameProps<'picture'>) {
@@ -66,7 +67,7 @@ export function Picture({ step, onDone, outfit }: GameProps<'picture'>) {
       <div class="layer">
         <div style={{ position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)' }}><Dots n={step.rounds.length} done={ri} /></div>
         <div key={ri} class="card slide-up" style={{ position: 'absolute', left: 250, top: 150, width: 420, height: 440, flexDirection: 'column' }}>
-          {p2w ? <div class="emoji-big">{r.word.emoji}</div>
+          {p2w ? <WordPic word={r.word.text} emoji={r.word.emoji} size={330} />
             : <div style={{ fontSize: r.word.text.length > 3 ? 100 : 140, color: '#5a3d73' }}>{r.word.text}</div>}
           {!p2w && <Speaker style={{ position: 'absolute', right: -30, bottom: -30, width: 80, height: 80, fontSize: 36 }} onClick={help} />}
         </div>
@@ -75,7 +76,7 @@ export function Picture({ step, onDone, outfit }: GameProps<'picture'>) {
             <button class={`card slide-up ${st[i] === 'wrong' ? 'shake' : ''} ${st[i] === 'right' ? 'right-glow' : ''} ${st[i] === 'hint' ? 'hint-glow' : ''}`}
               style={{ width: 460, height: 150, fontSize: p2w ? (w.text.length > 4 ? 60 : 78) : 100, color: '#5a3d73', animationDelay: `${i * 0.08}s` }}
               data-a={w.text === r.word.text ? 1 : 0} onPointerDown={(e) => choose(i, e)}>
-              {p2w ? w.text : w.emoji}
+              {p2w ? w.text : <WordPic word={w.text} emoji={w.emoji} size={136} />}
             </button>
           ))}
         </div>
@@ -148,7 +149,7 @@ export function Build({ step, onDone, outfit }: GameProps<'build'>) {
       <div class="layer">
         <div style={{ position: 'absolute', top: 24, left: '50%', transform: 'translateX(-50%)' }}><Dots n={step.words.length} done={wi} /></div>
         <div key={wi} class="card slide-up" style={{ position: 'absolute', left: 280, top: 110, width: 300, height: 300 }}>
-          <div class="emoji-big" style={{ fontSize: 170 }}>{w.emoji}</div>
+          <WordPic word={w.text} emoji={w.emoji} size={250} />
         </div>
         <div style={{ position: 'absolute', left: 620, top: 170, display: 'flex', gap: 18 }}>
           {[...w.text].map((ch, i) => (

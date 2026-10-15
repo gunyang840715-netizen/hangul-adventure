@@ -4,7 +4,7 @@ import type { JSX } from 'preact';
 import { onSpeaking } from '../engine/audio';
 import { PET, MAX_LEVEL, type Stage, type Slot } from '../data/pets';
 import { PET_PHOTO, PHOTO_BOX } from './petphotos';
-import { paintable, baseState, loadBase, loadMotions, rigOf, PaintPet as Painter, startPet, stopPet, VIEW, type Act } from './petpaint';
+import { paintable, baseState, loadBase, loadMotions, retryPaintImages, rigOf, PaintPet as Painter, startPet, stopPet, VIEW, type Act } from './petpaint';
 import type { Mat } from './petanim';
 import { artSrc } from './artmap';
 import { ITEM_ART } from './items.gen';
@@ -82,8 +82,12 @@ function usePaintReady(id: string): boolean {
     if (!can) { setSt('fail'); return; }
     let live = true;
     setSt(baseState(id));
-    loadBase(id).then(ok => { if (live) setSt(ok ? 'ok' : 'fail'); });
-    return () => { live = false; };
+    const check = () => loadBase(id).then(ok => { if (live) setSt(ok ? 'ok' : 'fail'); });
+    const retry = () => { retryPaintImages(); check(); };
+    if (navigator.onLine !== false) retryPaintImages();
+    check();
+    window.addEventListener('online', retry);
+    return () => { live = false; window.removeEventListener('online', retry); };
   }, [id]);
   return can && st === 'ok';
 }

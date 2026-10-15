@@ -5,6 +5,7 @@ import { useWander } from '../../src/art/petbrain';
 import { TraceBoard } from '../../src/games/Trace';
 import { useArtReady } from '../../src/art/paintbg';
 import { AppBoundary } from '../../src/screens/Recovery';
+import { loadBase, baseState, retryPaintImages } from '../../src/art/petpaint';
 import '../../src/styles.css';
 const w = window as any;
 w.__FAST__ = true; w.__SAID__ = [];
@@ -69,6 +70,20 @@ async function run() {
   try {
     render(<ImageCase />, mount); await wait(); check(mount.querySelector('[data-image-ready="false"]'), '그림 실패 시 대체 화면 유지');
     window.dispatchEvent(new Event('online')); await wait(); check(mount.querySelector('[data-image-ready="true"]'), '인터넷 복구 후 실패한 그림 다시 받기');
+  } finally { (window as any).Image = NativeImage; }
+  let petOnline = false, petAttempts = 0;
+  (window as any).Image = class {
+    onload: (() => void) | null = null; onerror: (() => void) | null = null;
+    set src(_: string) { petAttempts++; const ok = petOnline; setTimeout(() => ok ? this.onload?.() : this.onerror?.(), 0); }
+  };
+  try {
+    check(!(await loadBase('poodle')) && baseState('poodle') === 'fail', '친구 그림 연결 실패 상태 확인');
+    const before = petAttempts;
+    petOnline = true; retryPaintImages();
+    check(await loadBase('poodle'), '인터넷 복구 후 친구 그림 정상 복원');
+    check(petAttempts > before, '실패한 친구 그림 다시 요청');
+    const after = petAttempts; retryPaintImages(); await loadBase('poodle');
+    check(petAttempts === after, '정상 복원된 친구 그림은 중복 다운로드하지 않음');
   } finally { (window as any).Image = NativeImage; }
   render(<AppBoundary><Broken /></AppBoundary>, mount); await wait();
   check(mount.querySelector('[role="alert"] button')?.textContent?.includes('다시 열기'), '화면 오류 때 기록 초기화 없이 다시 열기 제공');

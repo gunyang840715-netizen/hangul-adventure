@@ -54,6 +54,13 @@ function img(key: string): Load {
   return L;
 }
 const BASE = ['front', 'eyes', 'mouth'];
+/** 연결 복구 때 실패한 그림만 다시 받기. 정상 그림·진행 중 요청은 재사용한다. */
+export function retryPaintImages() {
+  for (const key of Object.keys(IMGS)) {
+    if (IMGS[key].state !== 'fail' || !ART_MAP[key]) continue;
+    delete IMGS[key]; img(key);
+  }
+}
 /** 정면 그림·눈·입 덮개 (모두 받으면 true, 하나라도 실패하면 false) */
 export function loadBase(id: string): Promise<boolean> {
   const keys = BASE.filter(k => ART_MAP[`pet.${id}.paint-${k}`]);

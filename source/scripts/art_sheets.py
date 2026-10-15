@@ -15,6 +15,7 @@
 #   python3 source/scripts/art_sheets.py yard      <art-src/6-yard 폴더>   <저장소 맨 위>   (마당 기구 — 그림 키 furn.y-<자리>.<이름>)
 #   python3 source/scripts/art_sheets.py park      <art-src/7-park 폴더>   <저장소 맨 위>   (놀이터 기구 — furn.<자리>.<이름>)
 #   python3 source/scripts/art_sheets.py words     <art-src/9-words 폴더>  <저장소 맨 위>   (낱말 그림 — word.<번호>)
+#   python3 source/scripts/art_sheets.py items-side <art-src/2-items 폴더> <저장소 맨 위>   (꾸미기 옆모습 — iside.<slot>.<key>, 모자·안경·목걸이·옷만)
 # 시트마다 같은 이름의 .json({"1": "id", …} — 왼쪽 위부터 오른쪽으로)이 있어야 한다. 같은 시트의 -vN이 있으면 가장 큰 N을 쓴다.
 # 꾸미기는 sheet-NN 말고 사용자 요청으로 더한 옷 시트(clothes-dog-extra-NN · clothes-cat-extra-NN)도 함께 읽는다.
 import sys, os, re, json, glob, hashlib, io
@@ -34,7 +35,10 @@ CONF = {
     'yard': dict(group='yard', size=640, limit=70000, grid=3),
     'park': dict(group='park', size=720, limit=70000, grid=3),
     'words': dict(group='words', size=320, limit=40000, grid=4),
+    'items-side': dict(group='items', size=256, limit=40000, grid=4),
 }[MODE]
+SIDE = MODE == 'items-side'
+SIDE_SLOTS = {'hat', 'glasses', 'neck', 'clothes'}          # 걷기·달리기 때 붙이는 것(신발·장난감은 옆모습에서 숨김)
 TIGHT = MODE in ('furniture', 'yard', 'park')
 
 # 정사각형 안에서 놓는 쪽(세로): 'bottom' | 'top' | 'center'
@@ -50,13 +54,14 @@ def key_of(id_):
     if MODE == 'snacks': return f'snack.{id_}', id_
     if MODE == 'words': return f'word.{id_}', id_
     slot, k = id_.split(':')
+    if SIDE: return f'iside.{slot}.{k}', f'{slot}-{k}-side'
     return (f'item.{slot}.{k}' if MODE == 'items' else f'furn.{slot}.{k}'), f'{slot}-{k}'
 
 
 def align_of(id_):
     if MODE in ('snacks', 'words'): return 'center'
     slot = id_.split(':')[0]
-    if MODE == 'items': return ITEM_ALIGN.get(slot, 'center')
+    if MODE in ('items', 'items-side'): return ITEM_ALIGN.get(slot, 'center')
     return FURN_ALIGN.get(slot, 'bottom')
 
 
@@ -68,7 +73,7 @@ def latest_sheets():
         m = re.match(r'((?:sheet|clothes-(?:dog|cat)-extra)-\d+(?:-side)?)(?:-v(\d+))?\.png$', os.path.basename(f))
         if not m: continue
         base, v = m.group(1), int(m.group(2) or 1)
-        if base.endswith('-side'): continue                       # 옆모습 시트는 아직 쓰지 않음(옆모습 동작에 붙일 때)
+        if base.endswith('-side') != SIDE: continue               # 옆모습 시트는 items-side에서만
         if base in SKIP: continue
         if base not in out or v > out[base][0]: out[base] = (v, f)
     res = []
@@ -221,6 +226,16 @@ def write_items_gen():
                                          + json.dumps(out, ensure_ascii=False) + ';\n')
 
 
+def write_side_gen():
+    p = os.path.join(REPO, 'source/src/art/itemside.gen.ts')
+    out = {i: [round(v, 3) for v in BOX[i]] for i in sorted(BOX)}
+    head = ('// 자동으로 만든 파일 — source/scripts/art_sheets.py items-side (손으로 고치지 않음)\n'
+            '// 꾸미기 옆모습 그림(그림 키 iside.<slot>.<key>): 정사각형 그림 안에서 물건이 있는 곳 [x0, y0, x1, y1](0~1).\n'
+            '// 친구에게 붙이는 자리는 art/petside.ts가 친구의 옆모습 기준점(petside.gen.ts)으로 정한다.\n')
+    open(p, 'w', encoding='utf-8').write(head + 'export const ITEM_SIDE: Record<string, [number, number, number, number]> = '
+                                         + json.dumps(out, ensure_ascii=False) + ';\n')
+
+
 def update_artmap(amap, prefix):
     p = os.path.join(REPO, 'source/src/art/artmap.ts')
     s = open(p, encoding='utf-8').read()
@@ -245,9 +260,10 @@ def main():
         got = cells(I, grid)
         log(f'{os.path.basename(png)}: 칸 {sorted(got)} / 목록 {len(cmap)}')
         for c, id_ in cmap.items():
+            if SIDE and id_.split(':')[0] not in SIDE_SLOTS: continue
             J = got.get(int(c))
             if J is None: log(f'  {id_}: 그림 없음(칸 {c})'); continue
-            S = to_tight(J, size) if TIGHT else to_square(J, size, align_of(id_), id_ if MODE == 'items' else None)
+            S = to_tight(J, size) if TIGHT else to_square(J, size, align_of(id_), id_ if MODE in ('items', 'items-side') else None)
             data, q = webp(S, limit)
             k, name = key_of(id_)
             amap[k] = put(group, name, data)
@@ -263,8 +279,9 @@ def main():
     for rel in amap.values(): files[rel] = os.path.getsize(os.path.join(REPO, rel))
     man['files'] = [{'u': u, 'b': b} for u, b in sorted(files.items())]
     json.dump(man, open(man_p, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
-    update_artmap(amap, {'snacks': 'snack.', 'items': 'item.', 'furniture': 'furn.', 'yard': 'furn.', 'park': 'furn.', 'words': 'word.'}[MODE])
+    update_artmap(amap, {'snacks': 'snack.', 'items': 'item.', 'furniture': 'furn.', 'yard': 'furn.', 'park': 'furn.', 'words': 'word.', 'items-side': 'iside.'}[MODE])
     if MODE == 'items': write_items_gen()
+    if SIDE: write_side_gen()
     tot = sum(os.path.getsize(os.path.join(REPO, v)) for v in amap.values())
     log(f'끝: {len(amap)}장, {tot // 1024} KB')
     if QA and qa:

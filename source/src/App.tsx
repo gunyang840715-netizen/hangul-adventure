@@ -22,6 +22,13 @@ function Gallery() {
   const g = new URLSearchParams(location.search).get('gallery');
   const box = { background: '#e8f3ff', display: 'flex', flexWrap: 'wrap', gap: 6, padding: '40px 12px 12px', alignContent: 'flex-start', width: 1280, height: 800, position: 'fixed', left: 0, top: 0 } as any;
   const lab = (t: string) => <div style={{ fontSize: 16, textAlign: 'center', fontFamily: 'sans-serif' }}>{t}</div>;
+  if (g === '8') {   // 옆모습 꾸미기 확인용: ?gallery=8&act=walk&wear=hat:straw,glasses:round,neck:scarf,clothes:stripe
+    const q = new URLSearchParams(location.search);
+    const act = (q.get('act') || 'walk') as any;
+    const wear = Object.fromEntries((q.get('wear') || 'hat:straw,glasses:round,neck:scarf,clothes:stripe').split(',').map(x => x.split(':')));
+    const only = q.get('pets')?.split(',');
+    return <div style={box}>{PETS.filter(p => !only || only.includes(p.id)).map(p => <div><Pet pet={p.id} wear={wear} size={+(q.get('size') || 230)} motion="none" act={act} autoTalk={false} />{lab(p.breed)}</div>)}</div>;
+  }
   if (g === '2') return (
     <div style={box}>{PETS.map(p => (['baby', 'kid', 'adult'] as const).map(st => <div><Pet pet={p.id} stage={st} size={118} motion="none" autoTalk={false} />{lab(`${p.breed} ${st}`)}</div>))}</div>
   );

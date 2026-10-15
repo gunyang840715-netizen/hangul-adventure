@@ -153,8 +153,8 @@ export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}
 const mtx = (a: ArrayLike<number>) => `matrix(${Array.from(a, v => +v.toFixed(4)).join(' ')})`;
 const VB = `${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`;
 
-/** 정면 그림 한 장을 휘게 그리는 캔버스 + 꾸미기 아이템(예전 SVG 그림을 새 그림의 머리·목·몸·발 위치에 맞춰 얹음).
- *  연속 동작(걷기 등) 중에는 옆모습 아이템 그림이 아직 없어 아이템을 잠깐 숨긴다. */
+/** 정면 그림 한 장을 휘게 그리는 캔버스 + 꾸미기 아이템(새 그림·예전 SVG를 새 그림의 머리·목·몸·발 위치에 맞춰 얹음).
+ *  연속 동작(걷기 등) 중에는 이 SVG 층을 숨기고, 캔버스가 옆모습 아이템(모자·안경·목걸이·옷)을 칸마다 그린다(petside.ts). */
 function PaintedPet({ pid, size, mood, motion, wear, g, stage, talking, cls, style, flip, act, poke }:
   { pid: string; size: number; mood: Mood; motion: Motion; wear: Wear; g: number; stage: Stage; talking: boolean; cls: string; style?: any; flip?: boolean; act?: Act; poke: number }) {
   const r = rigOf(pid)!;
@@ -164,6 +164,7 @@ function PaintedPet({ pid, size, mood, motion, wear, g, stage, talking, cls, sty
   const [cid] = useState(() => 'pp' + (++uid));
   const now = { mood, motion, talking, g, act, poke };
   const cur = useRef(now); cur.current = now;
+  const wearR = useRef(wear); wearR.current = wear;
   useEffect(() => {
     let shown = '';
     const p = new Painter({
@@ -179,11 +180,12 @@ function PaintedPet({ pid, size, mood, motion, wear, g, stage, talking, cls, sty
     });
     Object.assign(p.inp, cur.current);
     p.setSize(size);
+    p.setWear(wearR.current);
     inst.current = p;
     startPet(p);
     return () => { stopPet(p); inst.current = null; };
   }, [pid]);
-  if (inst.current) { Object.assign(inst.current.inp, now); if (inst.current.size !== size) inst.current.setSize(size); }
+  if (inst.current) { Object.assign(inst.current.inp, now); inst.current.setWear(wear); if (inst.current.size !== size) inst.current.setSize(size); }
   useEffect(() => { if (act !== undefined) loadMotions(pid); }, [pid, act !== undefined]);
   const A = r.items;
   return (

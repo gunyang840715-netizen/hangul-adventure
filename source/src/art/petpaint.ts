@@ -4,10 +4,12 @@
 // · 걷기·달리기·점프·앉기·엎드리기·잠은 손그림 연속 동작(한 줄 그림)을 넘겨 그린다(2D).
 // · 친구마다 캔버스 하나. WebGL은 하나만 만들어 돌려 쓰고(기기마다 개수 제한이 있음) 그린 것을 각 캔버스에 복사한다.
 // · WebGL이 안 되면 2D로(휘기 없이 통째로), 그림을 못 받으면 Pet.tsx가 예전 그림(사진 머리·SVG)으로 그린다.
+// · 연속 동작 중에는 옆모습 꾸미기(모자·안경·목걸이·옷)를 칸마다 머리·몸통 자리에 그린다(art/petside.ts). 옷은 몸 안에만, 머리·귀는 그 위에.
 // 그림은 그 친구가 화면에 나올 때 받는다(서비스워커는 설치 때 받지 않음 — 받은 뒤에는 저장해 둠).
 import { ART_MAP, artSrc } from './artmap';
 import { PAINT_RIG } from './petpaint.gen';
 import { PetAnim, type AnimIn, type Pose, type Mat } from './petanim';
+import { sideFrame, sideArt, sideRig, placeM, mul, SIDE_SLOTS, type M6, type SideSlot } from './petside';
 
 export type { Act } from './petanim';
 type Pt = [number, number];
@@ -264,6 +266,10 @@ export class PaintPet {
   private ctx: CanvasRenderingContext2D | null;
   private px = 0.3; private cw = 0; private ch = 0;
   private io?: IntersectionObserver;
+  // 옆모습 꾸미기: 입은 것의 옆모습 그림, 옷·목걸이를 몸에 입힌 칸 그림(같은 칸이면 다시 안 그림)
+  private wearKey = '';
+  private side: Partial<Record<SideSlot, { key: string; box: [number, number, number, number] }>> = {};
+  private oc: HTMLCanvasElement | null = null; private ocKey = '';
   constructor(public o: PaintOpts) {
     this.anim = new PetAnim(PAINT_RIG[o.id]);
     this.ctx = o.canvas.getContext('2d');
@@ -271,6 +277,50 @@ export class PaintPet {
       this.io = new IntersectionObserver(es => { for (const e of es) this.visible = e.isIntersecting; });
       this.io.observe(o.canvas);
     }
+  }
+  /** 입은 아이템(옷장 wear) → 옆모습 그림을 미리 받아 둔다(나올 때 받기 — 서비스워커가 저장) */
+  setWear(wear: Partial<Record<string, string | undefined>>) {
+    const k = SIDE_SLOTS.map(sl => wear[sl] ?? '').join('|');
+    if (k === this.wearKey) return;
+    this.wearKey = k; this.ocKey = ''; this.side = {};
+    if (!sideRig(this.o.id)) return;
+    for (const sl of SIDE_SLOTS) {
+      const it = wear[sl] ? sideArt(`${sl}:${wear[sl]}`) : null;
+      if (it) { this.side[sl] = it; img(it.key); }
+    }
+  }
+  /** 칸 그림에 옷(몸 실루엣 안에만)·목걸이를 입히고 머리·귀를 그 위에 다시 그린 그림. 입힐 것이 없으면 null */
+  private dress(im: HTMLImageElement, m: PaintMotion, key: string, fi: number, sf: { h: M6; b: M6 | null }): HTMLCanvasElement | null {
+    const r = sideRig(this.o.id)!;
+    const cl = sf.b ? this.side.clothes : undefined, nk = this.side.neck;
+    const clI = cl && IMGS[cl.key]?.img, nkI = nk && IMGS[nk.key]?.img;
+    if (!clI && !nkI) return null;
+    const ck = `${key}|${fi}|${this.wearKey}|${clI ? 1 : 0}${nkI ? 1 : 0}`;
+    if (this.oc && this.ocKey === ck) return this.oc;
+    const oc = this.oc ?? (this.oc = document.createElement('canvas'));
+    if (oc.width !== m.w || oc.height !== m.h) { oc.width = m.w; oc.height = m.h; }
+    const o = oc.getContext('2d');
+    if (!o) return null;
+    o.setTransform(1, 0, 0, 1, 0, 0); o.globalCompositeOperation = 'source-over'; o.clearRect(0, 0, m.w, m.h);
+    o.drawImage(im, fi * m.w, 0, m.w, m.h, 0, 0, m.w, m.h);
+    if (clI && cl && sf.b) {
+      o.globalCompositeOperation = 'source-atop';
+      o.setTransform(...mul(sf.b, placeM('clothes', r, cl.box))); o.drawImage(clI, 0, 0, 1, 1);
+      o.setTransform(1, 0, 0, 1, 0, 0); o.globalCompositeOperation = 'source-over';
+    }
+    if (nkI && nk) { o.setTransform(...mul(sf.h, placeM('neck', r, nk.box))); o.drawImage(nkI, 0, 0, 1, 1); o.setTransform(1, 0, 0, 1, 0, 0); }
+    // 머리·귀는 옷·목걸이 위에(옆모습에서는 늘어진 귀·턱이 목과 어깨를 가림)
+    const H = sf.h, P = r.p;
+    o.save(); o.beginPath();
+    for (let i = 0; i < P.length; i += 2) {
+      const x = H[0] * P[i] + H[2] * P[i + 1] + H[4], y = H[1] * P[i] + H[3] * P[i + 1] + H[5];
+      if (i) o.lineTo(x, y); else o.moveTo(x, y);
+    }
+    o.closePath(); o.clip();
+    o.drawImage(im, fi * m.w, 0, m.w, m.h, 0, 0, m.w, m.h);
+    o.restore();
+    this.ocKey = ck;
+    return oc;
   }
   setSize(size: number) {
     this.size = size;
@@ -305,9 +355,22 @@ export class PaintPet {
       const m = r.motions[pose.sprite.key], im = IMGS[`pet.${this.o.id}.paint-${pose.sprite.key}`]?.img;
       if (m && im) {
         toCanvas(); c.transform(...pose.root);
-        const s = 1 / r.sp, dw = m.w * s, dh = m.h * s;
+        const s = 1 / r.sp, dw = m.w * s, dh = m.h * s, dx = r.cx - dw / 2, dy = r.ground - m.ground * s;
+        const key = pose.sprite.key, fi = pose.sprite.frame;
         if (pose.dim < 1) c.filter = `brightness(${pose.dim})`;
-        c.drawImage(im, pose.sprite.frame * m.w, 0, m.w, m.h, r.cx - dw / 2, r.ground - m.ground * s, dw, dh);
+        const sf = this.wearKey.replace(/\|/g, '') ? sideFrame(this.o.id, key, fi) : null;
+        const dressed = sf ? this.dress(im, m, key, fi, sf) : null;
+        if (dressed) c.drawImage(dressed, 0, 0, m.w, m.h, dx, dy, dw, dh);
+        else c.drawImage(im, fi * m.w, 0, m.w, m.h, dx, dy, dw, dh);
+        if (sf) {
+          // 안경·모자: 머리 변환을 따라(칸 그림 밖으로 나가도 되게 큰 캔버스에)
+          c.translate(dx, dy); c.scale(s, s);
+          for (const sl of ['glasses', 'hat'] as const) {
+            const it = this.side[sl], si = it && IMGS[it.key]?.img;
+            if (!it || !si) continue;
+            c.save(); c.transform(...mul(sf.h, placeM(sl, sideRig(this.o.id)!, it.box))); c.drawImage(si, 0, 0, 1, 1); c.restore();
+          }
+        }
         c.filter = 'none';
         return;
       }

@@ -16,6 +16,8 @@ from PIL import Image, ImageDraw
 REPO = sys.argv[1]
 ONLY = sys.argv[2].split(',') if len(sys.argv) > 2 and sys.argv[2] else None
 QA = os.environ.get('PET_QA')
+# 특정 동작만 추가 검수할 때 기존에 검수된 나머지 동작 좌표를 보존한다.
+MOTIONS = set(filter(None, os.environ.get('ART_SIDE_MOTIONS', '').split(',')))
 
 # 기준 프레임(idle 0) 좌표(px). Hc·Hr: 모자가 얹히는 머리 윗부분 원 · E: 가까운 눈 · F: 먼 눈(옆얼굴이라 안 보이면 None)
 # N: 코끝 · K1→K2: 목(목 뒤 → 목 앞) · P: 머리 둘레(귀 포함 — 옷이 머리·귀를 덮지 않게)
@@ -50,6 +52,7 @@ CB = {
 # 옆모습 꾸미기를 붙이는 동작과 몸통 회전 범위(도). sitstand는 마지막 칸(정면)을 빼고.
 SIDE_MOTIONS = {'idle': [0], 'walk': [-4, 0, 4], 'run': [-8, -4, 0, 4, 8], 'jump': [-12, -8, -4, 0, 4, 8, 12], 'eat': [0],
                 'sitstand': [-24, -18, -12, -6, 0], 'stretch': [-16, -12, -8, -4, 0, 4, 8]}
+if MOTIONS - SIDE_MOTIONS.keys(): raise ValueError('지원하지 않는 동작: ' + ','.join(sorted(MOTIONS - SIDE_MOTIONS.keys())))
 NCC_OK, IOU_OK, BODY_OK = 0.42, 0.72, 0.30
 
 
@@ -99,9 +102,9 @@ def apply(M, pts):
 
 class Head:
     """기준 머리(그림·알파·둘레)와 그 SIFT 특징점"""
-    def __init__(self, pid, ref):
+    def __init__(self, pid, ref, points=None):
         self.a = ANN[pid]; self.ref = ref
-        self.mask = poly_mask(ref.shape[:2], self.a['P'])
+        self.mask = poly_mask(ref.shape[:2], self.a['P'] if points is None else points)
         m = cv2.dilate(self.mask, np.ones((9, 9), np.uint8)) & ((ref[..., 3] > 0.3) * 255).astype(np.uint8)
         self.kp, self.d = SIFT.detectAndCompute(gray(ref), m)
         self.g = gray(ref).astype(np.float32)
@@ -198,6 +201,7 @@ def track(pid):
     head = Head(pid, ref)
     out = {}
     for mo, angs in SIDE_MOTIONS.items():
+        if MOTIONS and mo not in MOTIONS: continue
         fr = frames(pid, mo)
         if not fr: continue
         use = fr[:-1] if mo == 'sitstand' else fr                 # sitstand 마지막 칸은 정면(정면 꾸미기로)
@@ -229,6 +233,27 @@ def track(pid):
                 # 눈을 감거나 입을 벌린 칸은 그림 상관이 낮다 → 실루엣이 아주 잘 겹치면 받아 줌
                 if (ncc >= 0.5 and iou >= 0.78) or (ncc >= 0.3 and iou >= 0.88): cand.append((ncc + 0.5 * iou, [round(v, 4) for v in q]))
             if cand: hs[i] = max(cand)[1]; sc[i] = sc[i] + ('맞춤',)
+        # 기준 자세와 각도가 많이 다른 칸: 이미 검증한 같은 동작의 칸을 경유해 찾는다.
+        # 기준 머리와의 최종 상관/겹침 기준은 낮추지 않는다. 추정 좌표만으로 추가하지 않음.
+        for i, p in enumerate(hs):
+            if p is not None: continue
+            cand = []
+            for j, near_p in good:
+                near_M = sim_mat(near_p)
+                near = Head(pid, use[j], apply(near_M, ANN[pid]['P']))
+                q, matches = near.sift(use[i])
+                if q is None or matches < 5 or not 0.7 <= q[0] <= 1.4: continue
+                ncc_near, iou_near = near.score(use[i], q)
+                if ncc_near < 0.5 or iou_near < 0.85: continue
+                M = np.vstack([sim_mat(q), [0, 0, 1]]) @ np.vstack([near_M, [0, 0, 1]])
+                p0 = sim_of(M[:2])
+                if not 0.7 <= p0[0] <= 1.4 or abs(p0[1]) > 80: continue
+                p1, ncc, iou = refine(head, use[i], p0)
+                if (ncc >= 0.5 and iou >= 0.78) or (ncc >= 0.3 and iou >= 0.88):
+                    cand.append((ncc + 0.5 * iou, p1, j, matches, ncc, iou))
+            if cand:
+                _, hs[i], j, matches, ncc, iou = max(cand)
+                sc[i] = (matches, round(ncc, 2), round(iou, 2), f'경유{j}')
         if any(p is None for p in hs):
             log(f'  {pid}-{mo}: 머리를 못 찾은 칸 {[i for i, p in enumerate(hs) if p is None]} → 이 동작은 꾸미기 숨김 {sc}')
             continue
@@ -337,7 +362,7 @@ def qa_sheet(pid, ref, out, items):
 def main():
     rigs = {}
     gp = os.path.join(REPO, 'source/src/art/petside.gen.ts')
-    if os.path.exists(gp) and ONLY:      # 일부 친구만 다시 만들 때 나머지는 그대로
+    if os.path.exists(gp) and (ONLY or MOTIONS):      # 일부 친구/동작만 만들 때 나머지는 그대로
         rigs = json.loads(re.search(r'= (\{.*\});', open(gp, encoding='utf-8').read(), re.S).group(1))
     qa_items = {}
     if QA:
@@ -349,9 +374,13 @@ def main():
         log(pid)
         ref, out = track(pid)
         a = ANN[pid]
-        rigs[pid] = dict(hc=list(a['Hc']), hr=a['Hr'], e=list(a['E']), f=list(a['F']) if a['F'] else None,
+        motion_data = {mo: dict(h=d['h'], **({'b': d['b']} if d['b'] is not None else {})) for mo, d in out.items()}
+        if MOTIONS and pid in rigs:
+            rigs[pid]['m'].update(motion_data)
+        else:
+            rigs[pid] = dict(hc=list(a['Hc']), hr=a['Hr'], e=list(a['E']), f=list(a['F']) if a['F'] else None,
                          k1=list(a['K1']), k2=list(a['K2']), p=[v for xy in a['P'] for v in xy], cb=list(CB[pid]),
-                         m={mo: dict(h=d['h'], **({'b': d['b']} if d['b'] is not None else {})) for mo, d in out.items()})
+                         m=motion_data)
         log(f'  동작: {", ".join(f"{mo}{"" if d["b"] is not None else "(옷X)"}" for mo, d in out.items())}')
         if QA: qa_sheet(pid, ref, out, qa_items)
     write_gen(rigs)

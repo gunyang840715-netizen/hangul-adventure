@@ -48,18 +48,23 @@ async function run() {
   render(<TraceBoard ch="ㄴ" guide="full" test onMiss={() => misses++} onDone={() => completed++} />, mount); await wait();
   el = mount.querySelector('.trace-box canvas') as HTMLCanvasElement; el.setPointerCapture = () => {};
   const pos = (x: number, y: number) => { const b = el.getBoundingClientRect(); return [b.x + (x + 8) / 116 * b.width, b.y + (y + 8) / 116 * b.height]; };
-  const draw = (type: string, x: number, y: number, id = 1, primary = true) => { const p = pos(x, y); pointer(el, type, p[0], p[1], id, primary); };
+  let drawingId = 1;
+  const draw = (type: string, x: number, y: number, id = drawingId, primary = true) => { const p = pos(x, y); pointer(el, type, p[0], p[1], id, primary); };
   draw('pointerdown', 26, 18);
   draw('pointerdown', 95, 95, 2, false); draw('pointermove', 95, 95, 2, false);
   for (let y = 23; y <= 78; y += 5) draw('pointermove', 26, y);
   for (let x = 31; x <= 66; x += 5) draw('pointermove', x, 78);
   draw('pointercancel', 66, 78); await wait();
   check(completed === 0 && misses === 0, '두 번째 손가락 무시·시스템 취소는 정답/오답에 포함하지 않음');
+  draw('pointerdown', 26, 18); draw('pointermove', 26, 48);
+  draw('lostpointercapture', 26, 48); await wait();
+  check(completed === 0 && misses === 0, '포인터 캡처가 끊겨도 정답/오답에 포함하지 않음');
+  drawingId = 3; // 다음 터치는 브라우저가 새 pointerId를 부여할 수 있다.
   draw('pointerdown', 26, 18);
   for (let y = 23; y <= 78; y += 5) draw('pointermove', 26, y);
   for (let x = 31; x <= 81; x += 5) draw('pointermove', x, 78);
   draw('pointerup', 80, 78); await wait();
-  check(completed === 1, '취소 후 같은 획부터 다시 쓰면 정상 완료');
+  check(completed === 1, '터치 취소·캡처 중단 후 같은 획부터 다시 쓰면 정상 완료');
 
   const NativeImage = window.Image; let attempts = 0;
   (window as any).Image = class {

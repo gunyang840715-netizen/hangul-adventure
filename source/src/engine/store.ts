@@ -4,6 +4,7 @@
 import { mergeState, sumMap } from '../../shared/merge.js';
 import { PET, DEFAULT_PETS, SNACK, DROP_ORDER, OLD_ITEM, ITEM, BUILDS, BUILD, levelOf, stageOf, type Species, type Slot } from '../data/pets';
 import { CURRICULUM_VER, migrateLessonIdx } from '../data/curriculum';
+import { isBackupPayload } from './backup';
 
 export interface ItemStat { box: number; due: number; seen: number; right: number; wrong: number; last: number }
 
@@ -234,7 +235,7 @@ export function exportCode(): string {
 export function importCode(code: string): boolean {
   try {
     const o = JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
-    if (o && (o.v === 1 || o.v === 2 || o.v === 3)) { replaceAll(normalize(o)); return true; }
+    if (isBackupPayload(o)) { replaceAll(normalize(o)); return true; }
   } catch { /* 무시 */ }
   return false;
 }

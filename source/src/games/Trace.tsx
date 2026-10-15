@@ -209,7 +209,7 @@ export function TraceBoard({ ch, guide, onDone, onMood, quiet, test, onMiss }: B
         )}
       </svg>
       {done && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div class="glyph-bounce"><LetterGlyph ch={ch} size={579} face={!isSyl} color={color} width={W} /></div></div>}
-      <canvas ref={cv} onPointerDown={down as any} onPointerMove={move as any} onPointerUp={up as any} onPointerCancel={cancel as any} />
+      <canvas ref={cv} onPointerDown={down as any} onPointerMove={move as any} onPointerUp={up as any} onPointerCancel={cancel as any} onLostPointerCapture={cancel as any} />
     </div>
   );
 }

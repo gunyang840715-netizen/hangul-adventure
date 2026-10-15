@@ -125,6 +125,46 @@
    "b": 261702
   },
   {
+   "u": "art/backgrounds/yard-cat.front.fafa6881.webp",
+   "b": 189844
+  },
+  {
+   "u": "art/backgrounds/yard-cat.land.5e68ba0e.webp",
+   "b": 564296
+  },
+  {
+   "u": "art/backgrounds/yard-cat.sky.2ad9b129.webp",
+   "b": 315092
+  },
+  {
+   "u": "art/backgrounds/yard-dog.front.0f70f95c.webp",
+   "b": 194996
+  },
+  {
+   "u": "art/backgrounds/yard-dog.land.24c15ab1.webp",
+   "b": 586578
+  },
+  {
+   "u": "art/backgrounds/yard-dog.sky.b47b168f.webp",
+   "b": 381950
+  },
+  {
+   "u": "art/builds/cathouse-complete.eae22db6.webp",
+   "b": 351800
+  },
+  {
+   "u": "art/builds/doghouse-complete.dc770529.webp",
+   "b": 190460
+  },
+  {
+   "u": "art/builds/mat.a1b82723.webp",
+   "b": 22164
+  },
+  {
+   "u": "art/builds/park-complete.24562165.webp",
+   "b": 460768
+  },
+  {
    "u": "art/effects/fx-cloud1.538ccf1e.webp",
    "b": 12692
   },
@@ -921,6 +961,286 @@
    "b": 16996
   },
   {
+   "u": "art/park/ball-balloon.77fc9aec.webp",
+   "b": 27242
+  },
+  {
+   "u": "art/park/ball-bubble.8487937b.webp",
+   "b": 38386
+  },
+  {
+   "u": "art/park/ball-giant.763cbfac.webp",
+   "b": 26098
+  },
+  {
+   "u": "art/park/ball-pit.1eedde0b.webp",
+   "b": 30234
+  },
+  {
+   "u": "art/park/ball-rainbow.2e8a59f3.webp",
+   "b": 27702
+  },
+  {
+   "u": "art/park/carousel-balloon.11ff6f09.webp",
+   "b": 51796
+  },
+  {
+   "u": "art/park/carousel-cup.7b7199e3.webp",
+   "b": 35902
+  },
+  {
+   "u": "art/park/carousel-ferris.6e6af932.webp",
+   "b": 68778
+  },
+  {
+   "u": "art/park/carousel-horse.4b4b1a50.webp",
+   "b": 64222
+  },
+  {
+   "u": "art/park/carousel-plane.629279ba.webp",
+   "b": 43288
+  },
+  {
+   "u": "art/park/flower-cosmos.2fa356e8.webp",
+   "b": 64784
+  },
+  {
+   "u": "art/park/flower-fence.217da749.webp",
+   "b": 68892
+  },
+  {
+   "u": "art/park/flower-rose.5197741e.webp",
+   "b": 64324
+  },
+  {
+   "u": "art/park/flower-sunflower.22704266.webp",
+   "b": 62068
+  },
+  {
+   "u": "art/park/flower-tulip.ea0e3237.webp",
+   "b": 59024
+  },
+  {
+   "u": "art/park/jungle-castle.a55fe53c.webp",
+   "b": 36972
+  },
+  {
+   "u": "art/park/jungle-dome.962b8666.webp",
+   "b": 59358
+  },
+  {
+   "u": "art/park/jungle-rainbow.66e19a36.webp",
+   "b": 34324
+  },
+  {
+   "u": "art/park/jungle-rope.4e17129f.webp",
+   "b": 61204
+  },
+  {
+   "u": "art/park/jungle-tower.dce696fe.webp",
+   "b": 56842
+  },
+  {
+   "u": "art/park/picnic-basket.8ec7bcd1.webp",
+   "b": 41850
+  },
+  {
+   "u": "art/park/picnic-hammock.fd0036a6.webp",
+   "b": 29184
+  },
+  {
+   "u": "art/park/picnic-mat.a569c32c.webp",
+   "b": 42328
+  },
+  {
+   "u": "art/park/picnic-tent.a2c5b59a.webp",
+   "b": 27330
+  },
+  {
+   "u": "art/park/picnic-umbrella.72ce40ca.webp",
+   "b": 33878
+  },
+  {
+   "u": "art/park/pool-arch.b8574ba7.webp",
+   "b": 58540
+  },
+  {
+   "u": "art/park/pool-duck.74ca1404.webp",
+   "b": 35520
+  },
+  {
+   "u": "art/park/pool-fountain.431f1c92.webp",
+   "b": 51594
+  },
+  {
+   "u": "art/park/pool-frog.9fe8607b.webp",
+   "b": 46894
+  },
+  {
+   "u": "art/park/pool-whale.a516f012.webp",
+   "b": 41096
+  },
+  {
+   "u": "art/park/rider-bee.9804c98f.webp",
+   "b": 34960
+  },
+  {
+   "u": "art/park/rider-duck.d791d742.webp",
+   "b": 28176
+  },
+  {
+   "u": "art/park/rider-horse.c76a0056.webp",
+   "b": 38982
+  },
+  {
+   "u": "art/park/rider-rocket.8c4bf72b.webp",
+   "b": 30936
+  },
+  {
+   "u": "art/park/rider-whale.fdb34ab0.webp",
+   "b": 35986
+  },
+  {
+   "u": "art/park/sand-bucket.beab7897.webp",
+   "b": 33938
+  },
+  {
+   "u": "art/park/sand-castle.241e804c.webp",
+   "b": 35300
+  },
+  {
+   "u": "art/park/sand-digger.421380cd.webp",
+   "b": 39276
+  },
+  {
+   "u": "art/park/sand-shell.87cef4f9.webp",
+   "b": 30120
+  },
+  {
+   "u": "art/park/sand-turtle.a6a0b1e6.webp",
+   "b": 26638
+  },
+  {
+   "u": "art/park/seesaw-animal.8e6656d5.webp",
+   "b": 30394
+  },
+  {
+   "u": "art/park/seesaw-cloud.fef0b6ff.webp",
+   "b": 22716
+  },
+  {
+   "u": "art/park/seesaw-log.c97f99e3.webp",
+   "b": 32362
+  },
+  {
+   "u": "art/park/seesaw-rainbow.6bd70bc4.webp",
+   "b": 23962
+  },
+  {
+   "u": "art/park/seesaw-wood.a68c0bf9.webp",
+   "b": 22496
+  },
+  {
+   "u": "art/park/slide-castle.7f222b28.webp",
+   "b": 33026
+  },
+  {
+   "u": "art/park/slide-elephant.a51fbd26.webp",
+   "b": 30516
+  },
+  {
+   "u": "art/park/slide-rainbow.37c99e67.webp",
+   "b": 37104
+  },
+  {
+   "u": "art/park/slide-spiral.f421d700.webp",
+   "b": 42310
+  },
+  {
+   "u": "art/park/slide-wave.1a25491a.webp",
+   "b": 38420
+  },
+  {
+   "u": "art/park/swing-boat.e17b9df5.webp",
+   "b": 43846
+  },
+  {
+   "u": "art/park/swing-double.c0b0ee67.webp",
+   "b": 43672
+  },
+  {
+   "u": "art/park/swing-nest.c41b32fd.webp",
+   "b": 48178
+  },
+  {
+   "u": "art/park/swing-pink.9dd5151a.webp",
+   "b": 37802
+  },
+  {
+   "u": "art/park/swing-tire.0b06196a.webp",
+   "b": 42004
+  },
+  {
+   "u": "art/park/tramp-cloud.d4a44390.webp",
+   "b": 27046
+  },
+  {
+   "u": "art/park/tramp-flower.3aa19034.webp",
+   "b": 30734
+  },
+  {
+   "u": "art/park/tramp-heart.c7814d61.webp",
+   "b": 26362
+  },
+  {
+   "u": "art/park/tramp-round.177a4402.webp",
+   "b": 23956
+  },
+  {
+   "u": "art/park/tramp-star.bcebcd5b.webp",
+   "b": 29872
+  },
+  {
+   "u": "art/park/tree-apple.592d84ff.webp",
+   "b": 68262
+  },
+  {
+   "u": "art/park/tree-bird.54388e57.webp",
+   "b": 53538
+  },
+  {
+   "u": "art/park/tree-house.3777fb1d.webp",
+   "b": 63650
+  },
+  {
+   "u": "art/park/tree-rope.fe5e7644.webp",
+   "b": 49402
+  },
+  {
+   "u": "art/park/tree-slide.2e148690.webp",
+   "b": 52448
+  },
+  {
+   "u": "art/park/tunnel-caterpillar.33e1ec8c.webp",
+   "b": 29888
+  },
+  {
+   "u": "art/park/tunnel-cloth.b34d25cb.webp",
+   "b": 33442
+  },
+  {
+   "u": "art/park/tunnel-hill.4a94bc81.webp",
+   "b": 51160
+  },
+  {
+   "u": "art/park/tunnel-log.3a37d582.webp",
+   "b": 45348
+  },
+  {
+   "u": "art/park/tunnel-rainbow.af82417a.webp",
+   "b": 31602
+  },
+  {
    "u": "art/pets/corgi.head.812b6aae.webp",
    "b": 36198
   },
@@ -1615,6 +1935,246 @@
   {
    "u": "art/tiles/wall-wood.ecc5b108.webp",
    "b": 28464
+  },
+  {
+   "u": "art/yard/y-bench-flower.f905d2a6.webp",
+   "b": 56598
+  },
+  {
+   "u": "art/yard/y-bench-log.aa603733.webp",
+   "b": 33960
+  },
+  {
+   "u": "art/yard/y-bench-stump.26b1f980.webp",
+   "b": 31458
+  },
+  {
+   "u": "art/yard/y-bench-white.0bfd10b8.webp",
+   "b": 44270
+  },
+  {
+   "u": "art/yard/y-bench-wood.23c6ad73.webp",
+   "b": 25536
+  },
+  {
+   "u": "art/yard/y-bunting-flower.efa9882e.webp",
+   "b": 16498
+  },
+  {
+   "u": "art/yard/y-bunting-heart.b12ea489.webp",
+   "b": 12994
+  },
+  {
+   "u": "art/yard/y-bunting-lights.97ed36e6.webp",
+   "b": 16444
+  },
+  {
+   "u": "art/yard/y-bunting-rainbow.ec97619c.webp",
+   "b": 13110
+  },
+  {
+   "u": "art/yard/y-bunting-star.b530c2a6.webp",
+   "b": 16720
+  },
+  {
+   "u": "art/yard/y-fence-bamboo.ecfbd8e3.webp",
+   "b": 63124
+  },
+  {
+   "u": "art/yard/y-fence-flower.4c720024.webp",
+   "b": 55452
+  },
+  {
+   "u": "art/yard/y-fence-log.f49916a0.webp",
+   "b": 36416
+  },
+  {
+   "u": "art/yard/y-fence-picket.74710e6b.webp",
+   "b": 37248
+  },
+  {
+   "u": "art/yard/y-fence-stone.eeaad8e5.webp",
+   "b": 41584
+  },
+  {
+   "u": "art/yard/y-flowerbed-cosmos.dedfc6e1.webp",
+   "b": 57940
+  },
+  {
+   "u": "art/yard/y-flowerbed-rose.8523e269.webp",
+   "b": 48730
+  },
+  {
+   "u": "art/yard/y-flowerbed-sunflower.90286bea.webp",
+   "b": 43790
+  },
+  {
+   "u": "art/yard/y-flowerbed-tulip.ec416725.webp",
+   "b": 42092
+  },
+  {
+   "u": "art/yard/y-flowerbed-veggie.802b4b24.webp",
+   "b": 45628
+  },
+  {
+   "u": "art/yard/y-lantern-firefly.fad690cb.webp",
+   "b": 46070
+  },
+  {
+   "u": "art/yard/y-lantern-mushroom.fd7a46ef.webp",
+   "b": 34426
+  },
+  {
+   "u": "art/yard/y-lantern-paper.78b85ada.webp",
+   "b": 48362
+  },
+  {
+   "u": "art/yard/y-lantern-star.3f4ea9cb.webp",
+   "b": 52108
+  },
+  {
+   "u": "art/yard/y-lantern-stone.511cebeb.webp",
+   "b": 28286
+  },
+  {
+   "u": "art/yard/y-mailbox-cat.13a11dbc.webp",
+   "b": 40868
+  },
+  {
+   "u": "art/yard/y-mailbox-dog.3c9fe74d.webp",
+   "b": 34458
+  },
+  {
+   "u": "art/yard/y-mailbox-house.20b4d06e.webp",
+   "b": 46436
+  },
+  {
+   "u": "art/yard/y-mailbox-mushroom.7f84b66d.webp",
+   "b": 23906
+  },
+  {
+   "u": "art/yard/y-mailbox-red.beb9b28e.webp",
+   "b": 35744
+  },
+  {
+   "u": "art/yard/y-path-brick.2ac78c60.webp",
+   "b": 45764
+  },
+  {
+   "u": "art/yard/y-path-pebble.21fbf17a.webp",
+   "b": 53582
+  },
+  {
+   "u": "art/yard/y-path-petal.035d3047.webp",
+   "b": 49928
+  },
+  {
+   "u": "art/yard/y-path-stone.31236abe.webp",
+   "b": 41244
+  },
+  {
+   "u": "art/yard/y-path-wood.fd0ef802.webp",
+   "b": 46476
+  },
+  {
+   "u": "art/yard/y-pond-duck.7ec367c3.webp",
+   "b": 22992
+  },
+  {
+   "u": "art/yard/y-pond-fish.e9de4228.webp",
+   "b": 40144
+  },
+  {
+   "u": "art/yard/y-pond-fountain.9acee24c.webp",
+   "b": 34578
+  },
+  {
+   "u": "art/yard/y-pond-frog.c2ba383f.webp",
+   "b": 27364
+  },
+  {
+   "u": "art/yard/y-pond-lotus.61d5bfff.webp",
+   "b": 24586
+  },
+  {
+   "u": "art/yard/y-swing-basket.5fdcea68.webp",
+   "b": 59874
+  },
+  {
+   "u": "art/yard/y-swing-flower.c7b7084c.webp",
+   "b": 68352
+  },
+  {
+   "u": "art/yard/y-swing-hammock.939adb59.webp",
+   "b": 31406
+  },
+  {
+   "u": "art/yard/y-swing-tire.24e319b8.webp",
+   "b": 58252
+  },
+  {
+   "u": "art/yard/y-swing-wood.709f9f18.webp",
+   "b": 43442
+  },
+  {
+   "u": "art/yard/y-tree-apple.2f1bbdc8.webp",
+   "b": 67410
+  },
+  {
+   "u": "art/yard/y-tree-cherry.c36f7aa6.webp",
+   "b": 58642
+  },
+  {
+   "u": "art/yard/y-tree-maple.f84b791c.webp",
+   "b": 23622
+  },
+  {
+   "u": "art/yard/y-tree-orange.4e456862.webp",
+   "b": 25482
+  },
+  {
+   "u": "art/yard/y-tree-pine.c85b22cd.webp",
+   "b": 22856
+  },
+  {
+   "u": "art/yard/y-windowbox-daisy.b84ff9fe.webp",
+   "b": 52856
+  },
+  {
+   "u": "art/yard/y-windowbox-herb.7f334d95.webp",
+   "b": 57514
+  },
+  {
+   "u": "art/yard/y-windowbox-pansy.b46fa969.webp",
+   "b": 42756
+  },
+  {
+   "u": "art/yard/y-windowbox-red.fb26f179.webp",
+   "b": 50396
+  },
+  {
+   "u": "art/yard/y-windowbox-strawberry.ed25b5fe.webp",
+   "b": 49698
+  },
+  {
+   "u": "art/yard/y-wreath-bell.a58cb2ea.webp",
+   "b": 42494
+  },
+  {
+   "u": "art/yard/y-wreath-berry.8bbb6fe2.webp",
+   "b": 63572
+  },
+  {
+   "u": "art/yard/y-wreath-flower.5e005628.webp",
+   "b": 66972
+  },
+  {
+   "u": "art/yard/y-wreath-leaf.a3afadf8.webp",
+   "b": 65900
+  },
+  {
+   "u": "art/yard/y-wreath-ribbon.e781af42.webp",
+   "b": 40864
   }
  ]
 }

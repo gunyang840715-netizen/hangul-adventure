@@ -11,7 +11,7 @@ import { PetAnim, type AnimIn, type Pose, type Mat } from './petanim';
 
 export type { Act } from './petanim';
 type Pt = [number, number];
-export interface PaintMotion { n: number; w: number; h: number; ground: number; fps: number; loop: boolean }
+export interface PaintMotion { n: number; w: number; h: number; ground: number; fps: number; loop: boolean; reach?: number }   // reach: 먹기 — 코끝이 몸 가운데보다 앞에 있는 거리(기준판 px)
 export interface PaintRig {
   tex: number; ground: number; sp: number; eyeDist: number; cx: number; top: number;
   eyeL: Pt; eyeR: Pt; mouth: Pt; neck: Pt; earL: Pt; earR: Pt;

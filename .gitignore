@@ -2,3 +2,6 @@
 # art-src/ = GPT가 그린 원본 PNG·참고 사진·주문서 / review/ = Claude의 미리보기·목록·검사 결과
 art-src/
 review/
+
+# 파이썬 캐시
+__pycache__/

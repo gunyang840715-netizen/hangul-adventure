@@ -5,14 +5,15 @@
 import type { PaintRig } from './petpaint';
 
 export type Mat = [number, number, number, number, number, number];
-export type Act = 'sit' | 'walk' | 'run' | 'sleep' | 'lie';
+export type Act = 'sit' | 'walk' | 'run' | 'sleep' | 'lie'
+  | 'stand' | 'eat' | 'scratch' | 'groom' | 'stretch' | 'roll';   // 2순위 동작: 서서 쉬기·먹기·귀 긁기·그루밍(고양이)·기지개·구르기(강아지)
 type MoodK = 'happy' | 'wow' | 'think' | 'sleep' | 'love';
 type MotionK = 'bob' | 'jump' | 'cheer' | 'wiggle' | 'none' | 'fly' | 'hop';
 
 export interface AnimIn {
   mood: MoodK; motion: MotionK; talking: boolean;
   g: number;            // 자람 0~1 (growthOf)
-  act?: Act;            // 집 안·놀이터에서: 앉기·걷기·달리기·잠·엎드리기 (없으면 앉은 정면 그대로)
+  act?: Act;            // 집 안·놀이터에서: 앉기·걷기·달리기·잠·엎드리기·서서 쉬기·먹기·… (없으면 앉은 정면 그대로)
   poke: number;         // 바뀔 때마다 한 번 깡충(누르기 반응)
   reduce: boolean;      // 기기의 '움직임 줄이기'
 }
@@ -53,7 +54,7 @@ class Spring {
   }
 }
 
-type Place = 'front' | 'side' | 'lie' | 'asleep';
+type Place = 'front' | 'side' | 'sitside' | 'lie' | 'asleep';
 interface Seg { key: string; from: number; to: number; fps: number; loop?: boolean; hold?: boolean; lift?: number[] }
 
 export class PetAnim {
@@ -87,14 +88,20 @@ export class PetAnim {
     if (c.key === 'sitstand') return c.f >= this.n('sitstand') - 1 ? 'front' : 'side';
     if (c.key === 'liesleep') return c.f === 0 ? 'front' : c.f >= 3 ? 'asleep' : 'lie';
     if (c.key === 'lying') return 'lie';
+    if (c.key === 'groom') return 'front';                 // 그루밍은 정면으로 앉은 모습
+    if (c.key === 'scratch') return 'sitside';             // 귀 긁기는 옆으로 앉은 모습
     return 'side';
   }
+  /** 앉기·일어서기에서 '옆으로 앉은' 칸(4칸이면 2번) */
+  private sitSideF() { return Math.max(0, Math.min(2, this.n('sitstand') - 2)); }
   private toFront(): Seg[] {
     const c = this.cur, ss = this.n('sitstand');
     if (!c) return [];
     if (c.key === 'sitstand') return [{ key: 'sitstand', from: c.f, to: ss - 1, fps: 7 }];
     if (c.key === 'liesleep') return [{ key: 'liesleep', from: c.f, to: 0, fps: 6 }];
     if (c.key === 'lying') return [{ key: 'liesleep', from: 2, to: 0, fps: 6 }];
+    if (c.key === 'groom') return [];
+    if (c.key === 'scratch') return this.has('sitstand') ? [{ key: 'sitstand', from: this.sitSideF(), to: ss - 1, fps: 7 }] : [];
     return this.has('sitstand') ? [{ key: 'sitstand', from: 0, to: ss - 1, fps: 7 }] : [];
   }
   private toSide(): Seg[] {
@@ -103,8 +110,22 @@ export class PetAnim {
     if (!c) return [{ key: 'sitstand', from: ss - 1, to: 0, fps: 8 }];
     if (c.key === 'sitstand') return [{ key: 'sitstand', from: c.f, to: 0, fps: 8 }];
     if (c.key === 'liesleep' || c.key === 'lying') return [{ key: 'liesleep', from: c.key === 'lying' ? 2 : c.f, to: 0, fps: 7 }, { key: 'sitstand', from: ss - 1, to: 0, fps: 8 }];
+    if (c.key === 'groom') return [{ key: 'sitstand', from: ss - 1, to: 0, fps: 8 }];
+    if (c.key === 'scratch') return [{ key: 'sitstand', from: this.sitSideF(), to: 0, fps: 8 }];
     return [];
   }
+  /** 옆으로 앉기(귀 긁기 전) */
+  private toSitSide(): Seg[] {
+    const c = this.cur, ss = this.n('sitstand'), k = this.sitSideF();
+    if (!this.has('sitstand')) return [];
+    if (!c || c.key === 'groom') return [{ key: 'sitstand', from: ss - 1, to: k, fps: 7 }];
+    if (c.key === 'sitstand') return c.f === k ? [] : [{ key: 'sitstand', from: c.f, to: k, fps: 7 }];
+    if (c.key === 'liesleep' || c.key === 'lying') return [{ key: 'liesleep', from: c.key === 'lying' ? 2 : c.f, to: 0, fps: 7 }, { key: 'sitstand', from: ss - 1, to: k, fps: 7 }];
+    if (c.key === 'scratch') return [];
+    return [{ key: 'sitstand', from: 0, to: k, fps: 7 }];
+  }
+  private loopOf(k: string): Seg { const m = this.rig.motions[k]; return { key: k, from: 0, to: m.n - 1, fps: m.fps, loop: true }; }
+  private onceOf(k: string): Seg { const m = this.rig.motions[k]; return { key: k, from: 0, to: m.n - 1, fps: m.fps }; }
   private toLie(k: number): Seg[] {
     const c = this.cur;
     const down: Seg = { key: 'liesleep', from: 0, to: k, fps: 5, hold: true };
@@ -127,6 +148,17 @@ export class PetAnim {
         segs = this.toLie(next === 'sleep' ? 3 : 2);
         if (next === 'lie' && this.has('lying')) segs.push({ key: 'lying', from: 0, to: 0, fps: 1, hold: true });
       } else segs = this.toFront();
+    } else if (next === 'stand' || next === 'eat') {
+      // 옆으로 서서 쉬기 / 밥 먹기 (그림이 없으면 옆으로 선 칸에서 멈춤)
+      const k = next === 'eat' && this.has('eat') ? 'eat' : 'idle';
+      segs = [...this.toSide(), ...(this.has(k) ? [this.loopOf(k)] : [])];
+    } else if (next === 'scratch') {
+      segs = this.has('scratch') ? [...this.toSitSide(), this.loopOf('scratch')] : this.toFront();
+    } else if (next === 'groom') {
+      segs = this.has('groom') ? [...this.toFront(), this.loopOf('groom')] : this.toFront();
+    } else if (next === 'stretch' || next === 'roll') {
+      // 한 번 하고 옆으로 서서 쉬기
+      segs = this.has(next) ? [...this.toSide(), this.onceOf(next), ...(this.has('idle') ? [this.loopOf('idle')] : [])] : this.toFront();
     }
     this.segs = segs; this.segT = 0; this.loopSeg = null;
     if (!segs.length && next === 'sit') this.cur = null;
@@ -217,12 +249,16 @@ export class PetAnim {
 
     // ---------------- 연속 동작 칸
     if (this.cur) {
-      const lift = liftK * 0.32 * H0;
+      let lift = liftK * 0.32 * H0, hx = 1, hy = 1;
+      // 앉은 모습(그루밍·귀 긁기)에서 누르면 제자리 깡충
+      if (!p.reduce && (place === 'front' || place === 'sitside') && t - this.hopT < 0.5) {
+        const h = this.rootMotion('hop', t - this.hopT, H0); lift += h.y; hx = h.sx; hy = h.sy;
+      }
       const brS = place === 'asleep' || place === 'lie' ? amp * 0.8 * b : 0;
-      const root = about(cx, G, 0, S * (1 - brS * 0.3), S * (1 + brS), 0, -lift * S);
+      const root = about(cx, G, 0, S * hx * (1 - brS * 0.3), S * hy * (1 + brS), 0, -lift * S);
       this.prevLift = lift;
       return { sprite: { key: this.cur.key, frame: this.cur.f }, root, head: root, earL: root, earR: root, tail: root, tail2: root,
-        eyes: 0, mouth: 0, dim: place === 'asleep' ? 0.95 : 1, lift: lift * S, wide: place === 'side' ? 1.35 : place === 'front' ? 1 : 1.25 };
+        eyes: 0, mouth: 0, dim: place === 'asleep' ? 0.95 : 1, lift: lift * S, wide: place === 'side' ? 1.35 : place === 'front' ? 1 : place === 'sitside' ? 1.15 : 1.25 };
     }
 
     // ---------------- 정면 앉기 (그림 한 장을 휘게)

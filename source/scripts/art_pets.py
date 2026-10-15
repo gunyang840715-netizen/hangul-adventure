@@ -13,6 +13,7 @@ import sys, os, re, json, glob, hashlib, base64, io, math
 import numpy as np, cv2
 from PIL import Image
 from scipy import ndimage as ndi
+from art_key import chroma_key                      # 단색(초록·분홍) 배경 지우기 — 같은 폴더
 
 SRC, REPO = sys.argv[1], sys.argv[2]
 ONLY = sys.argv[3].split(',') if len(sys.argv) > 3 else None
@@ -23,7 +24,7 @@ SPR = 0.6                                 # 연속 동작 그림: 기준판 1칸
 GRID = 41                                 # 휘게 하는 격자 꼭짓점 수(한 변, 16px 간격)
 
 EARS = {'maltese': 'floppy', 'poodle': 'floppy', 'shiba': 'floppy', 'corgi': 'up', 'schnauzer': 'up',
-        'koshort': 'up', 'russian': 'up', 'siamese': 'up', 'fold': 'small', 'persian': 'up'}
+        'koshort': 'up', 'russian': 'up', 'siamese': 'up', 'fold': 'up', 'persian': 'up'}   # 모찌도 그림은 선 귀(원문)
 CATS = {'koshort', 'russian', 'siamese', 'fold', 'persian'}
 # 동작: 가로 칸, 세로 칸, 프레임 수, 초당 장수, 반복
 MOTIONS = {
@@ -41,7 +42,8 @@ def latest(pid, kind):
     return max(c, key=lambda f: int(re.search(r'-v(\d+)\.png$', f).group(1)) if re.search(r'-v\d+\.png$', f) else 1)
 
 def load(p):
-    return np.asarray(Image.open(p).convert('RGBA')).astype(np.float32) / 255.
+    I = np.asarray(Image.open(p).convert('RGBA')).astype(np.float32) / 255.
+    return chroma_key(I, pockets=True)              # 투명 배경이면 그대로
 
 def to8(I):
     g = I[..., :3].mean(axis=2) * I[..., 3] + (1 - I[..., 3])
@@ -366,21 +368,150 @@ def split_frames(S, cols, rows, n):
         frames.sort(key=lambda f: (int(f[1][1] // Hs), f[1][0]))
     return [f[0] for f in frames][:n], len(cs)
 
+def strip_masks(strip, meta, idx=None):
+    """한 줄 그림 → 칸별 실루엣(띠 그림 배율)"""
+    w = meta['w']; ids = range(meta['n']) if idx is None else idx
+    return [strip[:, i * w:(i + 1) * w, 3] > 0.5 for i in ids if i < meta['n']]
+
+def shape_scale(frames, refs, lo=0.6, hi=1.7):
+    """원본 프레임과 기준 실루엣(띠 그림 배율)을 발바닥 선에 맞춰 겹쳤을 때 가장 잘 겹치는(IoU) 배율.
+    자세가 조금 다른 동작(서서 쉬기·먹기·기지개·구르기·귀 긁기·그루밍)의 크기를 몸 전체 모양으로 맞춘다."""
+    from scipy.signal import fftconvolve
+    D = 2
+    def prep(m):
+        ys, xs = np.where(m)
+        return m[ys.min():ys.max() + 1, xs.min():xs.max() + 1].astype(np.float32)
+    R = [prep(cv2.resize(r.astype(np.uint8), (max(1, r.shape[1] // D), max(1, r.shape[0] // D)), interpolation=cv2.INTER_AREA) > 0) for r in refs]
+    best = (0.0, None)
+    fs = frames if len(frames) <= 6 else frames[::max(1, len(frames) // 6)]
+    for f in fs:
+        a = f[..., 3] > 0.5
+        for sc in np.arange(lo, hi, 0.02):
+            k = sc * SPR / D
+            A = cv2.resize(a.astype(np.uint8), (max(1, int(round(a.shape[1] * k))), max(1, int(round(a.shape[0] * k)))), interpolation=cv2.INTER_AREA) > 0
+            if not A.any(): continue
+            A = prep(A)
+            for B in R:
+                H = max(A.shape[0], B.shape[0])
+                Ap = np.zeros((H, A.shape[1]), np.float32); Ap[H - A.shape[0]:] = A       # 발바닥(아래)을 맞춤
+                Bp = np.zeros((H, B.shape[1]), np.float32); Bp[H - B.shape[0]:] = B
+                inter = fftconvolve(Ap, Bp[:, ::-1], mode='full', axes=1).sum(axis=0)
+                iou = float((inter / (Ap.sum() + Bp.sum() - inter + 1e-6)).max())
+                if iou > best[0]: best = (iou, sc)
+    return best
+
+def despeck(f):
+    """몸에서 떨어진 작은 점(바닥 얼룩·남은 티끌) 지우기 — 옅은 수염도 몸에 이어지게 낮은 알파로 덩어리를 본다"""
+    n, lab, st, _ = cv2.connectedComponentsWithStats((f[..., 3] > 0.05).astype(np.uint8), 8)
+    if n <= 2: return f
+    big = st[1:, 4].max()
+    amax = ndi.maximum(f[..., 3], lab, np.arange(n))
+    drop = [i for i in range(1, n) if st[i, 4] < 0.02 * big and amax[i] > 0.5]     # 눈에 보이는 작은 점만
+    if not drop: return f
+    g = f.copy(); g[np.isin(lab, drop)] = 0
+    return g
+
+_FRAMES = {}
+def frames_of(pid, key):
+    """시트 → 프레임들(한 번만 읽음)"""
+    if (pid, key) not in _FRAMES:
+        path = latest(pid, key)
+        if not path: _FRAMES[(pid, key)] = None
+        else:
+            cols, rows, n, fps, loop = MOTIONS.get(key, (1, 1, 1, 1, False))
+            frames, found = split_frames(clean_edges(load(path)), cols, rows, n)
+            if len(frames) != n: log(f'  {pid}-{key}: 프레임 {len(frames)}/{n} (덩어리 {found})')
+            _FRAMES[(pid, key)] = frames
+    return _FRAMES[(pid, key)]
+
+# 방향을 맞춰 볼 옆모습 동작 — 칸끼리 자세가 비슷한 것만(점프·구르기·기지개는 칸마다 자세가 달라 겹침으로 방향을 알 수 없음)
+SIDE = {'walk': None, 'run': None, 'idle': None, 'eat': None, 'scratch': None}
+
+def _mask_small(f, H=96):
+    a = f[..., 3] > 0.5
+    ys, xs = np.where(a)
+    a = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    k = H / a.shape[0]
+    return (cv2.resize(a.astype(np.uint8), (max(1, int(round(a.shape[1] * k))), H), interpolation=cv2.INTER_AREA) > 0).astype(np.float32)
+
+def _best_iou(A, B):
+    from scipy.signal import fftconvolve
+    inter = fftconvolve(A, B[:, ::-1], mode='full', axes=1).sum(axis=0)
+    return float((inter / (A.sum() + B.sum() - inter + 1e-6)).max())
+
+def _rel(items):
+    """프레임끼리 방향 관계: d>0 같은 방향, d<0 반대 방향(겹침이 충분할 때만)"""
+    n = len(items); M = np.zeros((n, n))
+    for i in range(n):
+        Ai = items[i]; Af = Ai[:, ::-1]
+        for j in range(i + 1, n):
+            same, flip = _best_iou(Ai, items[j]), _best_iou(Af, items[j])
+            if max(same, flip) > 0.6: M[i, j] = M[j, i] = same - flip
+    return M
+
+def orient(pid):
+    """옆모습 프레임 중 반대(왼쪽)로 그려진 것을 찾는다 — GPT가 가끔 한 줄을 반대로 그림.
+    한 동작 안에서 방향이 섞였을 때만 고친다: 동작 안 프레임끼리 겹쳐 두 무리로 나누고,
+    다른 동작(섞이지 않은 것)과 더 잘 맞는 무리를 오른쪽으로 본다(없으면 많은 쪽·0번 칸 쪽).
+    반환: {(key, 칸 번호): True(뒤집기)}"""
+    strips = {}
+    for key, idx in SIDE.items():
+        fr = frames_of(pid, key)
+        if fr: strips[key] = [(i, _mask_small(f)) for i, f in enumerate(fr) if idx is None or i in idx]
+    def groups(M, thr=0.08):
+        # 확실한 관계(|d|≥thr)만 따라가며 +1/−1을 매긴다(관계가 없는 칸은 +1 그대로 = 고치지 않음)
+        n = len(M); o = np.zeros(n, int)
+        for st in range(n):
+            if o[st]: continue
+            o[st] = 1; stack = [st]
+            while stack:
+                i = stack.pop()
+                for j in np.argsort(-np.abs(M[i])):
+                    if o[j] or abs(M[i, j]) < thr: continue
+                    o[j] = o[i] * (1 if M[i, j] > 0 else -1); stack.append(j)
+        return o
+    mixed = {}
+    for key, it in strips.items():
+        if len(it) < 2: continue
+        o = groups(_rel([m for _, m in it]))
+        if (o > 0).any() and (o < 0).any(): mixed[key] = o
+    flips = {}
+    clean = [m for k, it in strips.items() if k not in mixed for _, m in it]
+    for key, o in mixed.items():
+        it = strips[key]
+        score = 0.0                                          # +: o>0 무리가 다른 동작과 같은 방향
+        for (i, m), oi in zip(it, o):
+            for c in clean:
+                same, flip = _best_iou(m, c), _best_iou(m[:, ::-1], c)
+                if max(same, flip) > 0.6: score += oi * (same - flip)
+        if abs(score) < 0.05: score = (o > 0).sum() - (o < 0).sum() or (1 if o[0] > 0 else -1)
+        good = 1 if score > 0 else -1
+        for (i, _), oi in zip(it, o):
+            if oi != good: flips[(key, i)] = True
+    if flips: log(f'  {pid}: 반대로 그려진 칸 뒤집음 {sorted(flips)}')
+    return flips
+
+_FLIPS = {}
 def motion_strip(pid, key, fit):
-    """연속 동작 시트 → 한 줄 그림. fit: ('last'|'first'|'median', 기준판 키) 또는 ('area', 기준판 넓이)"""
-    path = latest(pid, key)
-    if not path: return None
-    cols, rows, n, fps, loop = MOTIONS.get(key, (1, 1, 1, 1, False))
-    S = clean_edges(load(path))
-    frames, found = split_frames(S, cols, rows, n)
-    if len(frames) != n: log(f'  {pid}-{key}: 프레임 {len(frames)}/{n} (덩어리 {found})')
+    """연속 동작 시트 → 한 줄 그림. fit: ('last'|'first'|'median', 기준판 키), ('area', 기준판 넓이),
+    ('shape', [기준 실루엣…], 예비 fit)"""
+    frames = frames_of(pid, key)
     if not frames: return None
+    cols, rows, n, fps, loop = MOTIONS.get(key, (1, 1, 1, 1, False))
+    if pid not in _FLIPS: _FLIPS[pid] = orient(pid)
+    frames = [despeck(f[:, ::-1].copy() if _FLIPS[pid].get((key, i)) else f) for i, f in enumerate(frames)]
     hs = [f.shape[0] for f in frames]; areas = [float((f[..., 3] > 0.5).sum()) for f in frames]
-    kind, val = fit
+    kind, val = fit[0], fit[1]
+    if kind == 'shape':
+        iou, sc = shape_scale(frames, val)
+        if sc is None or iou < 0.55:
+            log(f'  {pid}-{key}: 모양 맞추기 실패(IoU {iou:.2f}) → 넓이로'); kind, val = fit[2]
+        else:
+            s = sc; log(f'  {pid}-{key}: 모양 맞추기 IoU {iou:.2f} 배율 {sc:.2f}')
     if kind == 'last': s = val / hs[-1]
     elif kind == 'first': s = val / hs[0]
     elif kind == 'median': s = val / float(np.median(hs))
-    else: s = math.sqrt(val / max(float(np.median(areas)), 1))
+    elif kind == 'area': s = math.sqrt(val / max(float(np.median(areas)), 1))
     k = s * SPR
     imgs = []
     for f in frames:
@@ -405,7 +536,11 @@ def motion_strip(pid, key, fit):
         dst = strip[y0:y0 + sub.shape[0], x0:x0 + sub.shape[1]]
         dst[...] = np.where(sub[..., 3:4] > dst[..., 3:4], sub, dst)
     meta = dict(n=len(imgs), w=cw, h=ch, ground=int(top), fps=fps, loop=loop)
-    return strip, meta, dict(s=s, hs=[h_ * s for h_ in hs], area=float(np.median(areas)) * s * s)
+    if key == 'eat':
+        # 먹을 때 코끝이 몸 가운데에서 얼마나 앞(오른쪽)에 있나 — 기준판 px (앱이 밥그릇 앞에 세울 때)
+        tips = [float(np.where(I[..., 3] > 0.5)[1].max()) - c for I, b_, c in imgs]
+        meta['reach'] = round(float(np.median(tips)) / SPR, 1)
+    return strip, meta, dict(s=s, hs=[h_ * s for h_ in hs], area=float(np.median(areas)) * s * s, areas=[a_ * s * s for a_ in areas])
 
 # ---------------------------------------------------------------------------------------------
 def main():
@@ -443,8 +578,20 @@ def main():
         wk = motion_strip(pid, 'walk', ('median', stand_h))
         if wk:
             strips['walk'] = wk[:2]
-            for key in ('run', 'jump', 'scratch', 'stretch', 'roll', 'groom', 'eat', 'idle'):
-                r = motion_strip(pid, key, ('area', wk[2]['area']))
+            # 크기 맞추기: 달리기·점프 = 걷기 넓이(배포한 그대로),
+            #  2순위 동작은 몸 전체 모양을 겹쳐 맞춤 — 서서 쉬기·먹기·기지개·구르기 = 걷기 칸, 귀 긁기 = 옆으로 앉은 칸
+            #  (앉기·일어서기 2번 칸), 그루밍 = 정면 앉기 그림
+            walkM = strip_masks(*wk[:2], [0, 2, 4, 6])
+            sideM = strip_masks(*ss[:2], [2]) if ss and ss[1]['n'] >= 4 else walkM
+            frontM = [cv2.resize(fr['tex'][..., 3], (int(TEX * SPR), int(TEX * SPR)), interpolation=cv2.INTER_AREA) > 0.5]
+            A = ('area', wk[2]['area'])
+            fits = {'run': A, 'jump': A,
+                    'idle': ('shape', walkM, A), 'eat': ('shape', walkM, A), 'stretch': ('shape', walkM, A), 'roll': ('shape', walkM, A),
+                    'scratch': ('shape', sideM, A), 'groom': ('shape', frontM, ('median', sit_h))}
+            for key, fit in fits.items():
+                if key == 'roll' and pid in CATS: continue
+                if key == 'groom' and pid not in CATS: continue
+                r = motion_strip(pid, key, fit)
                 if r: strips[key] = r[:2]
         ls = motion_strip(pid, 'liesleep', ('first', sit_h))   # 첫 칸 = 정면 앉기
         if ls: strips['liesleep'] = ls[:2]
@@ -457,6 +604,7 @@ def main():
             put_art(key, strip, 80)
             rig['motions'][key] = meta
         rigs[pid] = rig
+        for k in [k for k in _FRAMES if k[0] == pid]: del _FRAMES[k]
         if QA: qa_front(pid, fr, W, rig)
         log(f'   눈 {rig["eyeL"]} {rig["eyeR"]} 입 {rig["mouth"]} 목 {rig["neck"]} 꼬리 {rig["tail"]} 동작 {list(rig["motions"])}')
     # manifest·artmap·rig 쓰기

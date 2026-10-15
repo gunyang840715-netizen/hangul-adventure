@@ -3,7 +3,7 @@
 // - 강아지·고양이가 침대에서 자거나 장난감으로 놀고, 놀이터에서는 그네·미끄럼틀·트램펄린을 타거나 돗자리에서 낮잠
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { burst, centerOf } from '../art/Scene';
-import { Pet } from '../art/Pet';
+import { Pet, growthOf } from '../art/Pet';
 import { useWander, canWander } from '../art/petbrain';
 import { MatIcon } from '../art/Build';
 import { FurnArt } from '../art/Home';
@@ -113,7 +113,9 @@ export function RoomScreen({ place, onBack }: { place: 'doghouse' | 'cathouse'; 
   const w = useWander({
     pet: pet.id, size: 230, mode: act, home: { x: playAt[0], y: playAt[1] }, bed: { x: sleepAt[0], y: sleepAt[1] },
     area: { x0: 110, x1: 860, y0: 380, y1: 468 },
-    spots: [{ x: playAt[0], y: playAt[1] }, ...(bowl ? [{ x: S('bowl').x - 170, y: S('bowl').y - 150 }] : [])],
+    spots: [{ x: playAt[0], y: playAt[1] }],
+    bowl: bowl ? { x: S('bowl').x, y: S('bowl').y, w: S('bowl').w, h: S('bowl').h } : null,
+    grow: 0.6 + 0.4 * growthOf(pet.level, pet.stage),
   });
   const slotSel = sel ? ROOM_SLOTS.find(s => s.id === sel)! : null;
   const tapPet = () => { sfx.tap(); pet.species === 'dog' ? sfx.bark(1) : sfx.meow(); setAct(a => (a === 'play' ? 'sleep' : 'play')); };
@@ -127,7 +129,7 @@ export function RoomScreen({ place, onBack }: { place: 'doghouse' | 'cathouse'; 
         <button class="pill home-wall-btn" onPointerDown={(e) => { e.stopPropagation(); sfx.tap(); setSel('wall'); }}>🎨 벽지</button>
         {order.filter(s => s.front && s.id === 'rug').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
         {order.filter(s => s.front && s.id === 'bed').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
-        <div class={`home-pet ${act}`} style={{ left: w.x, top: w.y, ...w.style }} onPointerDown={(e) => { e.stopPropagation(); tapPet(); }} data-act={act} data-move={w.act}>
+        <div class={`home-pet ${act}`} style={{ left: w.x, top: w.y, ...w.style }} onTransitionEnd={w.onArrive} onPointerDown={(e) => { e.stopPropagation(); tapPet(); }} data-act={act} data-move={w.act}>
           <Pet pet={pet.id} stage={pet.stage} level={pet.level} wear={pet.wear} size={230} mood={act === 'sleep' ? 'sleep' : 'happy'}
             motion={live ? 'none' : act === 'sleep' ? 'none' : 'jump'} act={live ? w.act : undefined} flip={live ? w.flip : undefined} poke={w.poke} autoTalk={false} />
           {(live ? w.act === 'sleep' : act === 'sleep') && <Zzz low={live} />}
@@ -211,7 +213,7 @@ function ParkPet({ v, s, off, onTap }: { v: PetView; s: { x: number; y: number; 
   const arrived = !live || (w.act !== 'walk' && w.act !== 'run' && Math.abs(w.x - s.x) < 2 && Math.abs(w.y - s.y) < 2);
   const cls = ride ? (arrived ? s.cls : '') : live ? '' : s.cls;
   return (
-    <div class={`park-pet ${cls}`} style={{ left: w.x + off, top: w.y, ...w.style }} data-act={s.cls} data-move={w.act} onPointerDown={(e) => { e.stopPropagation(); onTap(); }}>
+    <div class={`park-pet ${cls}`} style={{ left: w.x + off, top: w.y, ...w.style }} onTransitionEnd={w.onArrive} data-act={s.cls} data-move={w.act} onPointerDown={(e) => { e.stopPropagation(); onTap(); }}>
       <Pet pet={v.id} stage={v.stage} level={v.level} wear={v.wear} size={170} mood={s.sleep ? 'sleep' : 'happy'}
         motion={live ? 'none' : s.sleep ? 'none' : s.cls === 'walk' ? 'bob' : 'none'} act={live ? w.act : undefined} flip={live ? w.flip : undefined} poke={w.poke} autoTalk={false} />
       {(live ? w.act === 'sleep' : s.sleep) && <Zzz low={live} />}

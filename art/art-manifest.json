@@ -1,6 +1,306 @@
 {
  "files": [
   {
+   "u": "art/furniture/bed-basket.84832c12.webp",
+   "b": 39246
+  },
+  {
+   "u": "art/furniture/bed-canopy.66ccae9b.webp",
+   "b": 43298
+  },
+  {
+   "u": "art/furniture/bed-cloud.f1f5a85e.webp",
+   "b": 28730
+  },
+  {
+   "u": "art/furniture/bed-cushion.cbff5ee6.webp",
+   "b": 37026
+  },
+  {
+   "u": "art/furniture/bed-hammock.e112bf57.webp",
+   "b": 43372
+  },
+  {
+   "u": "art/furniture/bed-sofa.17ae46d2.webp",
+   "b": 31024
+  },
+  {
+   "u": "art/furniture/bowl-bone.42bc06b9.webp",
+   "b": 31764
+  },
+  {
+   "u": "art/furniture/bowl-fish.46a35048.webp",
+   "b": 29132
+  },
+  {
+   "u": "art/furniture/bowl-milk.c18997f8.webp",
+   "b": 22770
+  },
+  {
+   "u": "art/furniture/clock-cat.3d655c19.webp",
+   "b": 36454
+  },
+  {
+   "u": "art/furniture/clock-cuckoo.599020e3.webp",
+   "b": 46654
+  },
+  {
+   "u": "art/furniture/clock-dog.1ddf44f3.webp",
+   "b": 40392
+  },
+  {
+   "u": "art/furniture/clock-flower.8b0f6be9.webp",
+   "b": 42270
+  },
+  {
+   "u": "art/furniture/clock-round.e6342967.webp",
+   "b": 24518
+  },
+  {
+   "u": "art/furniture/clock-sun.38825485.webp",
+   "b": 40638
+  },
+  {
+   "u": "art/furniture/cushion-bone.208a5ca2.webp",
+   "b": 31066
+  },
+  {
+   "u": "art/furniture/cushion-cloud.28096060.webp",
+   "b": 29120
+  },
+  {
+   "u": "art/furniture/cushion-fish.9b35e47d.webp",
+   "b": 32652
+  },
+  {
+   "u": "art/furniture/cushion-heart.60cec841.webp",
+   "b": 37448
+  },
+  {
+   "u": "art/furniture/cushion-round.46f6dad6.webp",
+   "b": 38650
+  },
+  {
+   "u": "art/furniture/cushion-strawberry.8a7314c0.webp",
+   "b": 38616
+  },
+  {
+   "u": "art/furniture/frame-bone.6cfd1980.webp",
+   "b": 29006
+  },
+  {
+   "u": "art/furniture/frame-fish.1a8a2d03.webp",
+   "b": 40838
+  },
+  {
+   "u": "art/furniture/frame-flower.2cfed204.webp",
+   "b": 44290
+  },
+  {
+   "u": "art/furniture/frame-paw.7d145a35.webp",
+   "b": 35932
+  },
+  {
+   "u": "art/furniture/frame-rainbow.f30f8f06.webp",
+   "b": 42960
+  },
+  {
+   "u": "art/furniture/frame-sea.04aef72a.webp",
+   "b": 39222
+  },
+  {
+   "u": "art/furniture/lamp-cloud.849c94ae.webp",
+   "b": 23800
+  },
+  {
+   "u": "art/furniture/lamp-lantern.a2664875.webp",
+   "b": 30208
+  },
+  {
+   "u": "art/furniture/lamp-moon.c13a31ef.webp",
+   "b": 23142
+  },
+  {
+   "u": "art/furniture/lamp-mush.8997cf69.webp",
+   "b": 23948
+  },
+  {
+   "u": "art/furniture/lamp-star.5ec1a403.webp",
+   "b": 22544
+  },
+  {
+   "u": "art/furniture/lamp-tulip.12c97d23.webp",
+   "b": 25682
+  },
+  {
+   "u": "art/furniture/mobile-balloon.84df8554.webp",
+   "b": 51510
+  },
+  {
+   "u": "art/furniture/mobile-bird.6b7d9faa.webp",
+   "b": 54080
+  },
+  {
+   "u": "art/furniture/mobile-cloud.4b58aed9.webp",
+   "b": 46450
+  },
+  {
+   "u": "art/furniture/mobile-fish.5fe47397.webp",
+   "b": 59674
+  },
+  {
+   "u": "art/furniture/mobile-moon.683d77c9.webp",
+   "b": 45392
+  },
+  {
+   "u": "art/furniture/mobile-star.4c46c169.webp",
+   "b": 49804
+  },
+  {
+   "u": "art/furniture/plant-cactus.abcd5982.webp",
+   "b": 34452
+  },
+  {
+   "u": "art/furniture/plant-lemon.44c602fd.webp",
+   "b": 58610
+  },
+  {
+   "u": "art/furniture/plant-monstera.702469ee.webp",
+   "b": 67330
+  },
+  {
+   "u": "art/furniture/plant-pot.831586d9.webp",
+   "b": 66652
+  },
+  {
+   "u": "art/furniture/plant-sun.ddc6563b.webp",
+   "b": 45706
+  },
+  {
+   "u": "art/furniture/plant-tulip.a9f1e3b7.webp",
+   "b": 50934
+  },
+  {
+   "u": "art/furniture/rug-flower.64cbad96.webp",
+   "b": 30174
+  },
+  {
+   "u": "art/furniture/rug-heart.38eb22bb.webp",
+   "b": 29548
+  },
+  {
+   "u": "art/furniture/rug-paw.1b48cfde.webp",
+   "b": 31802
+  },
+  {
+   "u": "art/furniture/rug-rainbow.b7a3bedf.webp",
+   "b": 35464
+  },
+  {
+   "u": "art/furniture/rug-round.c6a6bb79.webp",
+   "b": 31096
+  },
+  {
+   "u": "art/furniture/rug-star.889517ad.webp",
+   "b": 30034
+  },
+  {
+   "u": "art/furniture/shelf-book.17943126.webp",
+   "b": 24318
+  },
+  {
+   "u": "art/furniture/shelf-jar.7166e47e.webp",
+   "b": 36448
+  },
+  {
+   "u": "art/furniture/shelf-music.33add1df.webp",
+   "b": 41118
+  },
+  {
+   "u": "art/furniture/shelf-plant.130af285.webp",
+   "b": 60020
+  },
+  {
+   "u": "art/furniture/shelf-shell.9f2ddf7f.webp",
+   "b": 31396
+  },
+  {
+   "u": "art/furniture/shelf-toy.07783b30.webp",
+   "b": 35052
+  },
+  {
+   "u": "art/furniture/tower-box.5026a53e.webp",
+   "b": 38844
+  },
+  {
+   "u": "art/furniture/tower-cat.dc4a4dbf.webp",
+   "b": 40878
+  },
+  {
+   "u": "art/furniture/tower-dollhouse.b9c304de.webp",
+   "b": 37382
+  },
+  {
+   "u": "art/furniture/tower-drawer.873a90be.webp",
+   "b": 20718
+  },
+  {
+   "u": "art/furniture/tower-shelf.862f4cab.webp",
+   "b": 42944
+  },
+  {
+   "u": "art/furniture/tower-wardrobe.19ccdd3b.webp",
+   "b": 21804
+  },
+  {
+   "u": "art/furniture/walldeco-bunting.404a0dbb.webp",
+   "b": 25980
+  },
+  {
+   "u": "art/furniture/walldeco-garland.9e83891c.webp",
+   "b": 44072
+  },
+  {
+   "u": "art/furniture/walldeco-lights.cbb52f16.webp",
+   "b": 24406
+  },
+  {
+   "u": "art/furniture/walldeco-paw.5a5d927a.webp",
+   "b": 22212
+  },
+  {
+   "u": "art/furniture/walldeco-rainbow.721e229f.webp",
+   "b": 19932
+  },
+  {
+   "u": "art/furniture/walldeco-stars.8d882c2a.webp",
+   "b": 25950
+  },
+  {
+   "u": "art/furniture/win-arch.84fdc559.webp",
+   "b": 43300
+  },
+  {
+   "u": "art/furniture/win-blue.da842556.webp",
+   "b": 44748
+  },
+  {
+   "u": "art/furniture/win-pink.bebc37b4.webp",
+   "b": 41514
+  },
+  {
+   "u": "art/furniture/win-rainbow.7534f9d4.webp",
+   "b": 36946
+  },
+  {
+   "u": "art/furniture/win-round.ae1767b1.webp",
+   "b": 34234
+  },
+  {
+   "u": "art/furniture/win-shutter.3640dc33.webp",
+   "b": 38864
+  },
+  {
    "u": "art/pets/corgi.head.812b6aae.webp",
    "b": 36198
   },
@@ -643,6 +943,58 @@
   {
    "u": "art/snacks/watermelon.61147b2d.webp",
    "b": 10792
+  },
+  {
+   "u": "art/tiles/floor-carpet.ff1b495d.webp",
+   "b": 51894
+  },
+  {
+   "u": "art/tiles/floor-check.4104e928.webp",
+   "b": 21970
+  },
+  {
+   "u": "art/tiles/floor-herring.2742325a.webp",
+   "b": 50298
+  },
+  {
+   "u": "art/tiles/floor-pink.86156226.webp",
+   "b": 25258
+  },
+  {
+   "u": "art/tiles/floor-star.1010e007.webp",
+   "b": 34842
+  },
+  {
+   "u": "art/tiles/floor-wood.90d997a3.webp",
+   "b": 27556
+  },
+  {
+   "u": "art/tiles/wall-cloud.770799c8.webp",
+   "b": 26264
+  },
+  {
+   "u": "art/tiles/wall-dots.ca86f78d.webp",
+   "b": 14612
+  },
+  {
+   "u": "art/tiles/wall-flower.0c9e1f03.webp",
+   "b": 41612
+  },
+  {
+   "u": "art/tiles/wall-mint.1cedae8c.webp",
+   "b": 14142
+  },
+  {
+   "u": "art/tiles/wall-night.8d52aa78.webp",
+   "b": 50666
+  },
+  {
+   "u": "art/tiles/wall-paw.c3648a3c.webp",
+   "b": 42576
+  },
+  {
+   "u": "art/tiles/wall-wood.ecc5b108.webp",
+   "b": 28464
   }
  ]
 }

@@ -15,6 +15,7 @@ import { syncSoon } from './engine/sync';
 import { LESSONS } from './data/curriculum';
 import { Pet, ItemIcon, SnackIcon } from './art/Pet';
 import { prefetchPets } from './art/petpaint';
+import { prefetchArt } from './art/paintbg';
 import { PETS, ITEM_LIST, SNACKS } from './data/pets';
 
 function Gallery() {
@@ -109,6 +110,8 @@ export function App() {
 
   // 고른 강아지·고양이의 새 그림을 한가할 때 미리 받아 둔다(인터넷이 없을 때도 보이게 — 서비스워커가 저장)
   useEffect(() => { try { prefetchPets([petView('dog').id, petView('cat').id]); } catch { /* 무시 */ } }, []);
+  // 공부·놀이 화면 배경은 앱이 켜지고 조금 뒤 조용히 미리 받아 둔다(서비스워커가 저장 → 다음부터 바로·인터넷 없이도)
+  useEffect(() => { try { prefetchArt(['sky', 'library', 'meadow', 'castle', 'beach', 'night'].flatMap(sc => ['sky', 'land', 'front', 'full'].map(l => `bg.${sc}.${l}`))); } catch { /* 무시 */ } }, []);
 
   // 시험용: ?screen=room&place=cathouse / ?screen=park / ?screen=build → 그 화면 바로 열기
   useEffect(() => {
@@ -116,7 +119,7 @@ export function App() {
     const sc = q.get('screen');
     if (!sc) return;
     if (sc === 'room') setRoom(q.get('place') === 'cathouse' ? 'cathouse' : 'doghouse');
-    if (['room', 'park', 'build', 'house'].includes(sc)) setScreen(sc as Screen);
+    if (['room', 'park', 'build', 'house', 'map', 'sleep', 'book'].includes(sc)) setScreen(sc as Screen);
   }, []);
 
   // 시험용: ?play=feed&lesson=6 → 그 놀이를 바로 열기

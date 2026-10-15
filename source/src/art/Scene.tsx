@@ -1,8 +1,10 @@
 // 배경 장면과 반짝이 효과
+// 손그림 배경(art/paintbg.tsx)이 있으면 그것을, 받기 전·없으면 예전 그림(SVG)을 그린다.
 import { useEffect, useState } from 'preact/hooks';
 import { LibraryBack } from './Library';
+import { PaintedBg, useArtSwap } from './paintbg';
 
-export type Theme = 'meadow' | 'river' | 'sky' | 'night' | 'castle' | 'cave' | 'beach' | 'library';
+export type Theme = 'meadow' | 'river' | 'sky' | 'night' | 'castle' | 'cave' | 'beach' | 'library' | 'title';
 
 const SKY: Record<Theme, [string, string]> = {
   meadow: ['#bfe6ff', '#fff4fb'],
@@ -13,6 +15,7 @@ const SKY: Record<Theme, [string, string]> = {
   cave: ['#b8f2e6', '#f0fffb'],
   beach: ['#9fdcff', '#fff6dc'],
   library: ['#fff4e6', '#ffe8cc'],
+  title: ['#ffd9ec', '#e8f3ff'],
 };
 
 const HILL: Record<Theme, [string, string]> = {
@@ -24,26 +27,31 @@ const HILL: Record<Theme, [string, string]> = {
   cave: ['#8fe3cf', '#63c9b0'],
   beach: ['#ffe8a8', '#ffd97a'],
   library: ['#e9b886', '#d9a06a'],
+  title: ['#ffe3f1', '#ffc9e3'],
 };
 
 export function Backdrop({ theme = 'meadow', ground = true }: { theme?: Theme; ground?: boolean }) {
+  const [art, onReady] = useArtSwap();
   if (theme === 'library') return <LibraryBack />;
   const [a, b] = SKY[theme];
   const [h1, h2] = HILL[theme];
   return (
-    <div class="backdrop" style={{ background: `linear-gradient(180deg, ${a} 0%, ${b} 75%)` }}>
-      {theme === 'night' ? <Stars /> : <div class="sun" />}
-      <Cloud x={8} y={10} s={1} d={0} />
-      <Cloud x={60} y={6} s={0.7} d={-12} />
-      <Cloud x={82} y={20} s={0.9} d={-25} />
-      <Cloud x={34} y={24} s={0.55} d={-40} />
-      {ground && (
-        <svg class="hills" viewBox="0 0 1280 260" preserveAspectRatio="none">
-          <path d="M0 120 C 200 40, 380 70, 560 110 S 900 40, 1280 100 L1280 260 L0 260Z" fill={h1} />
-          <path d="M0 180 C 240 120, 420 150, 700 170 S 1080 120, 1280 160 L1280 260 L0 260Z" fill={h2} />
-          {theme === 'meadow' && [120, 300, 520, 760, 980, 1160].map((x, i) => <Flower x={x} y={200 + (i % 2) * 22} c={['#ff8fb8', '#ffd43b', '#b197fc'][i % 3]} />)}
-        </svg>
-      )}
+    <div class="backdrop" data-theme={theme} style={{ background: `linear-gradient(180deg, ${a} 0%, ${b} 75%)` }}>
+      {!art && <>
+        {theme === 'night' ? <Stars /> : <div class="sun" />}
+        <Cloud x={8} y={10} s={1} d={0} />
+        <Cloud x={60} y={6} s={0.7} d={-12} />
+        <Cloud x={82} y={20} s={0.9} d={-25} />
+        <Cloud x={34} y={24} s={0.55} d={-40} />
+        {ground && (
+          <svg class="hills" viewBox="0 0 1280 260" preserveAspectRatio="none">
+            <path d="M0 120 C 200 40, 380 70, 560 110 S 900 40, 1280 100 L1280 260 L0 260Z" fill={h1} />
+            <path d="M0 180 C 240 120, 420 150, 700 170 S 1080 120, 1280 160 L1280 260 L0 260Z" fill={h2} />
+            {theme === 'meadow' && [120, 300, 520, 760, 980, 1160].map((x, i) => <Flower x={x} y={200 + (i % 2) * 22} c={['#ff8fb8', '#ffd43b', '#b197fc'][i % 3]} />)}
+          </svg>
+        )}
+      </>}
+      <PaintedBg scene={theme} ground={ground} onReady={onReady} />
     </div>
   );
 }

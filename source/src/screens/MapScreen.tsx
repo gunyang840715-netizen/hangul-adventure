@@ -8,6 +8,8 @@ import { load, starsTotal, adventuresTotal, snackTotal, petView, curLesson } fro
 import { helloLine, REVIEW_FAIL, TEST_LOCKED } from '../data/voice';
 import { sayAll } from '../engine/audio';
 import { josa } from '../lib/hangul';
+import { artSrc } from '../art/artmap';
+import { useArtReady } from '../art/paintbg';
 
 interface Props {
   onStart: (idx: number, replay: boolean) => void;
@@ -30,6 +32,27 @@ export function nodePos(i: number): [number, number] {
   return [300 + i * 165 + unitGap, 440 + Math.sin(i * 0.85) * 120];
 }
 
+// ---------- 손그림 모험 지도 (묶음 4: map-1~3, 가로로 긴 그림 3장을 이어 붙임) ----------
+// 지도 한 장 = 단원 3개(1: 글자 마을·글자 숲·바람 언덕 / 2: 낱말 다리·받침 성 ①·② / 3: 쌍둥이 동굴·무지개 섬·이야기 나라).
+// 단원 하나가 그림 한 장의 1/3을 차지하게 단계를 놓아, 그림 속 마을·숲·다리·성·동굴·섬·책 나라 위에 그 단원이 온다.
+// 단계는 그림 가운데의 길(모래 띠) 위에. 이웃 그림은 3% 겹쳐 부드럽게 섞는다.
+const MAPS = [1, 2, 3].map(n => artSrc(`map.${n}`));
+const MAP_ART = MAPS.every(Boolean);
+const MAP_AR = 3840 / 1200;
+const MAP_OV = 0.03;
+const UNIT_IDX: Record<number, number[]> = {};
+LESSONS.forEach((l, i) => { (UNIT_IDX[l.unit] ??= []).push(i); });
+
+function artPos(i: number, H: number): [number, number] {
+  const uw = MAP_AR * H * (1 - MAP_OV) / 3;
+  const u = LESSONS[i].unit - 1;
+  const idx = UNIT_IDX[LESSONS[i].unit];
+  const n = idx.length, j = idx.indexOf(i);
+  const lo = u === 0 ? 0.36 : 0.1, hi = 0.9;
+  // 길(그림 높이의 약 64%)은 무대 높이 H에서 안전 영역 좌표로 0.14H + 400
+  return [Math.round(uw * (u + lo + (hi - lo) * (j + 0.5) / n)), Math.round(0.14 * H + 395 + Math.sin(i * 1.3) * 32)];
+}
+
 export function MapScreen({ onStart, onPlay, onBook, onHouse, onParent, todayDone, demo, resumeIdx = -1 }: Props) {
   const s = load();
   const L = curLesson(s);                 // 지금 할 단계 (복습 시험에 떨어졌으면 다시 공부할 단계)
@@ -37,11 +60,14 @@ export function MapScreen({ onStart, onPlay, onBook, onHouse, onParent, todayDon
   const allDone = L >= LESSONS.length;
   const scroller = useRef<HTMLDivElement>(null);
   const [wig, setWig] = useState<number | null>(null);
-  const width = nodePos(LESSONS.length - 1)[0] + 400;
+  const H = stageInfo().h;
+  const pos = MAP_ART ? (i: number) => artPos(i, H) : nodePos;
+  const width = MAP_ART ? Math.round(MAP_AR * H * (3 - 2 * MAP_OV)) : pos(LESSONS.length - 1)[0] + 400;
+  const artOk = useArtReady(MAP_ART ? (MAPS as string[]) : null);
 
   useEffect(() => {
     const el = scroller.current!;
-    el.scrollLeft = nodePos(cur)[0] - stageInfo().w * 0.4;
+    el.scrollLeft = pos(cur)[0] - stageInfo().w * 0.4;
     const nm = s.name;
     if (allDone) say(`${nm}${josa(nm, '아', '야')}, 모든 모험을 끝냈어! 놀이터에서 더 놀자!`);
     else if (s.hold && !todayDone) say(REVIEW_FAIL);
@@ -55,9 +81,9 @@ export function MapScreen({ onStart, onPlay, onBook, onHouse, onParent, todayDon
   // 경로
   let d = '';
   LESSONS.forEach((_, i) => {
-    const [x, y] = nodePos(i);
+    const [x, y] = pos(i);
     if (i === 0) d = `M${x - 200} ${y + 100} Q ${x - 100} ${y + 60} ${x} ${y}`;
-    else { const [px, py] = nodePos(i - 1); d += ` C ${px + 70} ${py}, ${x - 70} ${y}, ${x} ${y}`; }
+    else { const [px, py] = pos(i - 1); d += ` C ${px + 70} ${py}, ${x - 70} ${y}, ${x} ${y}`; }
   });
 
   const tapNode = (i: number) => {
@@ -68,34 +94,37 @@ export function MapScreen({ onStart, onPlay, onBook, onHouse, onParent, todayDon
     say(i === L ? '이 모험은 내일 열려!' : s.hold && i <= s.lessonIdx ? TEST_LOCKED : '아직 잠겨 있어!');
   };
 
-  const [mx, my] = nodePos(cur);
+  const [mx, my] = pos(cur);
 
   return (
     <div class="screen" style={{ background: 'linear-gradient(180deg,#c9ecff,#fff3fb 70%)' }}>
       <div class="map-scroll" ref={scroller}>
         <div class="map-inner" style={{ width }}>
+          {MAP_ART && <div class={`map-art ${artOk ? 'on' : ''}`} style={{ width }}>
+            {MAPS.map((src, k) => <img src={src!} alt="" draggable={false} style={{ left: Math.round(k * MAP_AR * H * (1 - MAP_OV)), width: Math.round(MAP_AR * H), height: H }} />)}
+          </div>}
           <div class="map-safe" style={{ width }}>
           {/* 단원 땅 */}
           <svg style={{ position: 'absolute', left: 0, top: 0 }} width={width} height={800}>
-            {UNITS.map(u => {
+            {!artOk && UNITS.map(u => {
               const idx = LESSONS.map((l, i) => [l, i] as const).filter(([l]) => l.unit === u.id).map(([, i]) => i);
-              const x0 = nodePos(idx[0])[0] - 110, x1 = nodePos(idx[idx.length - 1])[0] + 110;
+              const x0 = pos(idx[0])[0] - 110, x1 = pos(idx[idx.length - 1])[0] + 110;
               return <g>
                 <rect x={x0} y={170} width={x1 - x0} height={560} rx={140} fill={u.color} opacity=".28" />
                 <rect x={x0 + 20} y={640} width={x1 - x0 - 40} height={120} rx={60} fill={u.color} opacity=".35" />
               </g>;
             })}
-            <path d={d} stroke="#fff" stroke-width="34" fill="none" stroke-linecap="round" />
-            <path d={d} stroke="#ffd6e8" stroke-width="12" fill="none" stroke-dasharray="2 26" stroke-linecap="round" />
+            <path d={d} stroke="#fff" stroke-width={artOk ? 20 : 34} fill="none" stroke-linecap="round" opacity={artOk ? 0.72 : 1} />
+            <path d={d} stroke={artOk ? '#ff9ec7' : '#ffd6e8'} stroke-width={artOk ? 9 : 12} fill="none" stroke-dasharray="2 26" stroke-linecap="round" />
           </svg>
           {UNITS.map(u => {
             const first = LESSONS.findIndex(l => l.unit === u.id);
             const last = LESSONS.length - 1 - [...LESSONS].reverse().findIndex(l => l.unit === u.id);
-            const x = (nodePos(first)[0] + nodePos(last)[0]) / 2;
+            const x = (pos(first)[0] + pos(last)[0]) / 2;
             return <div class="unit-label" style={{ left: x }}><b>{u.emoji}</b>{u.name}</div>;
           })}
           {LESSONS.map((l, i) => {
-            const [x, y] = nodePos(i);
+            const [x, y] = pos(i);
             const u = UNITS[l.unit - 1];
             const done = i < L;
             const locked = i > L || (i === L && todayDone);
@@ -109,18 +138,18 @@ export function MapScreen({ onStart, onPlay, onBook, onHouse, onParent, todayDon
               </button>
             );
           })}
-          {UNITS.map(u => {
+          {!artOk && UNITS.map(u => {
             const idx = LESSONS.map((l, i) => [l, i] as const).filter(([l]) => l.unit === u.id).map(([, i]) => i);
             const deco = DECO[u.id] ?? ['✨'];
             return idx.map((li, k) => {
-              const [x, y] = nodePos(li);
+              const [x, y] = pos(li);
               const e = deco[k % deco.length];
               const below = y < 440;
               return <div style={{ position: 'absolute', left: x + (k % 2 ? 30 : -70), top: below ? y + 110 + (k % 3) * 20 : y - 190 - (k % 2) * 20, fontSize: 54 + (k % 3) * 10, opacity: .9, pointerEvents: 'none' }}>{e}</div>;
             });
           })}
           {/* 성 (끝) */}
-          <div style={{ position: 'absolute', left: nodePos(LESSONS.length - 1)[0] + 120, top: 250, fontSize: 180 }}>🏰</div>
+          {!artOk && <div style={{ position: 'absolute', left: pos(LESSONS.length - 1)[0] + 120, top: 250, fontSize: 180 }}>🏰</div>}
           <div style={{ position: 'absolute', left: mx + 30, top: my - 190, pointerEvents: 'none' }}>
             <Buddy who="other" size={135} motion="bob" />
           </div>

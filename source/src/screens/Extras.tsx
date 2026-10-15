@@ -38,7 +38,7 @@ export function Title({ onStart }: { onStart: () => void }) {
   };
   return (
     <div class="screen" onClick={() => ready && onStart()}>
-      <Backdrop theme="sky" />
+      <Backdrop theme="title" />
       <div class="layer">
         <div class="title-logo slide-up" style={{ fontSize: 96 }}>{appTitle(load().name)}<small>한글 모험을 떠나요!</small></div>
         <div style={{ position: 'absolute', left: 110, top: 400 }} class="float"><LetterGlyph ch="ㄱ" size={160} /></div>
@@ -82,8 +82,8 @@ export function Sleep({ onParent, onWake, demo }: { onParent: () => void; onWake
           <Buddy who="lead" size={320} mood={waking ? 'wow' : 'sleep'} motion={waking ? 'jump' : 'bob'} autoTalk={false} />
           <Buddy who="other" size={250} mood={waking ? 'wow' : 'sleep'} motion={waking ? 'jump' : 'bob'} />
         </div>
-        <div style={{ fontSize: 64, color: '#fff' }}>{waking ? '다시 놀 수 있어요! ☀️' : '오늘은 여기까지! 🌙'}</div>
-        <div style={{ fontSize: 32, color: '#e5dbff' }}>{hasResume ? '하던 모험은 시간이 되면 그 자리부터 이어서 해요 🚩' : '내일 또 모험하자'}</div>
+        <div style={{ fontSize: 64, color: '#fff', textShadow: '0 4px 0 rgba(60,30,90,.45), 0 0 22px rgba(40,20,80,.55)' }}>{waking ? '다시 놀 수 있어요! ☀️' : '오늘은 여기까지! 🌙'}</div>
+        <div style={{ fontSize: 32, color: '#f3edff', textShadow: '0 3px 0 rgba(60,30,90,.45), 0 0 16px rgba(40,20,80,.6)' }}>{hasResume ? '하던 모험은 시간이 되면 그 자리부터 이어서 해요 🚩' : '내일 또 모험하자'}</div>
       </div>
       <div class="topbar"><GearLite onOpen={onParent} /></div>
     </div>

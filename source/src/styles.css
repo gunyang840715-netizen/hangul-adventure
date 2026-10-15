@@ -445,3 +445,40 @@ button { font-family: inherit; color: inherit; border: none; background: none; p
 @keyframes ptTalk { from { transform: scale(1) rotate(0deg); } to { transform: scale(1.035, .985) rotate(-1.2deg); } }
 .wardrobe-grid { scrollbar-width: none; }
 .wardrobe-grid::-webkit-scrollbar { display: none; }
+
+/* ---------- 손그림 배경 (art/paintbg.tsx · 묶음 4) ---------- */
+.pbg { position: absolute; inset: 0; overflow: hidden; opacity: 0; transition: opacity .45s ease; pointer-events: none; }
+.pbg.on { opacity: 1; }
+.pbg-l { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%; -webkit-user-drag: none; }
+.pbg.on .pbg-sky { transform-origin: 50% 100%; animation: skyPan 80s ease-in-out infinite alternate; }
+@keyframes skyPan { from { transform: scale(1.05) translateX(-1.2%); } to { transform: scale(1.05) translateX(1.2%); } }
+.pbg.on .pbg-front { transform-origin: 50% 100%; animation: grassSway 6.5s ease-in-out infinite alternate; }
+@keyframes grassSway { from { transform: skewX(-.6deg); } to { transform: skewX(.6deg); } }
+.pbg-fx { position: absolute; inset: 0; overflow: hidden; }
+.fx-lane { position: absolute; left: 0; width: 100%; animation: fxLane 120s linear infinite; will-change: transform; }
+.fx-lane img { display: block; opacity: .88; }
+.fx-lane.night img { filter: brightness(.55) saturate(.75); opacity: .6; }
+@keyframes fxLane { from { transform: translateX(-30%); } to { transform: translateX(112%); } }
+.fx-fall { position: absolute; top: 0; width: 100%; height: 100%; animation: fxFall 14s linear infinite; will-change: transform; }
+.fx-fall img { display: block; animation: flutter 3s ease-in-out infinite alternate; }
+@keyframes fxFall { from { transform: translate(0, -8%); } to { transform: translate(-18%, 108%); } }
+@keyframes flutter { from { transform: rotate(-35deg) translateX(-18px); } to { transform: rotate(40deg) translateX(18px); } }
+.fx-ray { position: absolute; left: -3%; top: -8%; width: 36%; mix-blend-mode: screen; opacity: .3; animation: rayPulse 7s ease-in-out infinite alternate; }
+@keyframes rayPulse { from { opacity: .14; } to { opacity: .42; } }
+.fx-fly { position: absolute; width: 2.6%; mix-blend-mode: screen; animation: flyWander 9s ease-in-out infinite alternate; }
+.fx-fly img { display: block; width: 100%; animation: flyBlink 2.4s ease-in-out infinite alternate; }
+@keyframes flyWander { 0% { transform: translate(0, 0); } 33% { transform: translate(40px, -30px); } 66% { transform: translate(-24px, -64px); } 100% { transform: translate(30px, -12px); } }
+@keyframes flyBlink { from { opacity: .12; } to { opacity: 1; } }
+.fx-twinkle { position: absolute; width: 2.2%; mix-blend-mode: screen; opacity: 0; animation: twinkleFx 3s ease-in-out infinite; }
+@keyframes twinkleFx { 0%, 100% { opacity: 0; transform: scale(.4) rotate(0); } 50% { opacity: .95; transform: scale(1) rotate(30deg); } }
+.fx-mote { position: absolute; width: 1.4%; mix-blend-mode: screen; animation: moteRise 16s linear infinite; }
+.fx-mote img { width: 100%; display: block; opacity: .65; }
+@keyframes moteRise { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: .9; } 85% { opacity: .75; } 100% { transform: translate(70px, -230px); opacity: 0; } }
+.map-art { position: absolute; left: 0; top: 0; height: 100%; opacity: 0; transition: opacity .45s ease; pointer-events: none; }
+.map-art.on { opacity: 1; }
+.map-art img { position: absolute; top: 0; -webkit-user-drag: none; }
+.map-art img + img { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 3%); mask-image: linear-gradient(to right, transparent 0, #000 3%); }
+@media (prefers-reduced-motion: reduce) {
+  .pbg-fx { display: none; }
+  .pbg.on .pbg-sky, .pbg.on .pbg-front { animation: none; }
+}

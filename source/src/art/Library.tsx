@@ -1,6 +1,8 @@
 // 글자 도서관: 공부(글자 소개·따라 쓰기·받아쓰기 시험) 화면 배경
 // 벽 + 나무 바닥 + 양옆 책장(화면이 넓으면 책장이 끝까지 이어짐) + '글자 도서관' 간판 + 깃발
 // 강아지·고양이는 책상에 앉아 책을 펴고 공부 (ReadingDesk를 친구들 앞에 놓음)
+// 손그림 도서관(art/paintbg.tsx, bg.library.full·front)이 있으면 그것을 쓰고, 받기 전·없으면 아래 그림
+import { PaintedBg, useArtSwap } from './paintbg';
 
 const BOOK_COLORS = ['#ff8fab', '#ffd43b', '#74c0fc', '#8ce99a', '#b197fc', '#ffa94d', '#63e6be', '#f783ac', '#ffc078', '#91a7ff'];
 
@@ -57,8 +59,10 @@ const SHELF_R = `url("data:image/svg+xml,${encodeURIComponent(shelfSvg(23))}")`;
 
 /** 도서관 배경 (무대 전체를 채움) */
 export function LibraryBack() {
+  const [art, onReady] = useArtSwap();
   return (
     <div class="backdrop library" data-theme="library">
+      {!art && <>
       <div class="lib-wall" />
       <div class="lib-shelf left" style={{ backgroundImage: SHELF_L }} />
       <div class="lib-shelf right" style={{ backgroundImage: SHELF_R }} />
@@ -81,6 +85,8 @@ export function LibraryBack() {
       </svg>
       {/* 바닥 둥근 깔개 */}
       <div class="lib-rug" />
+      </>}
+      <PaintedBg scene="library" onReady={onReady} />
     </div>
   );
 }

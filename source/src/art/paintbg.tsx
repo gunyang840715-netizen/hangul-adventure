@@ -111,24 +111,26 @@ const fxSrc = (k: string) => artSrc(`fx.${k}`);
 function Effects({ scene, part }: { scene: string; part: 'sky' | 'mid' }) {
   const f = FX[scene];
   if (!f) return null;
+  // 놀이터처럼 무대보다 훨씬 넓은 그림(가로 3200)에서는 크기는 줄이고 구름은 천천히
+  const k = scene === 'park' ? 0.4 : 1;
   const out = [];
   const clouds = ['cloud1', 'cloud2', 'cloud3'].map(fxSrc).filter(Boolean) as string[];
   if (part === 'sky') {
     for (let i = 0; i < (f.clouds ?? 0) && clouds.length; i++) {
     out.push(
-      <div class={`fx-lane ${f.night ? 'night' : ''}`} style={{ top: `${4 + i * 9 + (i % 2) * 3}%`, animationDuration: `${110 + i * 37}s`, animationDelay: `${-(i * 47 + 13)}s` }}>
-        <img src={clouds[i % clouds.length]} alt="" style={{ width: `${19 - i * 3}%` }} />
+      <div class={`fx-lane ${f.night ? 'night' : ''}`} style={{ top: `${4 + i * 9 + (i % 2) * 3}%`, animationDuration: `${(110 + i * 37) / k}s`, animationDelay: `${-(i * 47 + 13) / k}s` }}>
+        <img src={clouds[i % clouds.length]} alt="" style={{ width: `${(19 - i * 3) * k}%` }} />
       </div>,
     );
     }
     return <>{out}</>;
   }
-  (f.fall ?? []).forEach((k, i) => {
-    const src = fxSrc(k);
+  (f.fall ?? []).forEach((name, i) => {
+    const src = fxSrc(name);
     if (!src) return;
     out.push(
       <div class="fx-fall" style={{ left: `${12 + ((i * 37) % 80)}%`, animationDuration: `${13 + (i % 3) * 4}s`, animationDelay: `${-(i * 4.3 + 1)}s` }}>
-        <img src={src} alt="" style={{ width: `${2.2 + (i % 2) * 0.8}%`, animationDuration: `${2.8 + (i % 3) * 0.9}s` }} />
+        <img src={src} alt="" style={{ width: `${(2.2 + (i % 2) * 0.8) * k}%`, animationDuration: `${2.8 + (i % 3) * 0.9}s` }} />
       </div>,
     );
   });

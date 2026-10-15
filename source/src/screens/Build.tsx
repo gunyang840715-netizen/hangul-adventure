@@ -1,20 +1,21 @@
 // 집 짓기: 놀이로 모은 재료를 하나씩 써서 강아지 집 · 고양이 집 · 놀이터를 한 부분씩 짓기
 import { useEffect, useState } from 'preact/hooks';
-import { burst } from '../art/Scene';
+import { Backdrop, burst } from '../art/Scene';
+import { YardBack, YardDeco, houseFilter } from './Home';
 import { Pet } from '../art/Pet';
 import { BuildArt, MatIcon } from '../art/Build';
 import { say, sayAll, sfx, newScene } from '../engine/audio';
 import { buddy } from '../engine/bus';
 import { petView, matsLeft, builtCount, buildPart, nextBuild, onChange } from '../engine/store';
 import { BUILDS, BUILD, partLine, doneBuildLine } from '../data/pets';
-import { HOME_IN, HOME_LOCKED } from '../data/voice';
+import { HOME_IN, HOME_LOCKED, HOME_DECO } from '../data/voice';
 
 function useRefresh() {
   const [, force] = useState(0);
   useEffect(() => onChange(() => force(x => x + 1)), []);
 }
 
-export function BuildScreen({ onBack, onEnter }: { onBack: () => void; onEnter?: (place: 'doghouse' | 'cathouse' | 'park') => void }) {
+export function BuildScreen({ onBack, onEnter, onYard }: { onBack: () => void; onEnter?: (place: 'doghouse' | 'cathouse' | 'park') => void; onYard?: (house: 'doghouse' | 'cathouse') => void }) {
   useRefresh();
   const [sel, setSel] = useState<string>(() => nextBuild()?.id ?? 'doghouse');
   const [pop, setPop] = useState(-1);
@@ -66,9 +67,16 @@ export function BuildScreen({ onBack, onEnter }: { onBack: () => void; onEnter?:
   // 다 지었으면 강아지·고양이가 집 앞에서 낮잠 자다가 놀다가
   const [nap, setNap] = useState(false);
   useEffect(() => { if (!done) return; const t = setInterval(() => setNap(x => !x), 8000); return () => clearInterval(t); }, [done, sel]);
+  const house = sel === 'doghouse' || sel === 'cathouse' ? sel : null;
+  // 집 밖 마당 꾸미기(원문 E): 다 지은 집에서 들어감, 꾸민 마당은 이 화면에도 보인다
+  const yard = () => {
+    if (!house) return;
+    if (!done) { sfx.boing(); say(HOME_LOCKED); return; }
+    sfx.pop(); say(HOME_DECO); onYard?.(house);
+  };
   return (
-    <div class="screen">
-      <div class="backdrop yard"><div class="yard-sky" /><div class="yard-grass" /></div>
+    <div class="screen" data-build-screen={sel}>
+      {house ? <YardBack house={house} /> : <Backdrop theme="meadow" />}
       <div class="topbar">
         <button class="iconbtn" onClick={() => { sfx.tap(); onBack(); }}>🏠</button>
         <div class="pill" style={{ fontSize: 32 }}>🔨 집 짓기</div>
@@ -87,20 +95,25 @@ export function BuildScreen({ onBack, onEnter }: { onBack: () => void; onEnter?:
             );
           })}
         </div>
+        {house && done && <YardDeco house={house} front={false} />}
         <div class="build-stage" key={sel} data-enter={done ? 1 : 0} onClick={enter}>
-          <BuildArt id={sel} n={n} name={sel === 'doghouse' ? dog.name : sel === 'cathouse' ? cat.name : ''} size={700} pop={pop} />
+          <BuildArt id={sel} n={n} name={sel === 'doghouse' ? dog.name : sel === 'cathouse' ? cat.name : ''} size={700} pop={pop} tint={house && done ? houseFilter(house) : undefined} />
         </div>
+        {house && done && <YardDeco house={house} front />}
         {petFor.map((v, i) => (
           <div style={{ position: 'absolute', left: i === 0 ? 40 : 1040, top: 470 }}>
             <Pet pet={v.id} stage={v.stage} level={v.level} wear={v.wear} size={200} mood={done ? (nap ? 'sleep' : 'love') : 'happy'} motion={cheer ? 'cheer' : done && nap ? 'none' : 'bob'} act={done && nap ? 'sleep' : undefined} autoTalk={i === 0 && !nap} />
             {done && nap && <div class="zzz"><span>Z</span><span>z</span><span>z</span></div>}
           </div>
         ))}
-        {done ? (
+        {done ? (<>
           <button class="build-btn enter" data-build-enter={sel} onClick={() => enter()}>
             <span style={{ fontSize: 46 }}>{sel === 'park' ? '🎠' : '🚪'}</span><span>{sel === 'park' ? '놀이터 꾸미기' : '집 안으로'}</span>
           </button>
-        ) : (
+          {house && <button class="build-btn yard" data-build-yard={sel} onClick={yard}>
+            <span style={{ fontSize: 44 }}>🌳</span><span>마당 꾸미기</span>
+          </button>}
+        </>) : (
           <button class={`build-btn ${left <= 0 ? 'off' : ''}`} data-build-go={left > 0 ? 1 : 0} onClick={build}>
             <span style={{ fontSize: 50 }}>🔨</span><span>{b.parts[n].name} 짓기</span>
           </button>

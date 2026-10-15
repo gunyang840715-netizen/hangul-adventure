@@ -12,6 +12,9 @@
 #   python3 source/scripts/art_sheets.py snacks    <art-src/3-snacks 폴더> <저장소 맨 위>
 #   python3 source/scripts/art_sheets.py items     <art-src/2-items 폴더>  <저장소 맨 위>
 #   python3 source/scripts/art_sheets.py furniture <art-src/5-room 폴더>   <저장소 맨 위> [건너뛸 시트,…]
+#   python3 source/scripts/art_sheets.py yard      <art-src/6-yard 폴더>   <저장소 맨 위>   (마당 기구 — 그림 키 furn.y-<자리>.<이름>)
+#   python3 source/scripts/art_sheets.py park      <art-src/7-park 폴더>   <저장소 맨 위>   (놀이터 기구 — furn.<자리>.<이름>)
+#   python3 source/scripts/art_sheets.py words     <art-src/9-words 폴더>  <저장소 맨 위>   (낱말 그림 — word.<번호>)
 # 시트마다 같은 이름의 .json({"1": "id", …} — 왼쪽 위부터 오른쪽으로)이 있어야 한다. 같은 시트의 -vN이 있으면 가장 큰 N을 쓴다.
 import sys, os, re, json, glob, hashlib, io
 import numpy as np, cv2
@@ -27,7 +30,11 @@ CONF = {
     'snacks': dict(group='snacks', size=256, limit=40000, grid=4),
     'items': dict(group='items', size=256, limit=40000, grid=4),
     'furniture': dict(group='furniture', size=640, limit=70000, grid=3),   # 가구는 정사각형 X(꼭 맞게 자른 그대로) — 앱이 자리 상자에 비율 맞춰 넣음
+    'yard': dict(group='yard', size=640, limit=70000, grid=3),
+    'park': dict(group='park', size=720, limit=70000, grid=3),
+    'words': dict(group='words', size=256, limit=40000, grid=4),
 }[MODE]
+TIGHT = MODE in ('furniture', 'yard', 'park')
 
 # 정사각형 안에서 놓는 쪽(세로): 'bottom' | 'top' | 'center'
 ITEM_ALIGN = {'hat': 'bottom', 'shoes': 'bottom', 'toy': 'bottom', 'neck': 'top', 'clothes': 'top', 'glasses': 'center'}
@@ -38,14 +45,15 @@ def log(*a): print(*a, flush=True)
 
 
 def key_of(id_):
-    """그림 키와 파일 이름: snack.bone / item.hat.bow / furn.bed.cushion"""
+    """그림 키와 파일 이름: snack.bone / item.hat.bow / furn.bed.cushion / word.w001"""
     if MODE == 'snacks': return f'snack.{id_}', id_
+    if MODE == 'words': return f'word.{id_}', id_
     slot, k = id_.split(':')
     return (f'item.{slot}.{k}' if MODE == 'items' else f'furn.{slot}.{k}'), f'{slot}-{k}'
 
 
 def align_of(id_):
-    if MODE == 'snacks': return 'center'
+    if MODE in ('snacks', 'words'): return 'center'
     slot = id_.split(':')[0]
     if MODE == 'items': return ITEM_ALIGN.get(slot, 'center')
     return FURN_ALIGN.get(slot, 'bottom')
@@ -224,7 +232,7 @@ def main():
         for c, id_ in cmap.items():
             J = got.get(int(c))
             if J is None: log(f'  {id_}: 그림 없음(칸 {c})'); continue
-            S = to_tight(J, size) if MODE == 'furniture' else to_square(J, size, align_of(id_), id_)
+            S = to_tight(J, size) if TIGHT else to_square(J, size, align_of(id_), id_ if MODE == 'items' else None)
             data, q = webp(S, limit)
             k, name = key_of(id_)
             amap[k] = put(group, name, data)
@@ -240,7 +248,7 @@ def main():
     for rel in amap.values(): files[rel] = os.path.getsize(os.path.join(REPO, rel))
     man['files'] = [{'u': u, 'b': b} for u, b in sorted(files.items())]
     json.dump(man, open(man_p, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
-    update_artmap(amap, {'snacks': 'snack.', 'items': 'item.', 'furniture': 'furn.'}[MODE])
+    update_artmap(amap, {'snacks': 'snack.', 'items': 'item.', 'furniture': 'furn.', 'yard': 'furn.', 'park': 'furn.', 'words': 'word.'}[MODE])
     if MODE == 'items': write_items_gen()
     tot = sum(os.path.getsize(os.path.join(REPO, v)) for v in amap.values())
     log(f'끝: {len(amap)}장, {tot // 1024} KB')

@@ -6,7 +6,7 @@ import { Session } from './screens/Session';
 import { Title, Book, Parent, Sleep } from './screens/Extras';
 import { House, Dress, Adopt } from './screens/House';
 import { BuildScreen } from './screens/Build';
-import { RoomScreen, ParkScreen } from './screens/Home';
+import { RoomScreen, ParkScreen, YardScreen } from './screens/Home';
 import { BuildArt } from './art/Build';
 import { buildLesson, buildPlay, refreshSteps, dictationStep, LETTER_SETS, type Step } from './engine/session';
 import { petView, load, remainingMs, startClock, onChange, addLessonToday, addAdventure, addStars, todayDoneLessons, getResume, setResume, setClockActive, today, curLesson, passLesson, reviewDue, passReview, failReview } from './engine/store';
@@ -76,7 +76,7 @@ function Icon() {
   );
 }
 
-type Screen = 'title' | 'map' | 'session' | 'book' | 'house' | 'dress' | 'adopt' | 'build' | 'room' | 'park' | 'parent' | 'sleep';
+type Screen = 'title' | 'map' | 'session' | 'book' | 'house' | 'dress' | 'adopt' | 'build' | 'room' | 'park' | 'yard' | 'parent' | 'sleep';
 const GALLERY = /[?&]gallery=/.test(location.search);
 const ICON = /[?&]icon=/.test(location.search);
 /** 사용 시간을 세는 화면 */
@@ -93,6 +93,7 @@ export function App() {
   const [back, setBack] = useState<Screen>('map');
   const [sess, setSess] = useState<Sess | null>(null);
   const [room, setRoom] = useState<'doghouse' | 'cathouse'>('doghouse');
+  const [yardBack, setYardBack] = useState<'build' | 'house'>('build');
   const [demo, setDemo] = useState(() => /[?&]demo=1/.test(location.search));
   const [ver, tick] = useState(0);
   const s = load();
@@ -118,8 +119,8 @@ export function App() {
     const q = new URLSearchParams(location.search);
     const sc = q.get('screen');
     if (!sc) return;
-    if (sc === 'room') setRoom(q.get('place') === 'cathouse' ? 'cathouse' : 'doghouse');
-    if (['room', 'park', 'build', 'house', 'map', 'sleep', 'book'].includes(sc)) setScreen(sc as Screen);
+    if (sc === 'room' || sc === 'yard') setRoom(q.get('place') === 'cathouse' ? 'cathouse' : 'doghouse');
+    if (['room', 'park', 'yard', 'build', 'house', 'map', 'sleep', 'book'].includes(sc)) setScreen(sc as Screen);
   }, []);
 
   // 시험용: ?play=feed&lesson=6 → 그 놀이를 바로 열기
@@ -254,8 +255,9 @@ export function App() {
     case 'map': view = <MapScreen key={`${s.lessonIdx}:${todayDone}:${demo}:${ver > 0 ? s.epoch : 0}`} onStart={startLesson} onPlay={startPlay} onBook={() => go('book')} onHouse={() => go('house')} onParent={openParent} todayDone={todayDone} demo={demo} resumeIdx={validResume()?.lessonIdx ?? -1} />; break;
     case 'session': view = sess && <Session key={sess.steps.length + ':' + (sess.startAt ?? 0) + ':' + sess.idx} steps={sess.steps} lessonIdx={sess.idx} name={s.name} startAt={sess.startAt} resumed={sess.resumed} replay={sess.replay} play={sess.play} onFinish={finish} onPause={pause} onQuit={() => { setSess(null); syncSoon(500); go('map'); }} demo={demo} onFail={sess.review || !sess.replay ? failTest : undefined} />; break;
     case 'book': view = <Book onBack={() => go('map')} />; break;
-    case 'house': view = <House onBack={() => { syncSoon(500); go('map'); }} onDress={() => go('dress')} onAdopt={() => go('adopt')} onBuild={() => go('build')} />; break;
-    case 'build': view = <BuildScreen onBack={() => { syncSoon(500); go('house'); }} onEnter={(pl) => { if (pl === 'park') go('park'); else { setRoom(pl); go('room'); } }} />; break;
+    case 'house': view = <House onBack={() => { syncSoon(500); go('map'); }} onDress={() => go('dress')} onAdopt={() => go('adopt')} onBuild={() => go('build')} onYard={(h) => { setRoom(h); setYardBack('house'); go('yard'); }} />; break;
+    case 'build': view = <BuildScreen onBack={() => { syncSoon(500); go('house'); }} onEnter={(pl) => { if (pl === 'park') go('park'); else { setRoom(pl); go('room'); } }} onYard={(h) => { setRoom(h); setYardBack('build'); go('yard'); }} />; break;
+    case 'yard': view = <YardScreen key={'yard-' + room} house={room} onBack={() => { syncSoon(500); go(yardBack); }} />; break;
     case 'room': view = <RoomScreen key={room} place={room} onBack={() => { syncSoon(500); go('build'); }} />; break;
     case 'park': view = <ParkScreen onBack={() => { syncSoon(500); go('build'); }} />; break;
     case 'dress': view = <Dress onBack={() => { syncSoon(500); go('house'); }} />; break;

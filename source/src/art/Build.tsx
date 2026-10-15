@@ -1,5 +1,11 @@
 // 집 짓기 그림: 강아지 집 · 고양이 집 · 놀이터 (600x440 좌표). 지은 부분까지 그리고, 다음에 지을 부분은 흐린 그림자로
+// 손그림 완성 그림(원문 H — art/builds, art_builds.py)이 있으면: 완성 그림 1장을 흐린 밑그림으로 깔고,
+// 지은 부품의 영역(BUILD_MASK, 부품 순서 = data/pets.ts BUILDS)만 색을 입혀 보여 준다 — '○○을 만들었어!' 말과 그림이 맞게.
+// 그림을 받기 전·못 받으면 아래 SVG 그림.
 import type { JSX } from 'preact';
+import { useState } from 'preact/hooks';
+import { artSrc } from './artmap';
+import { useArtReady } from './paintbg';
 
 type Part = (name: string) => JSX.Element;
 
@@ -62,19 +68,133 @@ const PARK: Part[] = [
 
 const ART: Record<string, Part[]> = { doghouse: DOG, cathouse: CAT, park: PARK };
 
+// ---------- 손그림 완성 그림 ----------
+// 영역: 완성 그림 캔버스 0~1 좌표의 다각형 또는 ['e', 가운데x, 가운데y, 반지름x, 반지름y](타원). 부품 순서는 BUILDS와 같다.
+type Shape = [number, number][] | ['e', number, number, number, number];
+interface BMask { base?: Shape[]; parts: Shape[][]; sign?: [number, number, number]; body?: number }   // body: 앞에서부터 이만큼이 집 건물(집 색이 입혀지는 곳)
+const BUILD_MASK: Record<string, BMask> = {
+  doghouse: {
+    parts: [
+      [[[0.19, 0.585], [0.37, 0.56], [0.885, 0.56], [0.89, 0.62], [0.70, 0.715], [0.60, 0.715], [0.21, 0.665]]],            // 바닥
+      [[[0.27, 0.31], [0.43, 0.165], [0.625, 0.345], [0.66, 0.365], [0.845, 0.385], [0.835, 0.605], [0.27, 0.605]]],         // 벽
+      [[[0.185, 0.385], [0.43, 0.07], [0.72, 0.115], [0.89, 0.375], [0.865, 0.435], [0.66, 0.39], [0.62, 0.36], [0.43, 0.17], [0.26, 0.38], [0.22, 0.41]]], // 지붕
+      [[[0.33, 0.585], [0.33, 0.42], [0.355, 0.37], [0.40, 0.335], [0.45, 0.322], [0.50, 0.335], [0.545, 0.37], [0.57, 0.42], [0.57, 0.585]]], // 문
+      [[[0.65, 0.405], [0.795, 0.40], [0.795, 0.56], [0.65, 0.565]]],                                                       // 창문
+      [[[0.33, 0.262], [0.55, 0.255], [0.555, 0.33], [0.33, 0.335]]],                                                       // 이름표
+      [['e', 0.29, 0.815, 0.24, 0.135]],                                                                                   // 방석
+      [[[0.625, 0.785], [0.935, 0.785], [0.935, 0.935], [0.625, 0.935]]],                                                   // 밥그릇
+    ],
+    sign: [0.443, 0.297, 0.19],
+    body: 6,
+  },
+  cathouse: {
+    body: 5,
+    parts: [
+      [[[0.005, 0.595], [0.10, 0.58], [0.715, 0.58], [0.72, 0.65], [0.66, 0.705], [0.15, 0.705], [0.005, 0.665]]],
+      [[[0.09, 0.35], [0.70, 0.35], [0.705, 0.60], [0.09, 0.60]]],
+      [[[0.03, 0.36], [0.13, 0.23], [0.155, 0.19], [0.16, 0.065], [0.27, 0.065], [0.275, 0.14], [0.345, 0.105], [0.52, 0.22], [0.73, 0.355], [0.71, 0.405], [0.47, 0.33], [0.30, 0.31], [0.14, 0.37], [0.06, 0.40]]],
+      [['e', 0.355, 0.49, 0.105, 0.105]],
+      [[[0.51, 0.38], [0.66, 0.38], [0.66, 0.565], [0.51, 0.565]]],
+      [[[0.71, 0.165], [0.99, 0.165], [0.99, 0.80], [0.71, 0.80]]],                                                        // 캣타워
+      [['e', 0.285, 0.86, 0.245, 0.125]],
+      [[[0.585, 0.815], [0.915, 0.815], [0.915, 0.97], [0.585, 0.97]]],
+    ],
+  },
+  park: {
+    base: [['e', 0.495, 0.51, 0.49, 0.445]],                                                                               // 놀이터 땅은 처음부터
+    parts: [
+      [[[0.065, 0.455], [0.27, 0.405], [0.47, 0.43], [0.475, 0.535], [0.27, 0.60], [0.065, 0.55]]],                         // 모래밭
+      [[[0.62, 0.06], [0.84, 0.06], [0.90, 0.33], [0.70, 0.36], [0.60, 0.44], [0.50, 0.43], [0.52, 0.32], [0.62, 0.20]]],   // 미끄럼틀
+      [[[0.15, 0.13], [0.47, 0.12], [0.47, 0.40], [0.15, 0.40]]],                                                         // 그네
+      [[[0.06, 0.575], [0.18, 0.575], [0.43, 0.66], [0.43, 0.75], [0.14, 0.745], [0.06, 0.66]]],                           // 시소
+      [['e', 0.765, 0.47, 0.15, 0.095]],                                                                                   // 터널
+      [['e', 0.538, 0.69, 0.088, 0.088]],                                                                                  // 큰 공
+      [[[0.56, 0.75], [0.66, 0.70], [0.82, 0.69], [0.90, 0.73], [0.87, 0.86], [0.58, 0.86]]],                              // 꽃밭
+      [[[0.71, 0.53], [0.94, 0.525], [0.96, 0.62], [0.93, 0.71], [0.72, 0.71]]],                                          // 벤치
+    ],
+  },
+};
+/** 600x440 판에서 완성 그림(정사각형)이 놓이는 자리 */
+export const BUILD_IMG = { x: 40, y: -54, s: 520 };
+const bx = (u: number) => BUILD_IMG.x + BUILD_IMG.s * u, by = (v: number) => BUILD_IMG.y + BUILD_IMG.s * v;
+
+function shapeEl(sh: Shape, fill: string) {
+  if (sh[0] === 'e') {
+    const [, cx, cy, rx, ry] = sh as ['e', number, number, number, number];
+    return <ellipse cx={bx(cx)} cy={by(cy)} rx={rx * BUILD_IMG.s} ry={ry * BUILD_IMG.s} fill={fill} />;
+  }
+  return <polygon points={(sh as [number, number][]).map(([u, v]) => `${bx(u).toFixed(1)},${by(v).toFixed(1)}`).join(' ')} fill={fill} />;
+}
+function center(shapes: Shape[]): [number, number] {
+  let x0 = 1, y0 = 1, x1 = 0, y1 = 0;
+  for (const sh of shapes) {
+    let pts: [number, number][];
+    if (sh[0] === 'e') { const [, cx, cy, rx, ry] = sh as ['e', number, number, number, number]; pts = [[cx - rx, cy - ry], [cx + rx, cy + ry]]; }
+    else pts = sh as [number, number][];
+    for (const [u, v] of pts) { x0 = Math.min(x0, u); y0 = Math.min(y0, v); x1 = Math.max(x1, u); y1 = Math.max(y1, v); }
+  }
+  return [bx((x0 + x1) / 2), by((y0 + y1) / 2)];
+}
+
+let bseq = 0;
+function BuildPic({ id, src, n, next, name, size, pop, M, tint }: { id: string; src: string; n: number; next: boolean; name: string; size: number; pop: number; M: BMask; tint?: string }) {
+  const [u] = useState(() => `b${++bseq}`);
+  const N = M.parts.length;
+  const built = M.parts.slice(0, n), rest = M.parts.slice(n);
+  // 집 색(마당 'y-color' — 원문 E): 집 건물 부품에만 색조, 방석·밥그릇·캣타워는 그대로
+  const T = tint && tint !== 'none' && M.body ? M.body : 0;
+  const bodyBuilt = built.slice(0, T), otherBuilt = built.slice(T);
+  const img = (extra: Record<string, any> = {}) => <image href={src} x={BUILD_IMG.x} y={BUILD_IMG.y} width={BUILD_IMG.s} height={BUILD_IMG.s} {...extra} />;
+  const MU = { maskUnits: 'userSpaceOnUse', x: -200, y: -200, width: 1000, height: 840 } as any;
+  const showPop = pop >= 0 && pop < n;
+  const [pcx, pcy] = showPop ? center(M.parts[pop]) : [300, 300];
+  return (
+    <svg viewBox="0 0 600 440" width={size} height={size * 440 / 600} style={{ overflow: 'visible' }} data-build={id} data-built={n} data-art="1">
+      <defs>
+        <filter id={`${u}-s`} x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3.5" /></filter>
+        <mask id={`${u}-on`} {...MU}>
+          <g filter={`url(#${u}-s)`}>
+            {(M.base ?? []).map(sh => shapeEl(sh, '#fff'))}
+            {(T ? otherBuilt : built).flat().map(sh => shapeEl(sh, '#fff'))}
+            {rest.flat().map(sh => shapeEl(sh, '#000'))}
+          </g>
+        </mask>
+        {T > 0 && <mask id={`${u}-bd`} {...MU}><g filter={`url(#${u}-s)`}>{bodyBuilt.flat().map(sh => shapeEl(sh, '#fff'))}{[...otherBuilt, ...rest].flat().map(sh => shapeEl(sh, '#000'))}</g></mask>}
+        {next && n < N && <mask id={`${u}-nx`} {...MU}><g filter={`url(#${u}-s)`}>{M.parts[n].map(sh => shapeEl(sh, '#fff'))}{M.parts.slice(n + 1).flat().map(sh => shapeEl(sh, '#000'))}</g></mask>}
+        {showPop && <mask id={`${u}-pp`} {...MU}><g filter={`url(#${u}-s)`}>{M.parts[pop].map(sh => shapeEl(sh, '#fff'))}{rest.flat().map(sh => shapeEl(sh, '#000'))}</g></mask>}
+      </defs>
+      {n < N && img({ class: 'bld-ghost' })}
+      {img(n < N || M.base || T ? { mask: `url(#${u}-on)` } : {})}
+      {T > 0 && img({ mask: `url(#${u}-bd)`, style: { filter: tint } })}
+      {next && n < N && img({ class: 'bld-next', mask: `url(#${u}-nx)` })}
+      {showPop && img({ class: 'build-pop-img', mask: `url(#${u}-pp)`, style: { transformOrigin: `${pcx}px ${pcy}px` } })}
+      {M.sign && name && n > 5 && (
+        <text x={bx(M.sign[0])} y={by(M.sign[1]) + 9} font-size={Math.min(28, (M.sign[2] * BUILD_IMG.s) / Math.max(2, name.length) * 0.95)} text-anchor="middle" fill="#6b3a12" font-family="Jua" style={{ pointerEvents: 'none' }}>{name}</text>
+      )}
+    </svg>
+  );
+}
+
 /** n개 지은 모습. next=true면 다음에 지을 부분을 흐린 그림자로 미리 보여 줌 */
-export function BuildArt({ id, n, next = true, name = '', size = 600, pop = -1 }: { id: string; n: number; next?: boolean; name?: string; size?: number; pop?: number }) {
+export function BuildArt({ id, n, next = true, name = '', size = 600, pop = -1, tint }: { id: string; n: number; next?: boolean; name?: string; size?: number; pop?: number; tint?: string }) {
+  const src = artSrc(`build.${id}.complete`);
+  const ok = useArtReady(src ? [src] : null);
+  const M = BUILD_MASK[id];
+  if (src && ok && M) return <BuildPic id={id} src={src} n={n} next={next} name={name} size={size} pop={pop} M={M} tint={tint} />;
   const parts = ART[id] ?? [];
   return (
-    <svg viewBox="0 0 600 440" width={size} height={size * 440 / 600} style={{ overflow: 'visible' }} data-build={id} data-built={n}>
+    <svg viewBox="0 0 600 440" width={size} height={size * 440 / 600} style={{ overflow: 'visible', filter: tint && tint !== 'none' ? tint : undefined }} data-build={id} data-built={n}>
       {parts.slice(0, n).map((p, i) => <g class={i === pop ? 'build-pop' : ''} style={{ transformOrigin: '300px 300px' }}>{p(name)}</g>)}
       {next && n < parts.length && <g class="build-ghost" opacity=".22" style={{ filter: 'grayscale(1)' }}>{parts[n](name)}</g>}
     </svg>
   );
 }
 
-/** 집 짓기 재료 (나무판자 + 벽돌 + 망치) */
+/** 집 짓기 재료 (나무판자 + 벽돌 + 망치) — 손그림(build.mat)이 있으면 그것 */
 export function MatIcon({ size = 100 }: { size?: number }) {
+  const src = artSrc('build.mat');
+  const [bad, setBad] = useState(false);
+  if (src && !bad) return <img class="mat-icon" src={src} width={size} height={size} alt="" draggable={false} style={{ objectFit: 'contain', verticalAlign: 'middle' }} onError={() => setBad(true)} />;
   return (
     <svg viewBox="0 0 120 120" width={size} height={size}>
       <rect x="14" y="62" width="92" height="22" rx="5" fill="#c58b52" stroke="#8f5e2c" stroke-width="4" />

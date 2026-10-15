@@ -5,8 +5,10 @@ import { Pet, ItemIcon, SnackIcon } from '../art/Pet';
 import { say, sayAll, sfx, newScene } from '../engine/audio';
 import { buddy } from '../engine/bus';
 import {
-  load, petView, petInfo, feed, snackCount, choosePet, setLead, setWear, onChange, matsLeft, type PetView,
+  load, petView, petInfo, feed, snackCount, choosePet, setLead, setWear, onChange, matsLeft, builtCount, type PetView,
 } from '../engine/store';
+import { BUILD } from '../data/pets';
+import { HOME_LOCKED, HOME_DECO } from '../data/voice';
 import { PETS, SNACKS, SNACK, CLASSIC_SNACKS, SLOTS, SLOT_NAME, SLOT_ICON, ITEM_LIST, ITEM, STAGE_NAME, levelProgress, stageOf, itemFits, MAX_LEVEL, type Species, type Slot } from '../data/pets';
 import { helloLine, breedLine, dressLine, growLine, stageLine } from '../data/voice';
 import { nameLine } from '../games/common';
@@ -47,7 +49,7 @@ function Growth({ v }: { v: PetView }) {
 // =====================================================================
 // 우리 집
 // =====================================================================
-export function House({ onBack, onDress, onAdopt, onBuild }: { onBack: () => void; onDress: () => void; onAdopt: () => void; onBuild: () => void }) {
+export function House({ onBack, onDress, onAdopt, onBuild, onYard }: { onBack: () => void; onDress: () => void; onAdopt: () => void; onBuild: () => void; onYard?: (house: 'doghouse' | 'cathouse') => void }) {
   useRefresh();
   const s = load();
   const dog = petView('dog'), cat = petView('cat');
@@ -148,10 +150,16 @@ export function House({ onBack, onDress, onAdopt, onBuild }: { onBack: () => voi
           );
         })}
         {/* 오른쪽 단추 */}
-        <div style={{ position: 'absolute', left: 1000, top: 330, display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <button class="btn yellow" style={{ fontSize: 34, padding: '16px 26px' }} onClick={() => { sfx.tap(); onDress(); }}>👗 꾸미기</button>
-          <button class="btn mint" style={{ fontSize: 34, padding: '16px 26px' }} onClick={() => { sfx.tap(); onAdopt(); }}>🐾 친구 고르기</button>
-          <button class="btn violet" style={{ fontSize: 34, padding: '16px 26px' }} data-go-build="1" onClick={() => { sfx.tap(); onBuild(); }}>🔨 집 짓기{matsLeft() > 0 ? ` (${matsLeft()})` : ''}</button>
+        <div style={{ position: 'absolute', left: 1000, top: 292, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <button class="btn yellow" style={{ fontSize: 34, padding: '14px 26px' }} onClick={() => { sfx.tap(); onDress(); }}>👗 꾸미기</button>
+          <button class="btn mint" style={{ fontSize: 34, padding: '14px 26px' }} onClick={() => { sfx.tap(); onAdopt(); }}>🐾 친구 고르기</button>
+          <button class="btn violet" style={{ fontSize: 34, padding: '14px 26px' }} data-go-build="1" onClick={() => { sfx.tap(); onBuild(); }}>🔨 집 짓기{matsLeft() > 0 ? ` (${matsLeft()})` : ''}</button>
+          <button class="btn" style={{ fontSize: 34, padding: '14px 26px', background: '#40c057', boxShadow: '0 6px 0 #2b8a3e' }} data-go-yard="1" onClick={() => {
+            // 마당 꾸미기(원문 E): 고른 친구의 집 마당 — 집을 다 지어야 열림
+            const h = sel === 'dog' ? 'doghouse' : 'cathouse';
+            if (builtCount(h) < BUILD[h].parts.length) { sfx.boing(); say(HOME_LOCKED); return; }
+            sfx.tap(); say(HOME_DECO); onYard?.(h);
+          }}>🌳 마당 꾸미기</button>
         </div>
         {/* 간식 바구니 */}
         <div class="snack-tray">

@@ -1,7 +1,8 @@
-// 집 안(강아지 집·고양이 집)과 큰 놀이터 꾸미기: 자리(slot)마다 고를 수 있는 가구·놀이 기구
+// 집 안(강아지 집·고양이 집)과 큰 놀이터, 집 밖 마당 꾸미기: 자리(slot)마다 고를 수 있는 가구·놀이 기구·마당 장식
 // - 가구·기구 하나에 재료 1개 (한 번 사면 계속 바꿔 놓을 수 있음). free는 처음부터 있음
-// - 위치는 안전 영역(1280x800) 기준, 놀이터는 가로 2560
-export type Place = 'doghouse' | 'cathouse' | 'park';
+// - 위치는 안전 영역(1280x800) 기준, 놀이터는 가로 3200(예전 2560 — 새 자리는 오른쪽·빈 곳에)
+// - 마당(원문 E): 장소 'doghouse-out'·'cathouse-out', 저장은 기존 deco·bought 그대로(새 저장 칸 없음), 자리·가구 id는 'y-'로 시작
+export type Place = 'doghouse' | 'cathouse' | 'park' | 'doghouse-out' | 'cathouse-out';
 
 export interface SlotDef { id: string; name: string; x: number; y: number; w: number; h: number; vb: [number, number]; front?: boolean }
 export interface Furn { id: string; slot: string; name: string; free?: boolean; park?: boolean }
@@ -29,7 +30,7 @@ export const ROOM_SLOTS: SlotDef[] = [
 /** 화면 전체를 칠하는 자리(가구 상자가 없음) */
 export const FULL_SLOTS = ['wall', 'floor'];
 
-/** 큰 놀이터 자리 (가로 2560) */
+/** 큰 놀이터 자리 (예전 10개는 위치 그대로, 묶음 7 새 자리 4개는 빈 곳·오른쪽에) */
 export const PARK_SLOTS: SlotDef[] = [
   { id: 'slide', name: '미끄럼틀', x: 110, y: 250, w: 420, h: 378, vb: [400, 360] },
   { id: 'swing', name: '그네', x: 600, y: 290, w: 350, h: 340, vb: [340, 330] },
@@ -41,8 +42,50 @@ export const PARK_SLOTS: SlotDef[] = [
   { id: 'sand', name: '모래성', x: 760, y: 640, w: 300, h: 140, vb: [300, 140], front: true },
   { id: 'picnic', name: '돗자리', x: 1360, y: 650, w: 350, h: 124, vb: [340, 120], front: true },
   { id: 'flower', name: '꽃밭', x: 1900, y: 650, w: 350, h: 124, vb: [340, 120], front: true },
+  // 묶음 7 새 자리 (10-15, 뒤에 추가만)
+  { id: 'seesaw', name: '시소', x: 2300, y: 630, w: 340, h: 150, vb: [340, 150], front: true },
+  { id: 'rider', name: '흔들 놀이기구', x: 1090, y: 596, w: 180, h: 190, vb: [180, 190], front: true },
+  { id: 'jungle', name: '정글짐', x: 2580, y: 262, w: 360, h: 370, vb: [360, 370] },
+  { id: 'tunnel', name: '터널', x: 2700, y: 640, w: 340, h: 150, vb: [340, 150], front: true },
 ];
-export const PARK_W = 2560;
+export const PARK_W = 3200;
+
+/** 마당 자리 (원문 E: 울타리·우체통·화단·정원 길·등불·나무·깃발 줄·벤치·그네·연못·문 장식·창가 화분 + 집 색).
+ *  집은 집 짓기 화면과 같은 자리·크기(완성 그림 왼쪽 위 337,107 · 한 변 607)라서 꾸민 마당을 집 짓기 화면에도 그대로 그린다.
+ *  문 장식·창가 화분은 집 그림의 문·창문에 붙는다(고양이 집은 yardSlots에서 자리를 바꿈). 집 색 'y-color'는 그림 없음(색조). */
+export const YARD_SLOTS: SlotDef[] = [
+  { id: 'y-tree', name: '나무', x: 20, y: 150, w: 290, h: 440, vb: [290, 440] },
+  { id: 'y-bunting', name: '깃발 줄', x: 205, y: 128, w: 330, h: 110, vb: [330, 110] },
+  { id: 'y-swing', name: '그네', x: 1030, y: 290, w: 230, h: 300, vb: [230, 300] },
+  { id: 'y-fence', name: '울타리', x: 10, y: 468, w: 270, h: 150, vb: [270, 150] },
+  { id: 'y-lantern', name: '등불', x: 935, y: 392, w: 96, h: 230, vb: [96, 230] },
+  { id: 'y-mailbox', name: '우체통', x: 290, y: 450, w: 104, h: 190, vb: [104, 190], front: true },
+  { id: 'y-flowerbed', name: '화단', x: 30, y: 604, w: 280, h: 160, vb: [280, 160], front: true },
+  { id: 'y-path', name: '정원 길', x: 545, y: 655, w: 160, h: 145, vb: [160, 145], front: true },
+  { id: 'y-pond', name: '연못', x: 860, y: 662, w: 200, h: 136, vb: [200, 136], front: true },
+  { id: 'y-bench', name: '벤치', x: 1040, y: 590, w: 220, h: 150, vb: [220, 150], front: true },
+  { id: 'y-wreath', name: '문 장식', x: 564, y: 284, w: 92, h: 92, vb: [92, 92], front: true },
+  { id: 'y-windowbox', name: '창가 화분', x: 722, y: 424, w: 106, h: 66, vb: [106, 66], front: true },
+  { id: 'y-color', name: '집 색', x: 0, y: 0, w: 0, h: 0, vb: [0, 0] },
+];
+/** 집마다 다른 자리(문·창문 위치) */
+const YARD_HOUSE: Record<string, Record<string, Partial<SlotDef>>> = {
+  cathouse: { 'y-wreath': { x: 506, y: 322 }, 'y-windowbox': { x: 638, y: 406, w: 108 } },
+};
+export function yardSlots(house: 'doghouse' | 'cathouse'): SlotDef[] {
+  const o = YARD_HOUSE[house] ?? {};
+  return YARD_SLOTS.map(s => (o[s.id] ? { ...s, ...o[s.id] } : s));
+}
+/** 마당 자리 중 화면 전체를 칠하는 자리(상자 없음) */
+export const YARD_FULL = ['y-color'];
+/** 집 색: 같은 그림에 색조 필터(원문 E — 4~6가지) */
+export const HOUSE_COLOR: Record<string, string> = {
+  'y-color:base': 'none',
+  'y-color:pink': 'hue-rotate(-32deg) saturate(1.08)',
+  'y-color:sky': 'hue-rotate(170deg) saturate(.95)',
+  'y-color:mint': 'hue-rotate(85deg) saturate(.92)',
+  'y-color:violet': 'hue-rotate(235deg) saturate(.95)',
+};
 
 export const FURN: Furn[] = [
   // 집 안
@@ -159,6 +202,123 @@ export const FURN: Furn[] = [
   { id: 'floor:carpet', slot: 'floor', name: '폭신 카펫' },
   { id: 'floor:pink', slot: 'floor', name: '분홍 마루' },
   { id: 'floor:star', slot: 'floor', name: '별무늬 카펫' },
+  // ---------- 묶음 6 마당 (10-15, 뒤에 추가만 — 강아지·고양이 마당이 같은 목록) ----------
+  { id: 'y-fence:picket', slot: 'y-fence', name: '하얀 나무 울타리' },
+  { id: 'y-fence:log', slot: 'y-fence', name: '통나무 울타리' },
+  { id: 'y-fence:flower', slot: 'y-fence', name: '꽃 울타리' },
+  { id: 'y-fence:bamboo', slot: 'y-fence', name: '대나무 울타리' },
+  { id: 'y-fence:stone', slot: 'y-fence', name: '돌담' },
+  { id: 'y-mailbox:red', slot: 'y-mailbox', name: '빨간 우체통' },
+  { id: 'y-mailbox:dog', slot: 'y-mailbox', name: '강아지 우체통' },
+  { id: 'y-mailbox:cat', slot: 'y-mailbox', name: '고양이 우체통' },
+  { id: 'y-mailbox:house', slot: 'y-mailbox', name: '작은 집 우체통' },
+  { id: 'y-mailbox:mushroom', slot: 'y-mailbox', name: '버섯 우체통' },
+  { id: 'y-flowerbed:tulip', slot: 'y-flowerbed', name: '튤립 화단' },
+  { id: 'y-flowerbed:sunflower', slot: 'y-flowerbed', name: '해바라기 화단' },
+  { id: 'y-flowerbed:rose', slot: 'y-flowerbed', name: '장미 화단' },
+  { id: 'y-flowerbed:cosmos', slot: 'y-flowerbed', name: '코스모스 화단' },
+  { id: 'y-flowerbed:veggie', slot: 'y-flowerbed', name: '채소 텃밭' },
+  { id: 'y-path:stone', slot: 'y-path', name: '징검돌 길' },
+  { id: 'y-path:brick', slot: 'y-path', name: '벽돌 길' },
+  { id: 'y-path:wood', slot: 'y-path', name: '나무 길' },
+  { id: 'y-path:pebble', slot: 'y-path', name: '자갈 길' },
+  { id: 'y-path:petal', slot: 'y-path', name: '꽃잎 길' },
+  { id: 'y-lantern:stone', slot: 'y-lantern', name: '돌 등불' },
+  { id: 'y-lantern:paper', slot: 'y-lantern', name: '종이 초롱' },
+  { id: 'y-lantern:firefly', slot: 'y-lantern', name: '반딧불 병 등' },
+  { id: 'y-lantern:mushroom', slot: 'y-lantern', name: '버섯 등' },
+  { id: 'y-lantern:star', slot: 'y-lantern', name: '별 등불' },
+  { id: 'y-tree:apple', slot: 'y-tree', name: '사과나무' },
+  { id: 'y-tree:cherry', slot: 'y-tree', name: '벚꽃나무' },
+  { id: 'y-tree:pine', slot: 'y-tree', name: '소나무' },
+  { id: 'y-tree:maple', slot: 'y-tree', name: '단풍나무' },
+  { id: 'y-tree:orange', slot: 'y-tree', name: '귤나무' },
+  { id: 'y-bunting:rainbow', slot: 'y-bunting', name: '무지개 깃발' },
+  { id: 'y-bunting:heart', slot: 'y-bunting', name: '하트 깃발' },
+  { id: 'y-bunting:star', slot: 'y-bunting', name: '별 깃발' },
+  { id: 'y-bunting:lights', slot: 'y-bunting', name: '꼬마 전구' },
+  { id: 'y-bunting:flower', slot: 'y-bunting', name: '꽃 장식 줄' },
+  { id: 'y-bench:wood', slot: 'y-bench', name: '나무 벤치' },
+  { id: 'y-bench:log', slot: 'y-bench', name: '통나무 의자' },
+  { id: 'y-bench:white', slot: 'y-bench', name: '하얀 벤치' },
+  { id: 'y-bench:stump', slot: 'y-bench', name: '그루터기 의자' },
+  { id: 'y-bench:flower', slot: 'y-bench', name: '꽃 벤치' },
+  { id: 'y-swing:tire', slot: 'y-swing', name: '타이어 그네' },
+  { id: 'y-swing:wood', slot: 'y-swing', name: '나무 그네' },
+  { id: 'y-swing:flower', slot: 'y-swing', name: '꽃 그네' },
+  { id: 'y-swing:hammock', slot: 'y-swing', name: '해먹' },
+  { id: 'y-swing:basket', slot: 'y-swing', name: '바구니 그네' },
+  { id: 'y-pond:lotus', slot: 'y-pond', name: '연꽃 연못' },
+  { id: 'y-pond:fish', slot: 'y-pond', name: '물고기 연못' },
+  { id: 'y-pond:duck', slot: 'y-pond', name: '오리 연못' },
+  { id: 'y-pond:frog', slot: 'y-pond', name: '개구리 연못' },
+  { id: 'y-pond:fountain', slot: 'y-pond', name: '분수 연못' },
+  { id: 'y-wreath:flower', slot: 'y-wreath', name: '꽃 화환' },
+  { id: 'y-wreath:leaf', slot: 'y-wreath', name: '나뭇잎 화환' },
+  { id: 'y-wreath:berry', slot: 'y-wreath', name: '열매 화환' },
+  { id: 'y-wreath:ribbon', slot: 'y-wreath', name: '리본 장식' },
+  { id: 'y-wreath:bell', slot: 'y-wreath', name: '방울 장식' },
+  { id: 'y-windowbox:red', slot: 'y-windowbox', name: '빨간 꽃 화분' },
+  { id: 'y-windowbox:herb', slot: 'y-windowbox', name: '허브 화분' },
+  { id: 'y-windowbox:pansy', slot: 'y-windowbox', name: '팬지 화분' },
+  { id: 'y-windowbox:daisy', slot: 'y-windowbox', name: '데이지 화분' },
+  { id: 'y-windowbox:strawberry', slot: 'y-windowbox', name: '딸기 화분' },
+  { id: 'y-color:base', slot: 'y-color', name: '원래 색', free: true },
+  { id: 'y-color:pink', slot: 'y-color', name: '분홍 집' },
+  { id: 'y-color:sky', slot: 'y-color', name: '하늘색 집' },
+  { id: 'y-color:mint', slot: 'y-color', name: '연두 집' },
+  { id: 'y-color:violet', slot: 'y-color', name: '보라 집' },
+  // ---------- 묶음 7 놀이터 (10-15, 뒤에 추가만) ----------
+  { id: 'slide:elephant', slot: 'slide', name: '코끼리 미끄럼틀', park: true },
+  { id: 'slide:wave', slot: 'slide', name: '물결 미끄럼틀', park: true },
+  { id: 'slide:castle', slot: 'slide', name: '성 미끄럼틀', park: true },
+  { id: 'swing:double', slot: 'swing', name: '두 줄 그네', park: true },
+  { id: 'swing:boat', slot: 'swing', name: '배 그네', park: true },
+  { id: 'swing:nest', slot: 'swing', name: '둥지 그네', park: true },
+  { id: 'tramp:cloud', slot: 'tramp', name: '구름 트램펄린', park: true },
+  { id: 'tramp:heart', slot: 'tramp', name: '하트 트램펄린', park: true },
+  { id: 'tramp:flower', slot: 'tramp', name: '꽃 트램펄린', park: true },
+  { id: 'carousel:ferris', slot: 'carousel', name: '작은 관람차', park: true },
+  { id: 'carousel:plane', slot: 'carousel', name: '빙글빙글 비행기', park: true },
+  { id: 'carousel:balloon', slot: 'carousel', name: '열기구 놀이기구', park: true },
+  { id: 'pool:whale', slot: 'pool', name: '고래 분수', park: true },
+  { id: 'pool:arch', slot: 'pool', name: '물 터널', park: true },
+  { id: 'pool:frog', slot: 'pool', name: '개구리 물놀이터', park: true },
+  { id: 'tree:slide', slot: 'tree', name: '미끄럼 나무 집', park: true },
+  { id: 'tree:rope', slot: 'tree', name: '밧줄 사다리 나무', park: true },
+  { id: 'tree:bird', slot: 'tree', name: '새집 나무', park: true },
+  { id: 'ball:rainbow', slot: 'ball', name: '무지개 공 더미', park: true },
+  { id: 'ball:giant', slot: 'ball', name: '큰 비치볼', park: true },
+  { id: 'ball:balloon', slot: 'ball', name: '풍선 다발', park: true },
+  { id: 'sand:digger', slot: 'sand', name: '모래 굴착기', park: true },
+  { id: 'sand:turtle', slot: 'sand', name: '거북이 모래 놀이통', park: true },
+  { id: 'sand:shell', slot: 'sand', name: '조개 모래 놀이', park: true },
+  { id: 'picnic:basket', slot: 'picnic', name: '소풍 바구니', park: true },
+  { id: 'picnic:umbrella', slot: 'picnic', name: '파라솔', park: true },
+  { id: 'picnic:hammock', slot: 'picnic', name: '해먹', park: true },
+  { id: 'flower:sunflower', slot: 'flower', name: '해바라기 꽃밭', park: true },
+  { id: 'flower:rose', slot: 'flower', name: '장미 아치', park: true },
+  { id: 'flower:cosmos', slot: 'flower', name: '코스모스 꽃밭', park: true },
+  { id: 'seesaw:wood', slot: 'seesaw', name: '나무 시소', park: true },
+  { id: 'seesaw:rainbow', slot: 'seesaw', name: '무지개 시소', park: true },
+  { id: 'seesaw:animal', slot: 'seesaw', name: '동물 시소', park: true },
+  { id: 'seesaw:cloud', slot: 'seesaw', name: '구름 시소', park: true },
+  { id: 'seesaw:log', slot: 'seesaw', name: '통나무 시소', park: true },
+  { id: 'rider:horse', slot: 'rider', name: '흔들 목마', park: true },
+  { id: 'rider:duck', slot: 'rider', name: '흔들 오리', park: true },
+  { id: 'rider:bee', slot: 'rider', name: '흔들 꿀벌', park: true },
+  { id: 'rider:whale', slot: 'rider', name: '흔들 고래', park: true },
+  { id: 'rider:rocket', slot: 'rider', name: '흔들 로켓', park: true },
+  { id: 'jungle:dome', slot: 'jungle', name: '동그란 정글짐', park: true },
+  { id: 'jungle:rope', slot: 'jungle', name: '밧줄 그물', park: true },
+  { id: 'jungle:castle', slot: 'jungle', name: '성 정글짐', park: true },
+  { id: 'jungle:tower', slot: 'jungle', name: '나무 오르기 탑', park: true },
+  { id: 'jungle:rainbow', slot: 'jungle', name: '무지개 사다리', park: true },
+  { id: 'tunnel:caterpillar', slot: 'tunnel', name: '애벌레 터널', park: true },
+  { id: 'tunnel:rainbow', slot: 'tunnel', name: '무지개 터널', park: true },
+  { id: 'tunnel:log', slot: 'tunnel', name: '통나무 터널', park: true },
+  { id: 'tunnel:hill', slot: 'tunnel', name: '잔디 언덕 터널', park: true },
+  { id: 'tunnel:cloth', slot: 'tunnel', name: '천 터널', park: true },
 ];
 export const FURN_BY: Record<string, Furn> = Object.fromEntries(FURN.map(f => [f.id, f]));
 export const optionsFor = (slot: string, park = false) => FURN.filter(f => f.slot === slot && !!f.park === park);

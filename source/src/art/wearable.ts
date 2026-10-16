@@ -1,8 +1,8 @@
 // 미리 맞춘 착용 표면: 기기에서 격자 합성을 반복하지 않고 필요한 그림만 받는다.
-import {WORN,type WornAtlas} from './wearable.gen';
+import {WORN} from './wearable.gen';
 import {WORN_EXTRA} from './wearable.extra.gen';
 import {WORN_MOTION} from './wearable.motion.gen';
-import {WORN_PETS} from './wearable.pets.gen';
+import {WORN_PETS,type WornPetAtlas} from './wearable.pets.gen';
 import type {Mat} from './petanim';
 export type SelectedWear=Partial<Record<string,string|undefined>>;
 export function inverse(m:Mat):Mat{
@@ -10,7 +10,7 @@ export function inverse(m:Mat):Mat{
  return [m[3]/d,-m[1]/d,-m[2]/d,m[0]/d,(m[2]*m[5]-m[3]*m[4])/d,(m[1]*m[4]-m[0]*m[5])/d];
 }
 const slots=['clothes','shoes','neck','hat','glasses'] as const;
-type RuntimeWorn=WornAtlas&{width?:number;transforms?:Record<string,Mat>};
+type RuntimeWorn=WornPetAtlas&{transforms?:Record<string,Mat>};
 const registered=new Map<string,RuntimeWorn>();
 for(const slot of slots)registered.set(`corgi:${slot}:${WORN[slot].key}`,WORN[slot]);
 for(const[key,entry]of Object.entries(WORN_EXTRA))registered.set(`corgi:${key}`,entry);
@@ -27,11 +27,12 @@ export function wornEntry(id:string,slot:string,item?:string){
  if(!item)return undefined;
  return registered.get(`${id}:${slot}:${item}`);
 }
+function frameAsset(entry:RuntimeWorn|undefined,key:string){return entry?.frameAssets?.[key]||(entry?.frames[key]?{art:entry.art,rect:entry.frames[key]}:undefined);}
 export function wornSelection(id:string,pose:string,frame:number,wear:SelectedWear,image:(key:string)=>CanvasImageSource|undefined):SelectedWear{
- return Object.fromEntries(slots.filter(s=>{const entry=wornEntry(id,s,wear[s]);return !!entry?.frames[`${pose}/${frame}`]&&!!image(entry.art);}).map(s=>[s,wear[s]]));
+ return Object.fromEntries(slots.filter(s=>{const selected=frameAsset(wornEntry(id,s,wear[s]),`${pose}/${frame}`);return !!selected&&!!image(selected.art);}).map(s=>[s,wear[s]]));
 }
 export function wornKeys(id:string,wear:SelectedWear):string[]{
- return slots.flatMap(s=>{const entry=wornEntry(id,s,wear[s]);return entry?[entry.art]:[];});
+ return [...new Set(slots.flatMap(s=>{const entry=wornEntry(id,s,wear[s]);return entry?[entry.art,...Object.values(entry.frameAssets||{}).map(f=>f.art)]:[];}))];
 }
 /** 미검수 조합/자세에는 기존 표시를 유지한다. 아이템 선택이나 저장값을 바꾸지 않는다. */
 export function wornReady(id:string,pose:string,frame:number,wear:SelectedWear,image:(key:string)=>CanvasImageSource|undefined):boolean{
@@ -41,7 +42,7 @@ export function wornReady(id:string,pose:string,frame:number,wear:SelectedWear,i
 export function drawWorn(c:CanvasRenderingContext2D,pose:string,frame:number,wear:SelectedWear,image:(key:string)=>CanvasImageSource|undefined,head?:Mat,id='corgi'){
  for(const slot of slots){
   const entry=wornEntry(id,slot,wear[slot]);if(!entry)continue;
-  const im=image(entry.art),rect=entry.frames[`${pose}/${frame}`];if(!im||!rect)continue;
+  const selected=frameAsset(entry,`${pose}/${frame}`);if(!selected)continue;const im=image(selected.art),rect=selected.rect;if(!im)continue;
   const [x,y,w,h,dx,dy]=rect;
   c.save();try{
    if(head&&(slot==='hat'||slot==='glasses'))c.transform(...head);

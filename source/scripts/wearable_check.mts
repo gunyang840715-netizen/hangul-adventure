@@ -81,15 +81,25 @@ for(let frame=0;frame<6;frame++){
 }
 assert.deepEqual(wornSelection('corgi','jump',0,{...wear,neck:'bowtie'},k=>k===bowtie.art?undefined:image()),{hat:'straw',glasses:'round'});
 console.log('달리기·점프·긁기:',moving,'착탈 조합에서 기존 이미지 재사용·발 가림·개별 변환·미검수 부분 표시 유지 통과');
-// 냥이의 땡땡이 정면만 검수했다. 다른 친구나 동작으로 넓혀 선택하면 안 된다.
+// 냥이의 땡땡이 정면과 서기 네 칸만 검수했다. 다른 친구나 동작으로 넓혀 선택하면 안 된다.
 const cat=wornEntry('koshort','clothes','dots')!;assert.ok(cat);assert.equal(cat.width,300);
-assert.deepEqual(wornKeys('koshort',{clothes:'dots',hat:'straw'}),[cat.art]);
+assert.deepEqual(wornKeys('koshort',{clothes:'dots',hat:'straw'}),[cat.art,'pet.koshort.paint-wear-clothes-dots-idle']);
 assert.deepEqual(wornSelection('koshort','front',0,{clothes:'dots',neck:'scarf'},image),{clothes:'dots'});
 assert.deepEqual(wornSelection('koshort','front',0,{clothes:'dots'},()=>undefined),{});
 assert.equal(wornReady('koshort','front',0,{clothes:'dots'},image),true);
 for(const pet of ['corgi','maltese','russian','siamese'])assert.equal(wornEntry(pet,'clothes','dots'),undefined);
-for(const pose of ['idle','walk','run','jump','sitstand','eat','liesleep','scratch'])for(let frame=0;frame<8;frame++)assert.deepEqual(wornSelection('koshort',pose,frame,{clothes:'dots'},image),{});
+for(const pose of ['walk','run','jump','sitstand','eat','liesleep','scratch'])for(let frame=0;frame<8;frame++)assert.deepEqual(wornSelection('koshort',pose,frame,{clothes:'dots'},image),{});
 let catDepth=0;const catDrawn:CanvasImageSource[]=[];const catImage={}as CanvasImageSource;
 drawWorn({save(){catDepth++;},restore(){catDepth--;},drawImage(im:CanvasImageSource){catDrawn.push(im);}}as unknown as CanvasRenderingContext2D,'front',0,{clothes:'dots'},key=>key===cat.art?catImage:undefined,undefined,'koshort');
 assert.equal(catDepth,0);assert.deepEqual(catDrawn,[catImage]);
 console.log('냥이 땡땡이 정면: 정확한 친구/아이템/자세·원화 너비·미수신 대체 표시 검사 통과');
+
+const idleArt='pet.koshort.paint-wear-clothes-dots-idle',idleImage={}as CanvasImageSource;
+assert.deepEqual(wornSelection('koshort','idle',4,{clothes:'dots'},image),{});
+assert.deepEqual(wornSelection('koshort','idle',0,{clothes:'dots'},key=>key===cat.art?catImage:undefined),{});
+assert.deepEqual(wornSelection('koshort','front',0,{clothes:'dots'},key=>key===idleArt?idleImage:undefined),{});
+for(let frame=0;frame<4;frame++){
+ assert.deepEqual(wornSelection('koshort','idle',frame,{clothes:'dots'},key=>key===idleArt?idleImage:undefined),{clothes:'dots'});
+ let count=0,depth=0;drawWorn({save(){depth++;},restore(){depth--;},drawImage(im:CanvasImageSource,...rect:number[]){assert.equal(im,idleImage);assert.ok(rect.every(Number.isFinite));count++;}}as unknown as CanvasRenderingContext2D,'idle',frame,{clothes:'dots'},key=>key===idleArt?idleImage:undefined,undefined,'koshort');assert.equal(count,1);assert.equal(depth,0);
+}
+console.log('냥이 서기4칸: 정면/동작 자산 분리·해당 자세 파일 미수신 시 기존 표시 유지 통과');

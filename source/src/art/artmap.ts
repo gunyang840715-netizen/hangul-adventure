@@ -325,7 +325,7 @@ export const ART_MAP: Record<string, string> = {
   "fx.leaf3": "art/effects/fx-leaf3.e37c0daf.webp",
   "fx.leaf4": "art/effects/fx-leaf4.b0ab7d03.webp",
   "bg.library.front": "art/backgrounds/library.front.db109ad1.webp",
-  "bg.library.full": "art/backgrounds/library.full.c98ed727.webp",
+  "bg.library.full": "art/backgrounds/library.full.95e9c580.webp",
   "pet.maltese.head": "art/pets/maltese.head.aef9a4b6.webp",
   "pet.maltese.paint-eat": "art/pets/maltese.paint-eat.8f04bb73.webp",
   "pet.maltese.paint-eyes": "art/pets/maltese.paint-eyes.f2ac2fdb.webp",

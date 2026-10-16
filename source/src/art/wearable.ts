@@ -7,6 +7,10 @@ export function inverse(m:Mat):Mat{
  return [m[3]/d,-m[1]/d,-m[2]/d,m[0]/d,(m[2]*m[5]-m[3]*m[4])/d,(m[1]*m[4]-m[0]*m[5])/d];
 }
 const slots=['clothes','shoes','neck','hat','glasses'] as const;
+export function wornSelection(id:string,pose:string,frame:number,wear:SelectedWear,image:(key:string)=>CanvasImageSource|undefined):SelectedWear{
+ if(id!=='corgi')return {};
+ return Object.fromEntries(slots.filter(s=>wear[s]===WORN[s].key&&!!WORN[s].frames[`${pose}/${frame}`]&&!!image(WORN[s].art)).map(s=>[s,wear[s]]));
+}
 export function wornKeys(id:string,wear:SelectedWear):string[]{
  if(id!=='corgi')return [];
  return slots.filter(s=>wear[s]===WORN[s].key).map(s=>WORN[s].art);
@@ -19,7 +23,7 @@ export function wornReady(id:string,pose:string,frame:number,wear:SelectedWear,i
 }
 export function drawWorn(c:CanvasRenderingContext2D,pose:string,frame:number,wear:SelectedWear,image:(key:string)=>CanvasImageSource|undefined,head?:Mat){
  for(const slot of slots){
-  if(!wear[slot])continue;
+  if(wear[slot]!==WORN[slot].key)continue;
   const entry=WORN[slot],im=image(entry.art),rect=entry.frames[`${pose}/${frame}`];if(!im||!rect)continue;
   const [x,y,w,h,dx,dy]=rect;
   c.save();try{if(head&&(slot==='hat'||slot==='glasses'))c.transform(...head);c.drawImage(im,x,y,w,h,dx,dy,w,h);}finally{c.restore();}

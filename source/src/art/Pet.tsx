@@ -8,6 +8,7 @@ import { paintable, baseState, loadBase, loadMotions, retryPaintImages, rigOf, P
 import type { Mat } from './petanim';
 import { artSrc } from './artmap';
 import { ITEM_ART } from './items.gen';
+import {WORN} from './wearable.gen';
 
 export type Mood = 'happy' | 'wow' | 'think' | 'sleep' | 'love';
 export type Motion = 'bob' | 'jump' | 'cheer' | 'wiggle' | 'none' | 'fly' | 'hop';
@@ -156,6 +157,11 @@ export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}
 // ======================= 새 그림(손그림 수채) =======================
 const mtx = (a: ArrayLike<number>) => `matrix(${Array.from(a, v => +v.toFixed(4)).join(' ')})`;
 const VB = `${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`;
+function WornFront({pet,slot,item}:{pet:string;slot:string;item?:string}){
+  const entry=WORN[slot],rect=entry?.frames['front/0'];if(pet!=='corgi'||!rect||item!==entry.key)return null;
+  const [x,y,w,h,dx,dy]=rect,height=Math.max(...Object.values(entry.frames).map(r=>r[1]+r[3]));
+  return <svg x={dx} y={dy} width={w} height={h} viewBox={`${x} ${y} ${w} ${h}`} overflow="hidden"><image href={artSrc(entry.art)} x="0" y="0" width="2048" height={height}/></svg>;
+}
 
 /** 정면 그림 한 장을 휘게 그리는 캔버스 + 꾸미기 아이템(새 그림·예전 SVG를 새 그림의 머리·목·몸·발 위치에 맞춰 얹음).
  *  연속 동작(걷기 등) 중에는 이 SVG 층을 숨기고, 캔버스가 옆모습 아이템(모자·안경·목걸이·옷)을 칸마다 그린다(petside.ts). */
@@ -163,7 +169,6 @@ function PaintedPet({ pid, size, mood, motion, wear, g, stage, talking, cls, sty
   { pid: string; size: number; mood: Mood; motion: Motion; wear: Wear; g: number; stage: Stage; talking: boolean; cls: string; style?: any; flip?: boolean; act?: Act; poke: number }) {
   const r = rigOf(pid)!;
   const cv = useRef<HTMLCanvasElement>(null);
-  const fittedBody = useRef<SVGGElement>(null), fittedHead = useRef<SVGGElement>(null);
   const rootG = useRef<SVGGElement>(null), headG = useRef<SVGGElement>(null), backG = useRef<SVGGElement>(null), layer = useRef<SVGSVGElement>(null);
   const inst = useRef<Painter | null>(null);
   const [cid] = useState(() => 'pp' + (++uid));
@@ -172,11 +177,18 @@ function PaintedPet({ pid, size, mood, motion, wear, g, stage, talking, cls, sty
   const wearR = useRef(wear); wearR.current = wear;
   useEffect(() => {
     let shown = '';
+    let shownFitted='initial';
     const p = new Painter({
       id: pid, canvas: cv.current!,
       onPose: (pose) => {
-        if(fittedBody.current)fittedBody.current.style.visibility=pose.fitted?'hidden':'';
-        if(fittedHead.current)fittedHead.current.style.visibility=pose.fitted?'hidden':'';
+        const fittedKey=(pose.fittedSlots||[]).join('|');
+        if(fittedKey!==shownFitted){
+          layer.current?.querySelectorAll<SVGGElement>('[data-wear-kind]').forEach(node=>{
+            const ready=pose.fittedSlots?.includes(node.dataset.wearSlot||'')||false;
+            node.setAttribute('visibility',(node.dataset.wearKind==='new'?ready:!ready)?'inherit':'hidden');
+          });
+          shownFitted=fittedKey;
+        }
         const vis = pose.sprite ? 'hidden' : '';
         if (vis !== shown && layer.current) { layer.current.style.visibility = vis; shown = vis; }
         if (pose.sprite) return;
@@ -212,18 +224,17 @@ function PaintedPet({ pid, size, mood, motion, wear, g, stage, talking, cls, sty
           {/* 장난감: 친구 옆 바닥에(앞에 그려야 몸에 가리지 않음), 몸이 움직여도 그 자리 */}
           {wear.toy && <g transform={mtx(A.toy)}><Toy k={wear.toy} /></g>}
           <g ref={rootG}>
-            <g ref={fittedBody}>
-            {wear.clothes && <g transform={mtx(A.clothes)}><Clothes k={wear.clothes} clip={`url(#${cid}-body)`} /></g>}
-            {wear.shoes && <g transform={mtx(A.shoes)}><Shoes k={wear.shoes} /></g>}
-            {wear.neck && <g transform={mtx(A.neck)}><Neck k={wear.neck} /></g>}
-            </g>
+            {(['clothes','shoes','neck']as const).map(slot=><g>
+              <g data-wear-slot={slot} data-wear-kind="old" transform={mtx(A[slot])}>{slot==='clothes'?wear.clothes&&<Clothes k={wear.clothes} clip={`url(#${cid}-body)`}/>:slot==='shoes'?wear.shoes&&<Shoes k={wear.shoes}/>:wear.neck&&<Neck k={wear.neck}/>}</g>
+              <g data-wear-slot={slot} data-wear-kind="new" visibility="hidden"><WornFront pet={pid} slot={slot} item={wear[slot]}/></g>
+            </g>)}
           </g>
           <g ref={headG}>
+            {(['hat','glasses']as const).map(slot=><g>
+              <g data-wear-slot={slot} data-wear-kind="old" transform={mtx(A.head)}>{slot==='hat'?wear.hat&&<g transform={`translate(0 ${A.hatDy})`}><Hat k={wear.hat}/></g>:wear.glasses&&<Glasses k={wear.glasses} rb={`url(#${cid}-rb)`}/>}</g>
+              <g data-wear-slot={slot} data-wear-kind="new" visibility="hidden"><WornFront pet={pid} slot={slot} item={wear[slot]}/></g>
+            </g>)}
             <g transform={mtx(A.head)}>
-              <g ref={fittedHead}>
-              {wear.glasses && <Glasses k={wear.glasses} rb={`url(#${cid}-rb)`} />}
-              {wear.hat && <g transform={`translate(0 ${A.hatDy})`}><Hat k={wear.hat} /></g>}
-              </g>
               {mood === 'love' && <g class="pt-hearts"><text x="150" y="30" font-size="26">❤️</text><text x="34" y="44" font-size="18">💕</text></g>}
               {mood === 'sleep' && !act && <text x="146" y="34" font-size="24" fill="#6b7aa8" font-weight="bold">z</text>}
             </g>

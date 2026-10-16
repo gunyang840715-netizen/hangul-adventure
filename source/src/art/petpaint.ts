@@ -10,7 +10,7 @@ import { ART_MAP, artSrc } from './artmap';
 import { PAINT_RIG } from './petpaint.gen';
 import { PetAnim, type AnimIn, type Pose, type Mat } from './petanim';
 import { sideFrame, sideArt, sideRig, placeM, mul, SIDE_SLOTS, type SideFrame, type SideSlot } from './petside';
-import {wornKeys,wornReady,drawWorn,inverse,type SelectedWear} from './wearable';
+import {wornKeys,wornSelection,drawWorn,type SelectedWear} from './wearable';
 
 export type { Act } from './petanim';
 type Pt = [number, number];
@@ -267,7 +267,7 @@ export interface PaintOpts {
 const reduceMQ = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
 
 export class PaintPet {
-  private fitted = false;
+  private fittedSlots:string[]=[];
   anim: PetAnim;
   inp: AnimIn = { mood: 'happy', motion: 'bob', talking: false, g: 1, poke: 0, reduce: false };
   size = 200;
@@ -301,13 +301,13 @@ export class PaintPet {
       if (it) { this.side[sl] = it; img(it.key); }
     }
   }
-  /** 칸 그림에 옷(몸 실루엣 안에만)·목걸이를 입히고 머리·귀를 그 위에 다시 그린 그림. 입힐 것이 없으면 null */
-  private dress(im: HTMLImageElement, m: PaintMotion, key: string, fi: number, sf: SideFrame): HTMLCanvasElement | null {
+  /** 기존 옷만 몸 윤곽에 넣고 머리·귀를 보존한다. 새 부품과 목걸이는 바깥에서 순서대로 그린다. */
+  private dress(im: HTMLImageElement, m: PaintMotion, key: string, fi: number, sf: SideFrame, modern:SelectedWear): HTMLCanvasElement | null {
     const r = sf.r;
-    const cl = sf.b ? this.side.clothes : undefined, nk = this.side.neck;
-    const clI = cl && IMGS[cl.key]?.img, nkI = nk && IMGS[nk.key]?.img;
-    if (!clI && !nkI) return null;
-    const ck = `${key}|${fi}|${this.wearKey}|${clI ? 1 : 0}${nkI ? 1 : 0}`;
+    const cl = !modern.clothes&&sf.b ? this.side.clothes : undefined;
+    const clI = cl && IMGS[cl.key]?.img;
+    if (!clI) return null;
+    const ck = `${key}|${fi}|${this.wearKey}|${clI ? 1 : 0}|${modern.clothes||''}`;
     if (this.oc && this.ocKey === ck) return this.oc;
     const oc = this.oc ?? (this.oc = document.createElement('canvas'));
     if (oc.width !== m.w || oc.height !== m.h) { oc.width = m.w; oc.height = m.h; }
@@ -320,8 +320,7 @@ export class PaintPet {
       o.setTransform(...mul(sf.b, placeM('clothes', r, cl.box))); o.drawImage(clI, 0, 0, 1, 1);
       o.setTransform(1, 0, 0, 1, 0, 0); o.globalCompositeOperation = 'source-over';
     }
-    if (nkI && nk) { o.setTransform(...mul(sf.h, placeM('neck', r, nk.box))); o.drawImage(nkI, 0, 0, 1, 1); o.setTransform(1, 0, 0, 1, 0, 0); }
-    // 머리·귀는 옷·목걸이 위에(옆모습에서는 늘어진 귀·턱이 목과 어깨를 가림)
+    // 머리·귀는 기존 옷 위에(늘어진 귀·턱이 어깨를 가림)
     const H = sf.h, P = r.p;
     o.save(); o.beginPath();
     for (let i = 0; i < P.length; i += 2) {
@@ -346,12 +345,12 @@ export class PaintPet {
     let pose = this.anim.step(dt, this.inp);
     // 동작 그림을 기다리는 동안 실제로는 정면 그림을 그린다. 정면 꾸미기도 함께 유지.
     if (this.visible && !this.draw(pose) && pose.sprite) pose = { ...pose, sprite: null };
-    if (this.fitted) pose = { ...pose, fitted: true };
+    pose = { ...pose, fittedSlots:this.fittedSlots };
     // WebGL 없이 통째로 그릴 때는 머리가 따로 돌지 않으니 머리 아이템도 몸을 따라가게
     this.o.onPose?.(getGL() ? pose : { ...pose, head: pose.root });
   }
   private draw(pose: Pose): boolean {
-    this.fitted = false;
+    this.fittedSlots=[];
     const c = this.ctx, r = PAINT_RIG[this.o.id];
     if (!c || !r) return false;
     const px = this.px;
@@ -373,22 +372,26 @@ export class PaintPet {
         const s = 1 / r.sp, dw = m.w * s, dh = m.h * s, dx = r.cx - dw / 2, dy = r.ground - m.ground * s;
         const key = pose.sprite.key, fi = pose.sprite.frame;
         if (pose.dim < 1) c.filter = `brightness(${pose.dim})`;
-        if(wornReady(this.o.id,key,fi,this.selectedWear,k=>IMGS[k]?.img)){
-          c.drawImage(im,fi*m.w,0,m.w,m.h,dx,dy,dw,dh);
-          c.save();c.translate(dx,dy);c.scale(s,s);drawWorn(c,key,fi,this.selectedWear,k=>IMGS[k]?.img);c.restore();
-          c.filter='none';return true;
-        }
+        const modern=wornSelection(this.o.id,key,fi,this.selectedWear,k=>IMGS[k]?.img);
         const sf = this.wearKey.replace(/\|/g, '') ? sideFrame(this.o.id, key, fi) : null;
-        const dressed = sf ? this.dress(im, m, key, fi, sf) : null;
+        const dressed = sf ? this.dress(im, m, key, fi, sf,modern) : null;
         if (dressed) c.drawImage(dressed, 0, 0, m.w, m.h, dx, dy, dw, dh);
         else c.drawImage(im, fi * m.w, 0, m.w, m.h, dx, dy, dw, dh);
-        if (sf) {
-          // 안경·모자: 머리 변환을 따라(칸 그림 밖으로 나가도 되게 큰 캔버스에)
+        if(modern.clothes){c.save();c.translate(dx,dy);c.scale(s,s);drawWorn(c,key,fi,{clothes:modern.clothes},k=>IMGS[k]?.img);c.restore();}
+        if (sf||Object.keys(modern).length) {
           c.translate(dx, dy); c.scale(s, s);
-          for (const sl of ['glasses', 'hat'] as const) {
+          for (const sl of ['shoes','neck','hat','glasses'] as const) {
+            if(modern[sl]){drawWorn(c,key,fi,{[sl]:modern[sl]},k=>IMGS[k]?.img);continue;}
+            if(!sf||sl==='shoes')continue;
             const it = this.side[sl], si = it && IMGS[it.key]?.img;
             if (!it || !si) continue;
-            c.save(); c.transform(...mul(sf.h, placeM(sl, sf.r, it.box))); c.drawImage(si, 0, 0, 1, 1); c.restore();
+            c.save();
+            if(sl==='neck'){
+              // 기존 목걸이는 원래 턱·귀 뒤에 놓고, 새 신발/옷은 지우지 않는다.
+              c.beginPath();c.rect(-1000,-1000,m.w+2000,m.h+2000);
+              const H=sf.h,P=sf.r.p;for(let i=0;i<P.length;i+=2){const x=H[0]*P[i]+H[2]*P[i+1]+H[4],y=H[1]*P[i]+H[3]*P[i+1]+H[5];if(i)c.lineTo(x,y);else c.moveTo(x,y);}c.closePath();c.clip('evenodd');
+            }
+            c.transform(...mul(sf.h, placeM(sl, sf.r, it.box))); c.drawImage(si, 0, 0, 1, 1); c.restore();
           }
         }
         c.filter = 'none';
@@ -399,7 +402,7 @@ export class PaintPet {
     if (glDraw(this.o.id, pose, this.cw, this.ch)) {
       c.setTransform(1, 0, 0, 1, 0, 0);
       c.drawImage(glc, 0, glc.height - this.ch, this.cw, this.ch, 0, 0, this.cw, this.ch);
-      this.frontWear(pose);
+      this.frontWear();
       return false;
     }
     // WebGL이 없을 때: 통째로 움직이고 눈·입 덮개만 겹침
@@ -415,16 +418,12 @@ export class PaintPet {
     };
     over('eyes', r.eyesBox, pose.eyes); over('mouth', r.mouthBox, pose.mouth);
     c.filter = 'none';
-    this.frontWear(pose);
+    this.frontWear();
     return false;
   }
-  private frontWear(pose:Pose) {
-    if(wornReady(this.o.id,'front',0,this.selectedWear,k=>IMGS[k]?.img)&&this.ctx){
-      const c=this.ctx;c.save();c.setTransform(this.px,0,0,this.px,-VIEW.x*this.px,-VIEW.y*this.px);c.transform(...pose.root);
-      if(pose.dim<1)c.filter=`brightness(${pose.dim})`;
-      drawWorn(c,'front',0,this.selectedWear,k=>IMGS[k]?.img,getGL()?mul(inverse(pose.root),pose.head):undefined);
-      c.restore();this.fitted=true;return;
-    }
+  private frontWear() {
+    // 정면은 Pet의 몸/머리 SVG 순서에 부품을 넣어, 기존 아이템과 섞어도 가림 순서가 유지된다.
+    this.fittedSlots=Object.keys(wornSelection(this.o.id,'front',0,this.selectedWear,k=>IMGS[k]?.img));
   }
   destroy() { this.io?.disconnect(); }
 }

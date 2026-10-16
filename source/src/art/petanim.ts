@@ -19,6 +19,7 @@ export interface AnimIn {
 }
 export interface Pose {
   fitted?: boolean; // 정면 꾸미기를 새 착용 표면으로 직접 그렸는지 (저장하지 않음)
+  fittedSlots?:readonly string[]; // 준비된 부품만 기존 표시를 대체한다.
   sprite: null | { key: string; frame: number };
   root: Mat; head: Mat; earL: Mat; earR: Mat; tail: Mat; tail2: Mat;
   eyes: number; mouth: number; dim: number;

@@ -160,7 +160,7 @@ const VB = `${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`;
 function WornFront({pet,slot,item}:{pet:string;slot:string;item?:string}){
   const entry=wornEntry(pet,slot,item),rect=entry?.frames['front/0'];if(!entry||!rect)return null;
   const [x,y,w,h,dx,dy]=rect,height=Math.max(...Object.values(entry.frames).map(r=>r[1]+r[3]));
-  return <svg x={dx} y={dy} width={w} height={h} viewBox={`${x} ${y} ${w} ${h}`} overflow="hidden"><image href={artSrc(entry.art)} x="0" y="0" width="2048" height={height}/></svg>;
+  return <svg x={dx} y={dy} width={w} height={h} viewBox={`${x} ${y} ${w} ${h}`} overflow="hidden"><image href={artSrc(entry.art)} x="0" y="0" width={entry.width||2048} height={height}/></svg>;
 }
 
 /** 정면 그림 한 장을 휘게 그리는 캔버스 + 꾸미기 아이템(새 그림·예전 SVG를 새 그림의 머리·목·몸·발 위치에 맞춰 얹음).

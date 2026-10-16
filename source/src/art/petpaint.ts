@@ -377,11 +377,11 @@ export class PaintPet {
         const dressed = sf ? this.dress(im, m, key, fi, sf,modern) : null;
         if (dressed) c.drawImage(dressed, 0, 0, m.w, m.h, dx, dy, dw, dh);
         else c.drawImage(im, fi * m.w, 0, m.w, m.h, dx, dy, dw, dh);
-        if(modern.clothes){c.save();c.translate(dx,dy);c.scale(s,s);drawWorn(c,key,fi,{clothes:modern.clothes},k=>IMGS[k]?.img);c.restore();}
+        if(modern.clothes){c.save();c.translate(dx,dy);c.scale(s,s);drawWorn(c,key,fi,{clothes:modern.clothes},k=>IMGS[k]?.img,undefined,this.o.id);c.restore();}
         if (sf||Object.keys(modern).length) {
           c.translate(dx, dy); c.scale(s, s);
           for (const sl of ['shoes','neck','hat','glasses'] as const) {
-            if(modern[sl]){drawWorn(c,key,fi,{[sl]:modern[sl]},k=>IMGS[k]?.img);continue;}
+            if(modern[sl]){drawWorn(c,key,fi,{[sl]:modern[sl]},k=>IMGS[k]?.img,undefined,this.o.id);continue;}
             if(!sf||sl==='shoes')continue;
             const it = this.side[sl], si = it && IMGS[it.key]?.img;
             if (!it || !si) continue;

@@ -16,7 +16,8 @@ for(const[key,entry]of Object.entries(WORN_EXTRA))registered.set(`corgi:${key}`,
 for(const key of WORN_MOTION.items){
  const id=`${WORN_MOTION.pet}:${key}`,entry=registered.get(id),reference=entry?.frames[WORN_MOTION.reference];
  if(!entry||!reference)continue;
- const transforms=Object.fromEntries(Object.entries(WORN_MOTION.transforms).map(([pose,m])=>[pose,m as Mat]));
+ const limits:Partial<Record<string,string[]>>=WORN_MOTION.only;
+ const transforms=Object.fromEntries(Object.entries(WORN_MOTION.transforms).filter(([pose])=>!limits[key]||limits[key]!.includes(pose.split('/')[0])).map(([pose,m])=>[pose,m as Mat]));
  registered.set(id,{...entry,frames:{...entry.frames,...Object.fromEntries(Object.keys(transforms).map(p=>[p,reference]))},transforms});
 }
 /** 같은 슬롯에서도 선택한 아이템과 검수된 원화가 정확히 맞을 때만 연결한다. */

@@ -73,5 +73,11 @@ for(const pose of ['run','jump','scratch'])for(let frame=0;frame<6;frame++)for(l
 assert.deepEqual(wornSelection('corgi','jump',6,wear,image),{});
 assert.deepEqual(wornSelection('corgi','scratch',6,{neck:'bowtie'},image),{});
 assert.deepEqual(wornSelection('corgi','roll',0,{neck:'bowtie'},image),{});
+assert.deepEqual(wornSelection('corgi','jump',0,{neck:'scarf'},image),{});
+assert.deepEqual(wornSelection('corgi','run',0,{neck:'scarf'},image),{});
+for(let frame=0;frame<6;frame++){
+ assert.deepEqual(wornSelection('corgi','scratch',frame,{neck:'scarf'},image),{neck:'scarf'});
+ assert.deepEqual(wornSelection('corgi','scratch',frame,{neck:'scarf'},()=>undefined),{});
+}
 assert.deepEqual(wornSelection('corgi','jump',0,{...wear,neck:'bowtie'},k=>k===bowtie.art?undefined:image()),{hat:'straw',glasses:'round'});
 console.log('달리기·점프·긁기:',moving,'착탈 조합에서 기존 이미지 재사용·발 가림·개별 변환·미검수 부분 표시 유지 통과');

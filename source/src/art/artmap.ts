@@ -881,7 +881,12 @@ export const ART_MAP: Record<string, string> = {
   "bg.yard-cat.sky": "art/backgrounds/yard-cat.sky.2ad9b129.webp",
   "bg.yard-dog.front": "art/backgrounds/yard-dog.front.0f70f95c.webp",
   "bg.yard-dog.land": "art/backgrounds/yard-dog.land.24c15ab1.webp",
-  "bg.yard-dog.sky": "art/backgrounds/yard-dog.sky.b47b168f.webp"
+  "bg.yard-dog.sky": "art/backgrounds/yard-dog.sky.b47b168f.webp",
+  "pet.corgi.paint-wear-clothes": "art/pets/corgi.paint-wear-clothes.2d467631.webp",
+  "pet.corgi.paint-wear-hat": "art/pets/corgi.paint-wear-hat.26e199bd.webp",
+  "pet.corgi.paint-wear-glasses": "art/pets/corgi.paint-wear-glasses.4460c89c.webp",
+  "pet.corgi.paint-wear-neck": "art/pets/corgi.paint-wear-neck.dca74ae9.webp",
+  "pet.corgi.paint-wear-shoes": "art/pets/corgi.paint-wear-shoes.0e404053.webp"
 };
 
 export function artSrc(id: string): string | undefined {

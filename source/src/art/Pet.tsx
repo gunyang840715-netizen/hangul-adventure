@@ -163,6 +163,7 @@ function PaintedPet({ pid, size, mood, motion, wear, g, stage, talking, cls, sty
   { pid: string; size: number; mood: Mood; motion: Motion; wear: Wear; g: number; stage: Stage; talking: boolean; cls: string; style?: any; flip?: boolean; act?: Act; poke: number }) {
   const r = rigOf(pid)!;
   const cv = useRef<HTMLCanvasElement>(null);
+  const fittedBody = useRef<SVGGElement>(null), fittedHead = useRef<SVGGElement>(null);
   const rootG = useRef<SVGGElement>(null), headG = useRef<SVGGElement>(null), backG = useRef<SVGGElement>(null), layer = useRef<SVGSVGElement>(null);
   const inst = useRef<Painter | null>(null);
   const [cid] = useState(() => 'pp' + (++uid));
@@ -174,6 +175,8 @@ function PaintedPet({ pid, size, mood, motion, wear, g, stage, talking, cls, sty
     const p = new Painter({
       id: pid, canvas: cv.current!,
       onPose: (pose) => {
+        if(fittedBody.current)fittedBody.current.style.visibility=pose.fitted?'hidden':'';
+        if(fittedHead.current)fittedHead.current.style.visibility=pose.fitted?'hidden':'';
         const vis = pose.sprite ? 'hidden' : '';
         if (vis !== shown && layer.current) { layer.current.style.visibility = vis; shown = vis; }
         if (pose.sprite) return;
@@ -209,14 +212,18 @@ function PaintedPet({ pid, size, mood, motion, wear, g, stage, talking, cls, sty
           {/* 장난감: 친구 옆 바닥에(앞에 그려야 몸에 가리지 않음), 몸이 움직여도 그 자리 */}
           {wear.toy && <g transform={mtx(A.toy)}><Toy k={wear.toy} /></g>}
           <g ref={rootG}>
+            <g ref={fittedBody}>
             {wear.clothes && <g transform={mtx(A.clothes)}><Clothes k={wear.clothes} clip={`url(#${cid}-body)`} /></g>}
             {wear.shoes && <g transform={mtx(A.shoes)}><Shoes k={wear.shoes} /></g>}
             {wear.neck && <g transform={mtx(A.neck)}><Neck k={wear.neck} /></g>}
+            </g>
           </g>
           <g ref={headG}>
             <g transform={mtx(A.head)}>
+              <g ref={fittedHead}>
               {wear.glasses && <Glasses k={wear.glasses} rb={`url(#${cid}-rb)`} />}
               {wear.hat && <g transform={`translate(0 ${A.hatDy})`}><Hat k={wear.hat} /></g>}
+              </g>
               {mood === 'love' && <g class="pt-hearts"><text x="150" y="30" font-size="26">❤️</text><text x="34" y="44" font-size="18">💕</text></g>}
               {mood === 'sleep' && !act && <text x="146" y="34" font-size="24" fill="#6b7aa8" font-weight="bold">z</text>}
             </g>

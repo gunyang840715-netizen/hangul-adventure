@@ -10,6 +10,7 @@ import { ART_MAP, artSrc } from './artmap';
 import { PAINT_RIG } from './petpaint.gen';
 import { PetAnim, type AnimIn, type Pose, type Mat } from './petanim';
 import { sideFrame, sideArt, sideRig, placeM, mul, SIDE_SLOTS, type SideFrame, type SideSlot } from './petside';
+import {wornKeys,wornReady,drawWorn,inverse,type SelectedWear} from './wearable';
 
 export type { Act } from './petanim';
 type Pt = [number, number];
@@ -266,6 +267,7 @@ export interface PaintOpts {
 const reduceMQ = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
 
 export class PaintPet {
+  private fitted = false;
   anim: PetAnim;
   inp: AnimIn = { mood: 'happy', motion: 'bob', talking: false, g: 1, poke: 0, reduce: false };
   size = 200;
@@ -275,6 +277,7 @@ export class PaintPet {
   private io?: IntersectionObserver;
   // 옆모습 꾸미기: 입은 것의 옆모습 그림, 옷·목걸이를 몸에 입힌 칸 그림(같은 칸이면 다시 안 그림)
   private wearKey = '';
+  private selectedWear:SelectedWear={};
   private side: Partial<Record<SideSlot, { key: string; box: [number, number, number, number] }>> = {};
   private oc: HTMLCanvasElement | null = null; private ocKey = '';
   constructor(public o: PaintOpts) {
@@ -287,6 +290,8 @@ export class PaintPet {
   }
   /** 입은 아이템(옷장 wear) → 옆모습 그림을 미리 받아 둔다(나올 때 받기 — 서비스워커가 저장) */
   setWear(wear: Partial<Record<string, string | undefined>>) {
+    this.selectedWear={...wear};
+    for(const key of wornKeys(this.o.id,wear))img(key);
     const k = SIDE_SLOTS.map(sl => wear[sl] ?? '').join('|');
     if (k === this.wearKey) return;
     this.wearKey = k; this.ocKey = ''; this.side = {};
@@ -341,10 +346,12 @@ export class PaintPet {
     let pose = this.anim.step(dt, this.inp);
     // 동작 그림을 기다리는 동안 실제로는 정면 그림을 그린다. 정면 꾸미기도 함께 유지.
     if (this.visible && !this.draw(pose) && pose.sprite) pose = { ...pose, sprite: null };
+    if (this.fitted) pose = { ...pose, fitted: true };
     // WebGL 없이 통째로 그릴 때는 머리가 따로 돌지 않으니 머리 아이템도 몸을 따라가게
     this.o.onPose?.(getGL() ? pose : { ...pose, head: pose.root });
   }
   private draw(pose: Pose): boolean {
+    this.fitted = false;
     const c = this.ctx, r = PAINT_RIG[this.o.id];
     if (!c || !r) return false;
     const px = this.px;
@@ -366,6 +373,11 @@ export class PaintPet {
         const s = 1 / r.sp, dw = m.w * s, dh = m.h * s, dx = r.cx - dw / 2, dy = r.ground - m.ground * s;
         const key = pose.sprite.key, fi = pose.sprite.frame;
         if (pose.dim < 1) c.filter = `brightness(${pose.dim})`;
+        if(wornReady(this.o.id,key,fi,this.selectedWear,k=>IMGS[k]?.img)){
+          c.drawImage(im,fi*m.w,0,m.w,m.h,dx,dy,dw,dh);
+          c.save();c.translate(dx,dy);c.scale(s,s);drawWorn(c,key,fi,this.selectedWear,k=>IMGS[k]?.img);c.restore();
+          c.filter='none';return true;
+        }
         const sf = this.wearKey.replace(/\|/g, '') ? sideFrame(this.o.id, key, fi) : null;
         const dressed = sf ? this.dress(im, m, key, fi, sf) : null;
         if (dressed) c.drawImage(dressed, 0, 0, m.w, m.h, dx, dy, dw, dh);
@@ -387,6 +399,7 @@ export class PaintPet {
     if (glDraw(this.o.id, pose, this.cw, this.ch)) {
       c.setTransform(1, 0, 0, 1, 0, 0);
       c.drawImage(glc, 0, glc.height - this.ch, this.cw, this.ch, 0, 0, this.cw, this.ch);
+      this.frontWear(pose);
       return false;
     }
     // WebGL이 없을 때: 통째로 움직이고 눈·입 덮개만 겹침
@@ -402,7 +415,16 @@ export class PaintPet {
     };
     over('eyes', r.eyesBox, pose.eyes); over('mouth', r.mouthBox, pose.mouth);
     c.filter = 'none';
+    this.frontWear(pose);
     return false;
+  }
+  private frontWear(pose:Pose) {
+    if(wornReady(this.o.id,'front',0,this.selectedWear,k=>IMGS[k]?.img)&&this.ctx){
+      const c=this.ctx;c.save();c.setTransform(this.px,0,0,this.px,-VIEW.x*this.px,-VIEW.y*this.px);c.transform(...pose.root);
+      if(pose.dim<1)c.filter=`brightness(${pose.dim})`;
+      drawWorn(c,'front',0,this.selectedWear,k=>IMGS[k]?.img,getGL()?mul(inverse(pose.root),pose.head):undefined);
+      c.restore();this.fitted=true;return;
+    }
   }
   destroy() { this.io?.disconnect(); }
 }

@@ -18,6 +18,7 @@ export interface AnimIn {
   reduce: boolean;      // 기기의 '움직임 줄이기'
 }
 export interface Pose {
+  fitted?: boolean; // 정면 꾸미기를 새 착용 표면으로 직접 그렸는지 (저장하지 않음)
   sprite: null | { key: string; frame: number };
   root: Mat; head: Mat; earL: Mat; earR: Mat; tail: Mat; tail2: Mat;
   eyes: number; mouth: number; dim: number;

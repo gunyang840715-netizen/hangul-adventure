@@ -61,16 +61,17 @@ for(const key of frames){
 }
 console.log('목 착용 변형:',variants,'혼합·자세에서 정확한 아이템 자산 선택·누락 시 다른 부품 유지 통과');
 let moving=0;
-for(const pose of ['run','jump'])for(let frame=0;frame<6;frame++)for(let mask=0;mask<8;mask++){
+for(const pose of ['run','jump','scratch'])for(let frame=0;frame<6;frame++)for(let mask=0;mask<8;mask++){
  const choices={hat:'straw',glasses:'round',neck:'bowtie'},parts=Object.keys(choices);
  const selection=Object.fromEntries(parts.filter((_,i)=>mask&(1<<i)).map(s=>[s,choices[s as keyof typeof choices]]));
  assert.deepEqual(wornSelection('corgi',pose,frame,selection,k=>images.get(k)),selection);
- let transforms=0,draws=0,depth=0;
- const ctx={save(){depth++;},restore(){depth--;},transform(...m:number[]){assert.ok(m.every(Number.isFinite));assert.ok(Math.abs(m[0]*m[3]-m[1]*m[2])>.01);transforms++;},drawImage(){draws++;}}as unknown as CanvasRenderingContext2D;
+ let transforms=0,draws=0,depth=0,clips=0,holes=0;
+ const ctx={save(){depth++;},restore(){depth--;},beginPath(){},rect(){},moveTo(){holes++;},lineTo(...xy:number[]){assert.ok(xy.every(Number.isFinite));},closePath(){},clip(rule:string){assert.equal(rule,'evenodd');clips++;},transform(...m:number[]){assert.ok(m.every(Number.isFinite));assert.ok(Math.abs(m[0]*m[3]-m[1]*m[2])>.01);transforms++;},drawImage(){draws++;}}as unknown as CanvasRenderingContext2D;
  drawWorn(ctx,pose,frame,selection,k=>images.get(k));
- assert.equal(draws,Object.keys(selection).length);assert.equal(transforms,draws);assert.equal(depth,0);moving++;
+ assert.equal(draws,Object.keys(selection).length);assert.equal(transforms,draws);assert.equal(clips,pose==='scratch'&&frame>0&&frame<5?draws:0);assert.equal(holes,clips);assert.equal(depth,0);moving++;
 }
 assert.deepEqual(wornSelection('corgi','jump',6,wear,image),{});
-assert.deepEqual(wornSelection('corgi','scratch',0,{neck:'bowtie'},image),{});
+assert.deepEqual(wornSelection('corgi','scratch',6,{neck:'bowtie'},image),{});
+assert.deepEqual(wornSelection('corgi','roll',0,{neck:'bowtie'},image),{});
 assert.deepEqual(wornSelection('corgi','jump',0,{...wear,neck:'bowtie'},k=>k===bowtie.art?undefined:image()),{hat:'straw',glasses:'round'});
-console.log('달리기·점프:',moving,'착탈 조합에서 기존 이미지 재사용·개별 변환·미검수 부분 표시 유지 통과');
+console.log('달리기·점프·긁기:',moving,'착탈 조합에서 기존 이미지 재사용·발 가림·개별 변환·미검수 부분 표시 유지 통과');

@@ -43,6 +43,12 @@ export function drawWorn(c:CanvasRenderingContext2D,pose:string,frame:number,wea
   const entry=wornEntry('corgi',slot,wear[slot]);if(!entry)continue;
   const im=image(entry.art),rect=entry.frames[`${pose}/${frame}`];if(!im||!rect)continue;
   const [x,y,w,h,dx,dy]=rect;
-  c.save();try{if(head&&(slot==='hat'||slot==='glasses'))c.transform(...head);const placement=entry.transforms?.[`${pose}/${frame}`];if(placement)c.transform(...placement);c.drawImage(im,x,y,w,h,dx,dy,w,h);}finally{c.restore();}
+  c.save();try{
+   if(head&&(slot==='hat'||slot==='glasses'))c.transform(...head);
+   // 귀를 긁는 발은 모자 챙/목끈보다 앞에 있다. 원래 발 픽셀을 그대로 남긴다.
+   const paw=WORN_MOTION.foreground[`${pose}/${frame}` as keyof typeof WORN_MOTION.foreground];
+   if(paw){c.beginPath();c.rect(-2048,-2048,4096,4096);paw.forEach(([px,py],i)=>i?c.lineTo(px,py):c.moveTo(px,py));c.closePath();c.clip('evenodd');}
+   const placement=entry.transforms?.[`${pose}/${frame}`];if(placement)c.transform(...placement);c.drawImage(im,x,y,w,h,dx,dy,w,h);
+  }finally{c.restore();}
  }
 }

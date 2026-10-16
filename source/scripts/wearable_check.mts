@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {wornKeys,wornReady,wornSelection,drawWorn}from '../src/art/wearable';
+import {wornKeys,wornReady,wornSelection,drawWorn,wornEntry}from '../src/art/wearable';
 import {WORN}from '../src/art/wearable.gen';
 const wear={clothes:'stripe',hat:'straw',glasses:'round',neck:'scarf',shoes:'sneaker'},slots=Object.keys(wear);
 const image=()=>({}as CanvasImageSource);
@@ -37,3 +37,26 @@ for(const key of frames){const[pose,fi]=key.split('/');for(let mask=0;mask<32;ma
  drawWorn(ctx,pose,+fi,combination,image);assert.equal(draws,Object.keys(selected).length);mixed++;
 }}
 console.log('혼합 착용:',mixed,'조합·자세에서 미지원 아이템 대체 방지·검수 부품 유지 통과');
+// 같은 슬롯의 기존 목도리와 새 나비넥타이가 서로 대체되거나 함께 그려지면 안 된다.
+const bowtie=wornEntry('corgi','neck','bowtie')!;
+assert.ok(bowtie);assert.notEqual(bowtie.art,WORN.neck.art);
+assert.equal(wornEntry('maltese','neck','bowtie'),undefined);
+assert.equal(wornEntry('corgi','hat','bowtie'),undefined);
+assert.deepEqual(wornKeys('corgi',{neck:'bowtie'}),[bowtie.art]);
+assert.deepEqual(wornKeys('corgi',{neck:'scarf'}),[WORN.neck.art]);
+assert.deepEqual(wornSelection('corgi','front',0,{...wear,neck:'bowtie'},k=>k===bowtie.art?undefined:image()),{clothes:'stripe',shoes:'sneaker',hat:'straw',glasses:'round'});
+assert.deepEqual(wornSelection('corgi','front',0,{neck:'scarf'},k=>k===bowtie.art?image():undefined),{});
+const images=new Map([...Object.values(WORN),bowtie].map(a=>[a.art,{art:a.art}as unknown as CanvasImageSource]));
+let variants=0;
+for(const key of frames){
+ const[pose,fi]=key.split('/');assert.ok(bowtie.frames[key]);
+ for(let mask=0;mask<32;mask++){
+  const selected=Object.fromEntries(slots.map((s,i)=>[s,mask&(1<<i)?(s==='neck'?'bowtie':wear[s as keyof typeof wear]):'unadapted']));
+  const drawn:CanvasImageSource[]=[];let depth=0;
+  const ctx={save(){depth++;},restore(){depth--;},drawImage(im:CanvasImageSource){drawn.push(im);}}as unknown as CanvasRenderingContext2D;
+  drawWorn(ctx,pose,+fi,selected,k=>images.get(k));
+  assert.equal(depth,0);assert.equal(drawn.length,slots.filter((_,i)=>mask&(1<<i)).length);
+  assert.equal(drawn.includes(images.get(bowtie.art)!),selected.neck==='bowtie');assert.equal(drawn.includes(images.get(WORN.neck.art)!),false);variants++;
+ }
+}
+console.log('목 착용 변형:',variants,'혼합·자세에서 정확한 아이템 자산 선택·누락 시 다른 부품 유지 통과');

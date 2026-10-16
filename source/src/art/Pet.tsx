@@ -8,7 +8,7 @@ import { paintable, baseState, loadBase, loadMotions, retryPaintImages, rigOf, P
 import type { Mat } from './petanim';
 import { artSrc } from './artmap';
 import { ITEM_ART } from './items.gen';
-import {WORN} from './wearable.gen';
+import {wornEntry} from './wearable';
 
 export type Mood = 'happy' | 'wow' | 'think' | 'sleep' | 'love';
 export type Motion = 'bob' | 'jump' | 'cheer' | 'wiggle' | 'none' | 'fly' | 'hop';
@@ -158,7 +158,7 @@ export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}
 const mtx = (a: ArrayLike<number>) => `matrix(${Array.from(a, v => +v.toFixed(4)).join(' ')})`;
 const VB = `${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`;
 function WornFront({pet,slot,item}:{pet:string;slot:string;item?:string}){
-  const entry=WORN[slot],rect=entry?.frames['front/0'];if(pet!=='corgi'||!rect||item!==entry.key)return null;
+  const entry=wornEntry(pet,slot,item),rect=entry?.frames['front/0'];if(!entry||!rect)return null;
   const [x,y,w,h,dx,dy]=rect,height=Math.max(...Object.values(entry.frames).map(r=>r[1]+r[3]));
   return <svg x={dx} y={dy} width={w} height={h} viewBox={`${x} ${y} ${w} ${h}`} overflow="hidden"><image href={artSrc(entry.art)} x="0" y="0" width="2048" height={height}/></svg>;
 }

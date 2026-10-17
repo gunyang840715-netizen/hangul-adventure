@@ -7,5 +7,9 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
   'idle/1':{art:'pet.koshort.paint-wear-clothes-dots-idle',rect:[266,2,258,183,49,89]},
   'idle/2':{art:'pet.koshort.paint-wear-clothes-dots-idle',rect:[528,2,260,183,49,88]},
   'idle/3':{art:'pet.koshort.paint-wear-clothes-dots-idle',rect:[792,2,260,184,50,87]},
+  'eat/0':{art:'pet.koshort.paint-wear-clothes-dots-eat',rect:[2,2,247,143,94,78]},
+  'eat/1':{art:'pet.koshort.paint-wear-clothes-dots-eat',rect:[253,2,242,140,102,79]},
+  'eat/2':{art:'pet.koshort.paint-wear-clothes-dots-eat',rect:[499,2,252,142,92,74]},
+  'eat/3':{art:'pet.koshort.paint-wear-clothes-dots-eat',rect:[755,2,250,137,97,75]},
  }}},
 };

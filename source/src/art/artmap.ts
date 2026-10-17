@@ -1,5 +1,6 @@
 // 기존 그림 원본의 내용 해시 경로. 없는 그림은 기존 SVG로 그린다.
 export const ART_MAP: Record<string, string> = {
+  "pet.koshort.paint-wear-clothes-dots-eat": "art/pets/koshort.paint-wear-clothes-dots-eat.971e0020.webp",
   "pet.koshort.paint-wear-clothes-dots-idle": "art/pets/koshort.paint-wear-clothes-dots-idle.d2142d38.webp",
   "pet.koshort.paint-wear-clothes-dots": "art/pets/koshort.paint-wear-clothes-dots.a25d893f.webp",
   "map.1": "art/backgrounds/map-1.long.1e16facc.webp",
@@ -883,7 +884,7 @@ export const ART_MAP: Record<string, string> = {
   "bg.yard-cat.sky": "art/backgrounds/yard-cat.sky.2ad9b129.webp",
   "bg.yard-dog.front": "art/backgrounds/yard-dog.front.0f70f95c.webp",
   "bg.yard-dog.land": "art/backgrounds/yard-dog.land.24c15ab1.webp",
-  "bg.yard-dog.sky": "art/backgrounds/yard-dog.sky.b47b168f.webp",
+  "bg.yard-dog.sky": "art/backgrounds/yard-dog.sky.b47b168f.webp",
   "pet.corgi.paint-wear-clothes": "art/pets/corgi.paint-wear-clothes.2d467631.webp",
   "pet.corgi.paint-wear-hat": "art/pets/corgi.paint-wear-hat.26e199bd.webp",
   "pet.corgi.paint-wear-glasses": "art/pets/corgi.paint-wear-glasses.4460c89c.webp",

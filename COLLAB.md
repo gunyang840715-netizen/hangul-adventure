@@ -28,7 +28,7 @@
   check가 실패하면 사이트는 이전 버전 그대로다.
 - 사이트(바꾸지 않음): https://gunyang840715-netizen.github.io/hangul-adventure/
 - 기기는 앱을 다시 열 때 새 버전을 받는다(첫 화면은 인터넷 우선 3초, 안 되면 저장본).
-- git·커밋·push는 Claude만 한다. GPT는 드라이브 결과/(클라우드) 또는 art-src/(로컬)에만 저장한다.
+- git·커밋·push는 Claude가 기본으로 한다. 사용자가 허락하면 GPT(Codex)도 한다(10-16~) — 그때 둘 다 AGENTS.md '같이 배포하기'를 지킨다. 그림만 그리는 GPT는 드라이브 결과/(클라우드) 또는 art-src/(로컬)에만 저장한다.
   Claude가 차례 시작 때 드라이브 결과/의 최신 완료목록·새 zip과 art-src/GPT_진행.md를 확인한다.
   (드라이브의 큰 zip은 Claude 연결 도구로 받을 수 없다 → 컴퓨터가 켜져 있을 때 받아 art-src/<묶음>/에 풀어 넣는다.)
 

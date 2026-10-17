@@ -3,7 +3,7 @@
 규칙은 COLLAB.md 4장. GPT는 이 파일을 고치지 않는다 — GPT 기록은 art-src/GPT_진행.md와 각 묶음의 납품.md.
 
 **작업 중:** GPT(Codex, 로컬) — 사용자 승인으로 코드·그림·배포까지 직접 진행 중(10-16~, 기록은 `source/UPGRADE_STATUS.md`·`source/WEAR_RELEASE.md`).
-  Claude는 10-17 03:00에 GPT 결과 중 아직 안 들어간 것(도서관 바닥)만 넣음 — 아래 기록. 같은 파일을 동시에 고치지 않게 Codex 배포 전 원격 main 확인 필요.
+  둘 다 배포한다 — 올릴 때는 AGENTS.md '같이 배포하기'(10-17)를 지킨다.
 
 ## 지금 상태 (2026-10-13)
 - **그림은 클라우드(ChatGPT)에서 — 컴퓨터가 꺼져 있어도 계속** (18:40 사용자 요청). 규칙·재료·진행·결과는 구글 드라이브 「한글나라 그림 작업 (GPT·Claude 공용)」:
@@ -73,6 +73,8 @@
 (없음)
 
 ## 기록 (최근이 위)
+- 2026-10-17 [Claude] 둘 다 배포하는 규칙: AGENTS.md '같이 배포하기'(올리기 직전 원격 다시 받기·고친 줄만·올린 뒤 diff 확인·줄바꿈 유지·그림 안 지우기·gen 파일은 최신 스크립트로·Actions 확인), COLLAB 2장 고침.
+  확인: 10-17 Codex 커밋 5개는 Claude 변경을 지우지 않음. Codex가 올린 4개 파일(source/package.json·Pet.tsx·petanim.ts·petpaint.ts)은 CRLF로 들어가 있음(동작 문제 없음).
 - 2026-10-17 [Claude] 도서관 배경 바닥 복구·배포: GPT 후보의 아래쪽만 원본에 이어 붙임(art/backgrounds/library.full.95e9c580). 확인: 10-15 이후 GPT가 만든 앱용 파일 71개는 이미 main과 같음(Codex 직접 배포).
   참고: `scripts/side_rig_check.mts`(Codex)가 이 클라우드 환경(Node 22.22·tsx)에서는 모듈이 두 번 읽혀 실패함(CI에서는 통과). 앱 문제 아님 — 검사 쪽 import 정리 필요.
 - 2026-10-15 [Claude] 꾸미기 옆모습 반영·배포: GPT 옆모습 시트 7장 + 옷 추가 옆모습 4장 → 106장(art/items/*-side, 입은 것만 나올 때 받기).

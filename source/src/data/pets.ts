@@ -18,8 +18,8 @@ export const PETS: PetDef[] = [
   { id: 'shiba', species: 'dog', breed: '시바견', name: '보리', about: '꼬리가 동그랗게 말려 있어!' },
   { id: 'schnauzer', species: 'dog', breed: '슈나우저', name: '콩이', about: '멋진 수염이 있어!' },
   { id: 'koshort', species: 'cat', breed: '코리안 숏헤어', name: '냥이', about: '노란 줄무늬 치즈 고양이야!' },
-  { id: 'russian', species: 'cat', breed: '러시안 블루', name: '구름', about: '회색 털에 초록 눈이야!' },
-  { id: 'siamese', species: 'cat', breed: '샴', name: '라떼', about: '얼굴이랑 귀가 갈색이야!' },
+  { id: 'russian', species: 'cat', breed: '러시안 블루', name: '다랑이', about: '회색 털에 초록 눈이야!' },
+  { id: 'siamese', species: 'cat', breed: '샴', name: '꽁치', about: '얼굴이랑 귀가 갈색이야!' },
   { id: 'fold', species: 'cat', breed: '스코티시 폴드', name: '모찌', about: '귀가 폭 접혀 있어!' },
   { id: 'persian', species: 'cat', breed: '페르시안', name: '솜사탕', about: '털이 길고 복슬복슬해!' },
 ];

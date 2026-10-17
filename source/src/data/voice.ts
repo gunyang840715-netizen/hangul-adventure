@@ -86,9 +86,13 @@ export function buildLines(): string[] {
 }
 export const stageLine = (name: string, stage: 'kid' | 'adult') => `${iga(name)} ${stage === 'kid' ? '어린이가' : '어른이'} 됐어!`;
 export const gotLine = (thing: string) => `${eul(thing)} 받았어!`;
+/** 바뀌기 전 친구 이름 (앱에서는 더 이상 부르지 않음) */
+export const RETIRED_PET_NAMES = ['구름', '라떼'];
 export function petLines(): string[] {
   const L: string[] = [];
   for (const p of PETS) L.push(helloLine(p.name), breedLine(p.breed, p.name), p.about, hungryLine(p.name), dressLine(p.name), growLine(p.name), stageLine(p.name, 'kid'), stageLine(p.name, 'adult'));
+  // 예전 이름(10-17 사용자 요청으로 구름→다랑이, 라떼→꽁치) 문장도 남겨 둔다 — 이미 있는 녹음 묶음이 가리키는 문장이라 지우면 검사가 막힘
+  for (const n of RETIRED_PET_NAMES) L.push(helloLine(n), hungryLine(n), dressLine(n), growLine(n), stageLine(n, 'kid'), stageLine(n, 'adult'));
   for (const it of ITEM_LIST) L.push(gotLine(it.name));
   for (const sn of SNACKS) L.push(gotLine(sn.name));
   return L;

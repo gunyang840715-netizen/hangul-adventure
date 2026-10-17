@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+> **⓪ 매번 첫 명령 (사용자가 말하지 않아도): `node ../_collab/collab.mjs status`** — 이미 배포된 일·상대가 잡은 작업(🔒)·폴더가 뒤처졌는지 확인.
+> 같은 일이 이미 배포됐으면 다시 하지 않는다. 작업 잡기 `start`, 끝 `done`, push 전 `guard`(로컬 push는 훅이 자동 실행). 자세한 순서: 바탕화면 hangul 폴더의 `AGENTS.md`.
+> 그 폴더가 없는 곳(클라우드 복사본 등)이면 대신 `git fetch origin && git log --oneline -15 origin/main`으로 최근 배포를 확인한 뒤 시작한다.
+
 이 저장소는 GPT(Codex 앱)와 Claude가 함께 고친다. Claude는 「코드·통합·검사·배포」 담당, GPT는 「그림」 담당.
 작업 전 반드시 아래 세 파일을 읽는다. 우선순위: 사용자 지시 > COLLAB.md > AGENTS.md.
 

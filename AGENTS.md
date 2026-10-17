@@ -1,5 +1,9 @@
 # AGENTS.md — 이 저장소를 고치는 AI(ChatGPT · Codex 등)를 위한 안내
 
+> **⓪ 매번 첫 명령 (사용자가 말하지 않아도): `node ../_collab/collab.mjs status`** — 이미 배포된 일·상대가 잡은 작업(🔒)·폴더가 뒤처졌는지 확인.
+> 같은 일이 이미 배포됐으면 다시 하지 않는다. 작업 잡기 `start`, 끝 `done`, push 전 `guard`(로컬 push는 훅이 자동 실행). 자세한 순서: 바탕화면 hangul 폴더의 `AGENTS.md`.
+> 그 폴더가 없는 곳(클라우드 복사본 등)이면 대신 `git fetch origin && git log --oneline -15 origin/main`으로 최근 배포를 확인한 뒤 시작한다.
+
 > **GPT·Claude 공동 작업 중 (2026-10-12~): 작업 전에 반드시 `COLLAB.md`(공동 규칙)와 `HANDOFF.md`(작업판)를 읽는다.**
 > 이 파일과 COLLAB.md가 다르면 COLLAB.md를 따른다. 그림은 GPT, 코드·검사·배포는 Claude가 기본으로 맡고, 사용자가 허락하면 GPT도 배포한다 — 그때는 아래 '같이 배포하기'를 지킨다.
 

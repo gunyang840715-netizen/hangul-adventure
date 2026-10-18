@@ -43,6 +43,7 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
   'walk/5':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[802,2,152,89,268,-1]},
   'walk/6':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[958,2,154,89,261,-4]},
   'walk/7':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[1116,2,155,89,260,-7]},
+ }},neck:{key:'bowtie',art:'pet.maltese.paint-wear-neck-bowtie',width:163,frames:{'front/0':[0,0,163,100,245,382]},frameAssets:{
  }}},
  poodle:{hat:{key:'cap',art:'pet.maltese.paint-wear-hat-cap',width:274,frames:{'front/0':[0,0,274,207,182,50]},frameAssets:{
   'walk/0':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[2,2,154,90,266,-3]},

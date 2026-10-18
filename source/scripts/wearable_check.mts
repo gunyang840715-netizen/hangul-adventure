@@ -42,7 +42,7 @@ console.log('혼합 착용:',mixed,'조합·자세에서 미지원 아이템 대
 // 같은 슬롯의 기존 목도리와 새 나비넥타이가 서로 대체되거나 함께 그려지면 안 된다.
 const bowtie=wornEntry('corgi','neck','bowtie')!;
 assert.ok(bowtie);assert.notEqual(bowtie.art,WORN.neck.art);
-assert.equal(wornEntry('maltese','neck','bowtie'),undefined);
+assert.equal(wornEntry('poodle','neck','bowtie'),undefined);
 assert.equal(wornEntry('corgi','hat','bowtie'),undefined);
 assert.deepEqual(wornKeys('corgi',{neck:'bowtie'}),[bowtie.art]);
 assert.deepEqual(wornKeys('corgi',{neck:'scarf'}),[WORN.neck.art]);
@@ -198,3 +198,13 @@ for(let frame=0;frame<8;frame++){
 }
 assert.deepEqual(wornSelection('poodle','walk',8,{hat:'cap'},image),{});
 console.log('초코 걷기8칸: 실제 부품 재사용·개별 비퇴화변환·파일 미수신 기존 표시 통과');
+
+const malteseTie=wornEntry('maltese','neck','bowtie')!,malteseTieImage=image();assert.ok(malteseTie);assert.equal(malteseTie.width,163);assert.deepEqual(wornKeys('maltese',{neck:'bowtie'}),[malteseTie.art]);
+for(const pose of ['idle','walk','sitstand','eat','liesleep','run','jump','scratch'])assert.deepEqual(wornSelection('maltese',pose,0,{neck:'bowtie'},image),{});
+assert.deepEqual(wornSelection('maltese','front',1,{neck:'bowtie'},image),{});
+let neckMixed=0;for(const pose of ['front','idle','walk'])for(let mask=0;mask<32;mask++){
+ const choices={...wear,hat:'cap',neck:'bowtie'},selected=Object.fromEntries(slots.map((s,i)=>[s,mask&(1<<i)?choices[s as keyof typeof choices]:undefined]));
+ const expected={...(pose==='front'&&selected.neck?{neck:'bowtie'}:{}),...(selected.hat?{hat:'cap'}:{})};assert.deepEqual(wornSelection('maltese',pose,0,selected,image),expected);neckMixed++;
+}
+assert.equal(neckMixed,96);assert.deepEqual(wornSelection('maltese','front',0,{hat:'cap',neck:'bowtie'},key=>key===malteseTie.art?undefined:image()),{hat:'cap'});assert.deepEqual(wornSelection('maltese','front',0,{hat:'cap',neck:'bowtie'},key=>key===malteseCap.art?undefined:image()),{neck:'bowtie'});
+let tieDraws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...r:number[]){assert.equal(im,malteseTieImage);assert.deepEqual(r,[0,0,163,100,245,382,163,100]);tieDraws++;}}as unknown as CanvasRenderingContext2D,'front',0,{neck:'bowtie'},key=>key===malteseTie.art?malteseTieImage:undefined,undefined,'maltese');assert.equal(tieDraws,1);console.log('뭉치 나비넥타이 정면: 96혼합·모자와 개별 수신·다른 친구/자세 오선택 방지 통과');

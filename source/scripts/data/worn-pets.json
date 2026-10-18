@@ -433,6 +433,22 @@
             ]
           }
         }
+      },
+      "neck": {
+        "key": "bowtie",
+        "art": "pet.maltese.paint-wear-neck-bowtie",
+        "width": 163,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            163,
+            100,
+            245,
+            382
+          ]
+        },
+        "frameAssets": {}
       }
     },
     "poodle": {

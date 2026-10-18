@@ -48,6 +48,7 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
   'idle/1':{art:'pet.maltese.paint-wear-neck-bowtie-idle',rect:[110,2,104,54,217,182]},
   'idle/2':{art:'pet.maltese.paint-wear-neck-bowtie-idle',rect:[218,2,104,53,221,183]},
   'idle/3':{art:'pet.maltese.paint-wear-neck-bowtie-idle',rect:[326,2,106,54,219,184]},
+ }},shoes:{key:'sneaker',art:'pet.maltese.paint-wear-shoes-sneaker',width:317,frames:{'front/0':[0,0,317,96,173,528]},frameAssets:{
  }}},
  poodle:{hat:{key:'cap',art:'pet.maltese.paint-wear-hat-cap',width:274,frames:{'front/0':[0,0,274,207,182,50]},frameAssets:{
   'walk/0':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[2,2,154,90,266,-3]},

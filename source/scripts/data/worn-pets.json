@@ -494,6 +494,22 @@
             ]
           }
         }
+      },
+      "shoes": {
+        "key": "sneaker",
+        "art": "pet.maltese.paint-wear-shoes-sneaker",
+        "width": 317,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            317,
+            96,
+            173,
+            528
+          ]
+        },
+        "frameAssets": {}
       }
     },
     "poodle": {

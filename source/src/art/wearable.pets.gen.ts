@@ -30,6 +30,10 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
   'sitstand/3':{art:'pet.koshort.paint-wear-clothes-dots-sitstand',rect:[787,2,153,131,143,185]},
  }}},
  maltese:{hat:{key:'cap',art:'pet.maltese.paint-wear-hat-cap',width:274,frames:{'front/0':[0,0,274,207,182,50]},frameAssets:{
+  'idle/0':{art:'pet.maltese.paint-wear-hat-cap-idle',rect:[2,2,184,104,212,-35]},
+  'idle/1':{art:'pet.maltese.paint-wear-hat-cap-idle',rect:[190,2,182,104,212,-35]},
+  'idle/2':{art:'pet.maltese.paint-wear-hat-cap-idle',rect:[376,2,183,103,212,-34]},
+  'idle/3':{art:'pet.maltese.paint-wear-hat-cap-idle',rect:[563,2,186,106,211,-38]},
  }}},
  poodle:{hat:{key:'cap',art:'pet.maltese.paint-wear-hat-cap',width:274,frames:{'front/0':[0,0,274,207,182,50]},frameAssets:{
  }}},

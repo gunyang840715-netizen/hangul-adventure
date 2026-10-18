@@ -894,7 +894,8 @@ export const ART_MAP: Record<string, string> = {
   "pet.corgi.paint-wear-glasses": "art/pets/corgi.paint-wear-glasses.4460c89c.webp",
   "pet.corgi.paint-wear-neck": "art/pets/corgi.paint-wear-neck.dca74ae9.webp",
   "pet.corgi.paint-wear-shoes": "art/pets/corgi.paint-wear-shoes.0e404053.webp",
-  "pet.corgi.paint-wear-neck-bowtie": "art/pets/corgi.paint-wear-neck-bowtie.77adc5e1.webp"
+  "pet.corgi.paint-wear-neck-bowtie": "art/pets/corgi.paint-wear-neck-bowtie.77adc5e1.webp",
+  "pet.maltese.paint-wear-hat-cap-idle": "art/pets/maltese.paint-wear-hat-cap-idle.01abb76b.webp"
 };
 
 export function artSrc(id: string): string | undefined {

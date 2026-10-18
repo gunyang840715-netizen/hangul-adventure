@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import {execFileSync}from 'node:child_process';
+execFileSync(process.execPath,['scripts/build_worn_pets.mjs','--check'],{stdio:'inherit'});
 import {wornKeys,wornReady,wornSelection,drawWorn,wornEntry}from '../src/art/wearable';
 import {WORN}from '../src/art/wearable.gen';
 const wear={clothes:'stripe',hat:'straw',glasses:'round',neck:'scarf',shoes:'sneaker'},slots=Object.keys(wear);
@@ -81,14 +83,14 @@ for(let frame=0;frame<6;frame++){
 }
 assert.deepEqual(wornSelection('corgi','jump',0,{...wear,neck:'bowtie'},k=>k===bowtie.art?undefined:image()),{hat:'straw',glasses:'round'});
 console.log('달리기·점프·긁기:',moving,'착탈 조합에서 기존 이미지 재사용·발 가림·개별 변환·미검수 부분 표시 유지 통과');
-// 냥이의 땡땡이 정면과 서기·먹기 각각 네 칸만 검수했다. 다른 친구나 동작으로 넓혀 선택하면 안 된다.
+// 냥이의 땡땡이 정면과 서기·먹기·잠 전환 각각 네 칸만 검수했다. 다른 친구나 동작으로 넓혀 선택하면 안 된다.
 const cat=wornEntry('koshort','clothes','dots')!;assert.ok(cat);assert.equal(cat.width,300);
-assert.deepEqual(wornKeys('koshort',{clothes:'dots',hat:'straw'}),[cat.art,'pet.koshort.paint-wear-clothes-dots-idle','pet.koshort.paint-wear-clothes-dots-eat']);
+assert.deepEqual(wornKeys('koshort',{clothes:'dots',hat:'straw'}),[cat.art,'pet.koshort.paint-wear-clothes-dots-idle','pet.koshort.paint-wear-clothes-dots-eat','pet.koshort.paint-wear-clothes-dots-liesleep']);
 assert.deepEqual(wornSelection('koshort','front',0,{clothes:'dots',neck:'scarf'},image),{clothes:'dots'});
 assert.deepEqual(wornSelection('koshort','front',0,{clothes:'dots'},()=>undefined),{});
 assert.equal(wornReady('koshort','front',0,{clothes:'dots'},image),true);
 for(const pet of ['corgi','maltese','russian','siamese'])assert.equal(wornEntry(pet,'clothes','dots'),undefined);
-for(const pose of ['walk','run','jump','sitstand','liesleep','scratch'])for(let frame=0;frame<8;frame++)assert.deepEqual(wornSelection('koshort',pose,frame,{clothes:'dots'},image),{});
+for(const pose of ['walk','run','jump','sitstand','scratch'])for(let frame=0;frame<8;frame++)assert.deepEqual(wornSelection('koshort',pose,frame,{clothes:'dots'},image),{});
 let catDepth=0;const catDrawn:CanvasImageSource[]=[];const catImage={}as CanvasImageSource;
 drawWorn({save(){catDepth++;},restore(){catDepth--;},drawImage(im:CanvasImageSource){catDrawn.push(im);}}as unknown as CanvasRenderingContext2D,'front',0,{clothes:'dots'},key=>key===cat.art?catImage:undefined,undefined,'koshort');
 assert.equal(catDepth,0);assert.deepEqual(catDrawn,[catImage]);
@@ -108,3 +110,12 @@ const eatArt='pet.koshort.paint-wear-clothes-dots-eat';
 for(let frame=0;frame<4;frame++){assert.deepEqual(wornSelection('koshort','eat',frame,{clothes:'dots'},key=>key===eatArt?image():undefined),{clothes:'dots'});assert.deepEqual(wornSelection('koshort','eat',frame,{clothes:'dots'},key=>key===idleArt?image():undefined),{});}
 assert.deepEqual(wornSelection('koshort','eat',4,{clothes:'dots'},image),{});
 console.log('냥이 먹기4칸: 정확한 자세별 파일 선택·동작 파일 미수신 대체 표시 통과');
+
+const sleepArt='pet.koshort.paint-wear-clothes-dots-liesleep',sleepImage=image();
+for(let frame=0;frame<4;frame++){
+ assert.deepEqual(wornSelection('koshort','liesleep',frame,{clothes:'dots'},key=>key===sleepArt?sleepImage:undefined),{clothes:'dots'});
+ assert.deepEqual(wornSelection('koshort','liesleep',frame,{clothes:'dots'},key=>key===sleepArt?undefined:image()),{});
+ let count=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...rect:number[]){assert.equal(im,sleepImage);assert.ok(rect.every(Number.isFinite));count++;}}as unknown as CanvasRenderingContext2D,'liesleep',frame,{clothes:'dots'},key=>key===sleepArt?sleepImage:undefined,undefined,'koshort');assert.equal(count,1);
+}
+assert.deepEqual(wornSelection('koshort','liesleep',4,{clothes:'dots'},image),{});
+console.log('냥이 잠 전환4칸: 정확한 파일·누락 시 기존 표시·다른 자세로 오선택 방지 통과');

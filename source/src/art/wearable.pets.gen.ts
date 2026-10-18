@@ -1,3 +1,4 @@
+// build_worn_pets.mjs로 자동 생성. 좌표 수정은 scripts/data/worn-pets.json에서 한다.
 // 개별 검수한 다른 친구의 실제 착용 부품. 기재하지 않은 아이템/자세에는 적용하지 않는다.
 import type {WornAtlas}from './wearable.gen';
 export interface WornPetAtlas extends WornAtlas{width?:number;frameAssets?:Record<string,{art:string;rect:number[]}>}
@@ -11,5 +12,9 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
   'eat/1':{art:'pet.koshort.paint-wear-clothes-dots-eat',rect:[253,2,242,140,102,79]},
   'eat/2':{art:'pet.koshort.paint-wear-clothes-dots-eat',rect:[499,2,252,142,92,74]},
   'eat/3':{art:'pet.koshort.paint-wear-clothes-dots-eat',rect:[755,2,250,137,97,75]},
+  'liesleep/0':{art:'pet.koshort.paint-wear-clothes-dots-liesleep',rect:[2,2,153,131,132,157]},
+  'liesleep/1':{art:'pet.koshort.paint-wear-clothes-dots-liesleep',rect:[159,2,173,129,58,161]},
+  'liesleep/2':{art:'pet.koshort.paint-wear-clothes-dots-liesleep',rect:[336,2,203,129,25,161]},
+  'liesleep/3':{art:'pet.koshort.paint-wear-clothes-dots-liesleep',rect:[543,2,188,77,25,164]},
  }}},
 };

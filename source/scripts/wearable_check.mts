@@ -139,12 +139,12 @@ assert.deepEqual(wornSelection('koshort','sitstand',4,{clothes:'dots'},image),{}
 console.log('냥이 앉기 전환4칸: 해당 부품 선택·다른 파일 오선택 방지·미수신 기존 표시 통과');
 
 const malteseCap=wornEntry('maltese','hat','cap')!,malteseCapImage=image();assert.ok(malteseCap);assert.equal(malteseCap.width,274);
-assert.deepEqual(wornKeys('maltese',{hat:'cap',clothes:'stripe'}),[malteseCap.art,'pet.maltese.paint-wear-hat-cap-idle']);
+assert.deepEqual(wornKeys('maltese',{hat:'cap',clothes:'stripe'}),[malteseCap.art,'pet.maltese.paint-wear-hat-cap-idle','pet.maltese.paint-wear-hat-cap-walk']);
 assert.deepEqual(wornSelection('maltese','front',0,{hat:'cap',clothes:'stripe'},key=>key===malteseCap.art?malteseCapImage:undefined),{hat:'cap'});
 assert.deepEqual(wornSelection('maltese','front',0,{hat:'cap'},()=>undefined),{});
 assert.deepEqual(wornSelection('maltese','front',1,{hat:'cap'},image),{});
 for(const pet of ['corgi','koshort'])assert.equal(wornEntry(pet,'hat','cap'),undefined);
-for(const pose of ['walk','sitstand','eat','liesleep','run','jump','scratch'])for(let frame=0;frame<8;frame++)assert.deepEqual(wornSelection('maltese',pose,frame,{hat:'cap'},image),{});
+for(const pose of ['sitstand','eat','liesleep','run','jump','scratch'])for(let frame=0;frame<8;frame++)assert.deepEqual(wornSelection('maltese',pose,frame,{hat:'cap'},image),{});
 let capDraws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...r:number[]){assert.equal(im,malteseCapImage);assert.deepEqual(r,[0,0,274,207,182,50,274,207]);capDraws++;}}as unknown as CanvasRenderingContext2D,'front',0,{hat:'cap'},key=>key===malteseCap.art?malteseCapImage:undefined,undefined,'maltese');assert.equal(capDraws,1);
 console.log('뭉치 야구모자 정면: 친구·아이템·자세 범위와 원화 실제 크기·미수신 대체 표시 통과');
 const poodleCap=wornEntry('poodle','hat','cap')!;assert.ok(poodleCap);assert.equal(poodleCap.art,malteseCap.art);assert.deepEqual(poodleCap.frames,malteseCap.frames);
@@ -183,3 +183,11 @@ for(const[pet,width,height,x,y]of [['russian',247,187,196,40],['siamese',212,151
  let draws=0;drawWorn({save(){},restore(){},drawImage(actual:CanvasImageSource,...r:number[]){assert.equal(actual,im);assert.deepEqual(r,[0,0,width,height,x,y,width,height]);draws++;}}as unknown as CanvasRenderingContext2D,'front',0,{hat:'cap'},key=>key===entry.art?im:undefined,undefined,pet);assert.equal(draws,1);
 }
 console.log('네 고양이 야구모자 정면: 친구별 원화·머리 좌표·미수신·다른 자세 오선택 방지 통과');
+const malteseWalkArt='pet.maltese.paint-wear-hat-cap-walk',malteseWalkImage=image();
+for(let frame=0;frame<8;frame++){
+ assert.deepEqual(wornSelection('maltese','walk',frame,{hat:'cap'},key=>key===malteseWalkArt?malteseWalkImage:undefined),{hat:'cap'});
+ assert.deepEqual(wornSelection('maltese','walk',frame,{hat:'cap'},key=>key===malteseWalkArt?undefined:image()),{});
+ let draws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...rect:number[]){assert.equal(im,malteseWalkImage);assert.ok(rect.every(Number.isFinite));assert.ok(rect[5]<0,'머리 위 여백 좌표 유지');draws++;}}as unknown as CanvasRenderingContext2D,'walk',frame,{hat:'cap'},key=>key===malteseWalkArt?malteseWalkImage:undefined,undefined,'maltese');assert.equal(draws,1);
+}
+assert.deepEqual(wornSelection('maltese','walk',8,{hat:'cap'},image),{});
+console.log('뭉치 야구모자 걷기8칸: 개별 부품·원래 정면/서기 보존·파일 미수신 기존 표시 통과');

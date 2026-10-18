@@ -143,7 +143,7 @@ assert.deepEqual(wornKeys('maltese',{hat:'cap',clothes:'stripe'}),[malteseCap.ar
 assert.deepEqual(wornSelection('maltese','front',0,{hat:'cap',clothes:'stripe'},key=>key===malteseCap.art?malteseCapImage:undefined),{hat:'cap'});
 assert.deepEqual(wornSelection('maltese','front',0,{hat:'cap'},()=>undefined),{});
 assert.deepEqual(wornSelection('maltese','front',1,{hat:'cap'},image),{});
-for(const pet of ['corgi','koshort','shiba'])assert.equal(wornEntry(pet,'hat','cap'),undefined);
+for(const pet of ['corgi','koshort'])assert.equal(wornEntry(pet,'hat','cap'),undefined);
 for(const pose of ['walk','sitstand','eat','liesleep','run','jump','scratch'])for(let frame=0;frame<8;frame++)assert.deepEqual(wornSelection('maltese',pose,frame,{hat:'cap'},image),{});
 let capDraws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...r:number[]){assert.equal(im,malteseCapImage);assert.deepEqual(r,[0,0,274,207,182,50,274,207]);capDraws++;}}as unknown as CanvasRenderingContext2D,'front',0,{hat:'cap'},key=>key===malteseCap.art?malteseCapImage:undefined,undefined,'maltese');assert.equal(capDraws,1);
 console.log('뭉치 야구모자 정면: 친구·아이템·자세 범위와 원화 실제 크기·미수신 대체 표시 통과');
@@ -160,3 +160,8 @@ for(let frame=0;frame<4;frame++){
 }
 assert.deepEqual(wornSelection('maltese','idle',4,{hat:'cap'},image),{});
 console.log('뭉치 야구모자 서기4칸: 개별 머리·귀 부품 선택, 수신 실패, 원래 정면과 초코 범위 보존 통과');
+const shibaCap=wornEntry('shiba','hat','cap')!;assert.ok(shibaCap);assert.equal(shibaCap.art,poodleCap.art);assert.deepEqual(shibaCap.frames,poodleCap.frames);
+assert.deepEqual(wornKeys('shiba',{hat:'cap'}),[shibaCap.art]);assert.deepEqual(wornSelection('shiba','front',0,{hat:'cap'},image),{hat:'cap'});assert.deepEqual(wornSelection('shiba','front',0,{hat:'cap'},()=>undefined),{});
+assert.deepEqual(wornSelection('shiba','front',1,{hat:'cap'},image),{});
+for(const pose of ['idle','walk','sitstand','eat','liesleep','run','jump','scratch'])assert.deepEqual(wornSelection('shiba',pose,0,{hat:'cap'},image),{});
+console.log('보리 야구모자 정면: 검수 부품 재사용·미수신·다른 자세 오선택 방지 통과');

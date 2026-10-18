@@ -667,6 +667,22 @@
             -18.47685041
           ]
         }
+      },
+      "neck": {
+        "key": "bowtie",
+        "art": "pet.poodle.paint-wear-neck-bowtie",
+        "width": 165,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            165,
+            102,
+            239,
+            382
+          ]
+        },
+        "frameAssets": {}
       }
     },
     "shiba": {
@@ -684,6 +700,22 @@
             50
           ]
         }
+      },
+      "neck": {
+        "key": "bowtie",
+        "art": "pet.shiba.paint-wear-neck-bowtie",
+        "width": 176,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            176,
+            106,
+            236,
+            385
+          ]
+        },
+        "frameAssets": {}
       }
     },
     "schnauzer": {
@@ -701,6 +733,22 @@
             50
           ]
         }
+      },
+      "neck": {
+        "key": "bowtie",
+        "art": "pet.schnauzer.paint-wear-neck-bowtie",
+        "width": 160,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            160,
+            100,
+            240,
+            385
+          ]
+        },
+        "frameAssets": {}
       }
     },
     "russian": {

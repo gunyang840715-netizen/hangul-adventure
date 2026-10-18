@@ -1,7 +1,8 @@
 // build_worn_pets.mjs로 자동 생성. 좌표 수정은 scripts/data/worn-pets.json에서 한다.
 // 개별 검수한 다른 친구의 실제 착용 부품. 기재하지 않은 아이템/자세에는 적용하지 않는다.
 import type {WornAtlas}from './wearable.gen';
-export interface WornPetAtlas extends WornAtlas{width?:number;frameAssets?:Record<string,{art:string;rect:number[]}>}
+import type {Mat}from './petanim';
+export interface WornPetAtlas extends WornAtlas{width?:number;frameAssets?:Record<string,{art:string;rect:number[]}>;transforms?:Record<string,Mat>}
 export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
  koshort:{clothes:{key:'dots',art:'pet.koshort.paint-wear-clothes-dots',width:300,frames:{'front/0':[0,0,300,214,170,381]},frameAssets:{
   'idle/0':{art:'pet.koshort.paint-wear-clothes-dots-idle',rect:[2,2,260,182,48,89]},
@@ -44,7 +45,15 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
   'walk/7':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[1116,2,155,89,260,-7]},
  }}},
  poodle:{hat:{key:'cap',art:'pet.maltese.paint-wear-hat-cap',width:274,frames:{'front/0':[0,0,274,207,182,50]},frameAssets:{
- }}},
+  'walk/0':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[2,2,154,90,266,-3]},
+  'walk/1':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[2,2,154,90,266,-3]},
+  'walk/2':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[2,2,154,90,266,-3]},
+  'walk/3':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[2,2,154,90,266,-3]},
+  'walk/4':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[2,2,154,90,266,-3]},
+  'walk/5':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[2,2,154,90,266,-3]},
+  'walk/6':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[2,2,154,90,266,-3]},
+  'walk/7':{art:'pet.maltese.paint-wear-hat-cap-walk',rect:[2,2,154,90,266,-3]},
+ },transforms:{'walk/0':[0.85571337,0.07098305,-0.07098305,0.85571337,26.46517322,-31.58621532],'walk/1':[0.84816483,0.05531491,-0.05531491,0.84816483,32.90255428,-27.85949477],'walk/2':[0.84600579,0.0453259,-0.0453259,0.84600579,26.70727893,-25.21281191],'walk/3':[0.86644212,0.04464153,-0.04464153,0.86644212,15.59645958,-29.21877466],'walk/4':[0.85796611,0.03184113,-0.03184113,0.85796611,19.58760983,-16.02659497],'walk/5':[0.84046654,0.07503162,-0.07503162,0.84046654,39.60517493,-27.49314859],'walk/6':[0.85713287,0.03832035,-0.03832035,0.85713287,23.54221121,-18.46679778],'walk/7':[0.85883729,0.03608024,-0.03608024,0.85883729,17.75968065,-18.47685041]}}},
  shiba:{hat:{key:'cap',art:'pet.maltese.paint-wear-hat-cap',width:274,frames:{'front/0':[0,0,274,207,182,50]},frameAssets:{
  }}},
  schnauzer:{hat:{key:'cap',art:'pet.schnauzer.paint-wear-hat-cap',width:253,frames:{'front/0':[0,0,253,207,182,50]},frameAssets:{

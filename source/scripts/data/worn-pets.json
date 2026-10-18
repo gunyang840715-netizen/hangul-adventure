@@ -380,6 +380,23 @@
           ]
         }
       }
+    },
+    "schnauzer": {
+      "hat": {
+        "key": "cap",
+        "art": "pet.schnauzer.paint-wear-hat-cap",
+        "width": 253,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            253,
+            207,
+            182,
+            50
+          ]
+        }
+      }
     }
   }
 }

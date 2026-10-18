@@ -165,3 +165,11 @@ assert.deepEqual(wornKeys('shiba',{hat:'cap'}),[shibaCap.art]);assert.deepEqual(
 assert.deepEqual(wornSelection('shiba','front',1,{hat:'cap'},image),{});
 for(const pose of ['idle','walk','sitstand','eat','liesleep','run','jump','scratch'])assert.deepEqual(wornSelection('shiba',pose,0,{hat:'cap'},image),{});
 console.log('보리 야구모자 정면: 검수 부품 재사용·미수신·다른 자세 오선택 방지 통과');
+const schnauzerCap=wornEntry('schnauzer','hat','cap')!,schnauzerCapImage=image();assert.ok(schnauzerCap);assert.equal(schnauzerCap.width,253);
+assert.deepEqual(wornKeys('schnauzer',{hat:'cap'}),[schnauzerCap.art]);
+assert.deepEqual(wornSelection('schnauzer','front',0,{hat:'cap'},key=>key===schnauzerCap.art?schnauzerCapImage:undefined),{hat:'cap'});
+assert.deepEqual(wornSelection('schnauzer','front',0,{hat:'cap'},key=>key===schnauzerCap.art?undefined:image()),{});
+assert.deepEqual(wornSelection('schnauzer','front',1,{hat:'cap'},image),{});
+for(const pose of ['idle','walk','sitstand','eat','liesleep','run','jump','scratch'])assert.deepEqual(wornSelection('schnauzer',pose,0,{hat:'cap'},image),{});
+let schnauzerDraws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...r:number[]){assert.equal(im,schnauzerCapImage);assert.deepEqual(r,[0,0,253,207,182,50,253,207]);schnauzerDraws++;}}as unknown as CanvasRenderingContext2D,'front',0,{hat:'cap'},key=>key===schnauzerCap.art?schnauzerCapImage:undefined,undefined,'schnauzer');assert.equal(schnauzerDraws,1);
+console.log('콩이 야구모자 정면: 귀 가림 전용 부품·정확한 친구/자세/수신 범위 통과');

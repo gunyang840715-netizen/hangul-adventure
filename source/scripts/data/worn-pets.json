@@ -448,7 +448,52 @@
             382
           ]
         },
-        "frameAssets": {}
+        "frameAssets": {
+          "idle/0": {
+            "art": "pet.maltese.paint-wear-neck-bowtie-idle",
+            "rect": [
+              2,
+              2,
+              104,
+              53,
+              222,
+              184
+            ]
+          },
+          "idle/1": {
+            "art": "pet.maltese.paint-wear-neck-bowtie-idle",
+            "rect": [
+              110,
+              2,
+              104,
+              54,
+              217,
+              182
+            ]
+          },
+          "idle/2": {
+            "art": "pet.maltese.paint-wear-neck-bowtie-idle",
+            "rect": [
+              218,
+              2,
+              104,
+              53,
+              221,
+              183
+            ]
+          },
+          "idle/3": {
+            "art": "pet.maltese.paint-wear-neck-bowtie-idle",
+            "rect": [
+              326,
+              2,
+              106,
+              54,
+              219,
+              184
+            ]
+          }
+        }
       }
     },
     "poodle": {

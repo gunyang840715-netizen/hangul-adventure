@@ -1,5 +1,6 @@
 // 기존 그림 원본의 내용 해시 경로. 없는 그림은 기존 SVG로 그린다.
 export const ART_MAP: Record<string, string> = {
+  "pet.koshort.paint-wear-clothes-dots-walk": "art/pets/koshort.paint-wear-clothes-dots-walk.b35030ca.webp",
   "pet.koshort.paint-wear-clothes-dots-eat": "art/pets/koshort.paint-wear-clothes-dots-eat.971e0020.webp",
   "pet.koshort.paint-wear-clothes-dots-liesleep": "art/pets/koshort.paint-wear-clothes-dots-liesleep.7d4e658d.webp",
   "pet.koshort.paint-wear-clothes-dots-idle": "art/pets/koshort.paint-wear-clothes-dots-idle.d2142d38.webp",

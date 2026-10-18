@@ -16,5 +16,13 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
   'liesleep/1':{art:'pet.koshort.paint-wear-clothes-dots-liesleep',rect:[159,2,173,129,58,161]},
   'liesleep/2':{art:'pet.koshort.paint-wear-clothes-dots-liesleep',rect:[336,2,203,129,25,161]},
   'liesleep/3':{art:'pet.koshort.paint-wear-clothes-dots-liesleep',rect:[543,2,188,77,25,164]},
+  'walk/0':{art:'pet.koshort.paint-wear-clothes-dots-walk',rect:[2,2,270,185,74,119]},
+  'walk/1':{art:'pet.koshort.paint-wear-clothes-dots-walk',rect:[276,2,267,191,78,112]},
+  'walk/2':{art:'pet.koshort.paint-wear-clothes-dots-walk',rect:[547,2,261,189,84,108]},
+  'walk/3':{art:'pet.koshort.paint-wear-clothes-dots-walk',rect:[812,2,274,188,71,114]},
+  'walk/4':{art:'pet.koshort.paint-wear-clothes-dots-walk',rect:[2,197,262,182,82,118]},
+  'walk/5':{art:'pet.koshort.paint-wear-clothes-dots-walk',rect:[268,197,252,171,93,126]},
+  'walk/6':{art:'pet.koshort.paint-wear-clothes-dots-walk',rect:[524,197,267,182,80,114]},
+  'walk/7':{art:'pet.koshort.paint-wear-clothes-dots-walk',rect:[795,197,276,189,74,113]},
  }}},
 };

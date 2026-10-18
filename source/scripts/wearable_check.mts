@@ -173,3 +173,13 @@ assert.deepEqual(wornSelection('schnauzer','front',1,{hat:'cap'},image),{});
 for(const pose of ['idle','walk','sitstand','eat','liesleep','run','jump','scratch'])assert.deepEqual(wornSelection('schnauzer',pose,0,{hat:'cap'},image),{});
 let schnauzerDraws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...r:number[]){assert.equal(im,schnauzerCapImage);assert.deepEqual(r,[0,0,253,207,182,50,253,207]);schnauzerDraws++;}}as unknown as CanvasRenderingContext2D,'front',0,{hat:'cap'},key=>key===schnauzerCap.art?schnauzerCapImage:undefined,undefined,'schnauzer');assert.equal(schnauzerDraws,1);
 console.log('콩이 야구모자 정면: 귀 가림 전용 부품·정확한 친구/자세/수신 범위 통과');
+for(const[pet,width,height,x,y]of [['russian',247,187,196,40],['siamese',212,151,210,45],['fold',241,165,196,25],['persian',230,197,209,45]]as const){
+ const entry=wornEntry(pet,'hat','cap')!,im=image();assert.ok(entry);assert.equal(entry.art,`pet.${pet}.paint-wear-hat-cap`);assert.equal(entry.width,width);
+ assert.deepEqual(wornKeys(pet,{hat:'cap',clothes:'dots'}),[entry.art]);
+ assert.deepEqual(wornSelection(pet,'front',0,{hat:'cap'},key=>key===entry.art?im:undefined),{hat:'cap'});
+ assert.deepEqual(wornSelection(pet,'front',0,{hat:'cap'},key=>key===entry.art?undefined:image()),{});
+ assert.deepEqual(wornSelection(pet,'front',1,{hat:'cap'},image),{});
+ for(const pose of ['idle','walk','sitstand','eat','liesleep','run','jump','scratch'])assert.deepEqual(wornSelection(pet,pose,0,{hat:'cap'},image),{});
+ let draws=0;drawWorn({save(){},restore(){},drawImage(actual:CanvasImageSource,...r:number[]){assert.equal(actual,im);assert.deepEqual(r,[0,0,width,height,x,y,width,height]);draws++;}}as unknown as CanvasRenderingContext2D,'front',0,{hat:'cap'},key=>key===entry.art?im:undefined,undefined,pet);assert.equal(draws,1);
+}
+console.log('네 고양이 야구모자 정면: 친구별 원화·머리 좌표·미수신·다른 자세 오선택 방지 통과');

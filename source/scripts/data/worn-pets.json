@@ -397,6 +397,74 @@
           ]
         }
       }
+    },
+    "russian": {
+      "hat": {
+        "key": "cap",
+        "art": "pet.russian.paint-wear-hat-cap",
+        "width": 247,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            247,
+            187,
+            196,
+            40
+          ]
+        }
+      }
+    },
+    "siamese": {
+      "hat": {
+        "key": "cap",
+        "art": "pet.siamese.paint-wear-hat-cap",
+        "width": 212,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            212,
+            151,
+            210,
+            45
+          ]
+        }
+      }
+    },
+    "fold": {
+      "hat": {
+        "key": "cap",
+        "art": "pet.fold.paint-wear-hat-cap",
+        "width": 241,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            241,
+            165,
+            196,
+            25
+          ]
+        }
+      }
+    },
+    "persian": {
+      "hat": {
+        "key": "cap",
+        "art": "pet.persian.paint-wear-hat-cap",
+        "width": 230,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            230,
+            197,
+            209,
+            45
+          ]
+        }
+      }
     }
   }
 }

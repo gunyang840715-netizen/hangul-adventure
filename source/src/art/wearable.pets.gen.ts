@@ -41,4 +41,12 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
  }}},
  schnauzer:{hat:{key:'cap',art:'pet.schnauzer.paint-wear-hat-cap',width:253,frames:{'front/0':[0,0,253,207,182,50]},frameAssets:{
  }}},
+ russian:{hat:{key:'cap',art:'pet.russian.paint-wear-hat-cap',width:247,frames:{'front/0':[0,0,247,187,196,40]},frameAssets:{
+ }}},
+ siamese:{hat:{key:'cap',art:'pet.siamese.paint-wear-hat-cap',width:212,frames:{'front/0':[0,0,212,151,210,45]},frameAssets:{
+ }}},
+ fold:{hat:{key:'cap',art:'pet.fold.paint-wear-hat-cap',width:241,frames:{'front/0':[0,0,241,165,196,25]},frameAssets:{
+ }}},
+ persian:{hat:{key:'cap',art:'pet.persian.paint-wear-hat-cap',width:230,frames:{'front/0':[0,0,230,197,209,45]},frameAssets:{
+ }}},
 };

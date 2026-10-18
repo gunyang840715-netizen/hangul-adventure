@@ -24,5 +24,9 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
   'walk/5':{art:'pet.koshort.paint-wear-clothes-dots-walk',rect:[268,197,252,171,93,126]},
   'walk/6':{art:'pet.koshort.paint-wear-clothes-dots-walk',rect:[524,197,267,182,80,114]},
   'walk/7':{art:'pet.koshort.paint-wear-clothes-dots-walk',rect:[795,197,276,189,74,113]},
+  'sitstand/0':{art:'pet.koshort.paint-wear-clothes-dots-sitstand',rect:[2,2,255,192,68,113]},
+  'sitstand/1':{art:'pet.koshort.paint-wear-clothes-dots-sitstand',rect:[261,2,259,185,38,130]},
+  'sitstand/2':{art:'pet.koshort.paint-wear-clothes-dots-sitstand',rect:[524,2,259,182,34,128]},
+  'sitstand/3':{art:'pet.koshort.paint-wear-clothes-dots-sitstand',rect:[787,2,153,131,143,185]},
  }}},
 };

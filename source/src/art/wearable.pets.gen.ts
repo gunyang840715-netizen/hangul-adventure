@@ -31,4 +31,6 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
  }}},
  maltese:{hat:{key:'cap',art:'pet.maltese.paint-wear-hat-cap',width:274,frames:{'front/0':[0,0,274,207,182,50]},frameAssets:{
  }}},
+ poodle:{hat:{key:'cap',art:'pet.maltese.paint-wear-hat-cap',width:274,frames:{'front/0':[0,0,274,207,182,50]},frameAssets:{
+ }}},
 };

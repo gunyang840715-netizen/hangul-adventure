@@ -29,4 +29,6 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
   'sitstand/2':{art:'pet.koshort.paint-wear-clothes-dots-sitstand',rect:[524,2,259,182,34,128]},
   'sitstand/3':{art:'pet.koshort.paint-wear-clothes-dots-sitstand',rect:[787,2,153,131,143,185]},
  }}},
+ maltese:{hat:{key:'cap',art:'pet.maltese.paint-wear-hat-cap',width:274,frames:{'front/0':[0,0,274,207,182,50]},frameAssets:{
+ }}},
 };

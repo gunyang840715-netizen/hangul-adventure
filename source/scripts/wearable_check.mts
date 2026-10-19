@@ -5,14 +5,14 @@ import {wornKeys,wornReady,wornSelection,drawWorn,wornEntry}from '../src/art/wea
 import {WORN}from '../src/art/wearable.gen';
 const wear={clothes:'stripe',hat:'straw',glasses:'round',neck:'scarf',shoes:'sneaker'},slots=Object.keys(wear);
 const image=()=>({}as CanvasImageSource);
-assert.deepEqual(wornKeys('maltese',wear),['pet.maltese.paint-wear-clothes-stripe','pet.maltese.paint-wear-shoes-sneaker','pet.maltese.paint-wear-glasses-round']);
+assert.deepEqual(wornKeys('maltese',wear),['pet.maltese.paint-wear-clothes-stripe','pet.maltese.paint-wear-shoes-sneaker','pet.maltese.paint-wear-hat-straw','pet.maltese.paint-wear-glasses-round']);
 assert.equal(wornKeys('corgi',wear).length,5);
 assert.equal(wornReady('corgi','front',0,{},image),false);
 assert.equal(wornReady('maltese','front',0,wear,image),false);
 assert.equal(wornReady('corgi','run',0,wear,image),false);
 assert.equal(wornReady('corgi','front',0,{...wear,hat:'unknown'},image),false);
 assert.equal(wornReady('corgi','front',0,wear,()=>undefined),false);
-assert.deepEqual(wornSelection('maltese','front',0,wear,image),{clothes:'stripe',shoes:'sneaker',glasses:'round'});
+assert.deepEqual(wornSelection('maltese','front',0,wear,image),{clothes:'stripe',shoes:'sneaker',hat:'straw',glasses:'round'});
 assert.deepEqual(wornSelection('corgi','run',0,wear,image),{hat:'straw',glasses:'round'});
 assert.deepEqual(wornSelection('corgi','front',0,{...wear,hat:'crown'},image),{clothes:'stripe',shoes:'sneaker',neck:'scarf',glasses:'round'});
 assert.deepEqual(wornSelection('corgi','front',0,wear,k=>k===WORN.hat.art?undefined:image()),{clothes:'stripe',shoes:'sneaker',neck:'scarf',glasses:'round'});
@@ -267,3 +267,9 @@ for(const pose of ['idle','walk','sitstand','eat','liesleep','run','jump','scrat
 const five={clothes:'stripe',shoes:'sneaker',neck:'bowtie',hat:'cap',glasses:'round'};for(let mask=0;mask<32;mask++){const selected=Object.fromEntries(Object.entries(five).filter((_,i)=>mask&(1<<i)));assert.deepEqual(wornSelection(r.pet,'front',0,selected,image),selected);dogShirtMixed++;}for(const slot of Object.keys(five)as(keyof typeof five)[]){const missing=wornEntry(r.pet,slot,five[slot])!.art;assert.deepEqual(wornSelection(r.pet,'front',0,five,key=>key===missing?undefined:image()),Object.fromEntries(Object.entries(five).filter(([s])=>s!==slot)));}
 let draws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...rect:number[]){assert.equal(im,own);assert.deepEqual(rect,[...r.rect,r.rect[2],r.rect[3]]);draws++;}}as unknown as CanvasRenderingContext2D,'front',0,{clothes:'stripe'},key=>key===r.art?own:undefined,undefined,r.pet);assert.equal(draws,1);}
 assert.equal(dogShirtMixed,96);console.log('초코·보리·콩이 정면 줄무늬옷: 96혼합·각 몸판/소매 전용 부품·다섯 슬롯 독립 수신·미검수 자세/후드티 대체 표시 통과');
+
+// 같은 슬롯의 추가 품목이 기본 모자나 다른 자세의 좌표를 덮어쓰지 않는다.
+const malteseStraw=wornEntry('maltese','hat','straw')!,malteseStrawImage=image();assert.ok(malteseStraw);assert.equal(malteseStraw.width,342);assert.deepEqual(wornKeys('maltese',{hat:'straw'}),[malteseStraw.art]);assert.deepEqual(wornKeys('maltese',{hat:'cap'}),[malteseCap.art,malteseIdleArt,malteseWalkArt]);assert.equal(Object.keys(malteseCap.frames).length,1);assert.equal(Object.keys(malteseCap.frameAssets||{}).length,12);
+for(const pose of ['idle','walk','sitstand','eat','liesleep','run','jump','scratch'])assert.deepEqual(wornSelection('maltese',pose,0,{hat:'straw'},image),{});assert.deepEqual(wornSelection('maltese','front',1,{hat:'straw'},image),{});assert.deepEqual(wornSelection('maltese','front',0,{hat:'party'},image),{});for(const pet of ['poodle','shiba','schnauzer','koshort','russian','siamese','fold','persian'])assert.equal(wornEntry(pet,'hat','straw'),undefined);
+let strawMixed=0;for(const hat of ['cap','straw']){const selectedFive={clothes:'stripe',shoes:'sneaker',neck:'bowtie',hat,glasses:'round'};for(let mask=0;mask<32;mask++){const selected=Object.fromEntries(Object.entries(selectedFive).filter((_,i)=>mask&(1<<i)));assert.deepEqual(wornSelection('maltese','front',0,selected,image),selected);strawMixed++;}for(const slot of Object.keys(selectedFive)as(keyof typeof selectedFive)[]){const missing=wornEntry('maltese',slot,selectedFive[slot])!.art;assert.deepEqual(wornSelection('maltese','front',0,selectedFive,key=>key===missing?undefined:image()),Object.fromEntries(Object.entries(selectedFive).filter(([s])=>s!==slot)));}}assert.equal(strawMixed,64);
+let strawDraws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...r:number[]){assert.equal(im,malteseStrawImage);assert.deepEqual(r,[0,0,342,180,148,55,342,180]);strawDraws++;}}as unknown as CanvasRenderingContext2D,'front',0,{hat:'straw'},key=>key===malteseStraw.art?malteseStrawImage:undefined,undefined,'maltese');assert.equal(strawDraws,1);console.log('뭉치 밀짚모자 정면: 추가 품목64혼합·야구모자13칸 보존·품목별 독립 수신·미검수 자세/친구 대체 표시 통과');

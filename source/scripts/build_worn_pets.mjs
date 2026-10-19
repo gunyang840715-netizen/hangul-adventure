@@ -32,6 +32,27 @@ for(const[pet,slots]of Object.entries(data.pets)){
  text+='},\n';
 }
 text+='};\n';
+// 기본 슬롯의 검수 범위와 좌표를 덮어쓰지 않고, 같은 슬롯의 다른 품목을 더한다.
+const variants=data.variants??[];assert(Array.isArray(variants),'추가 품목 형식');
+const extra=new Map(),seen=new Set();
+for(const e of variants){
+ name(e.pet);assert(Object.hasOwn(data.pets,e.pet),'미등록 친구의 추가 품목');
+ assert(['clothes','hat','glasses','neck','shoes'].includes(e.slot),'추가 품목 슬롯');name(e.key);
+ const id=`${e.pet}:${e.slot}:${e.key}`;assert(!seen.has(id),'추가 품목 중복');seen.add(id);
+ assert(data.pets[e.pet][e.slot]?.key!==e.key,'기본 품목 덮어쓰기 금지');
+ if(e.width!==undefined)assert(Number.isInteger(e.width)&&e.width>0);
+ assert(e.frames&&typeof e.frames==='object'&&!Array.isArray(e.frames),'추가 품목 자세 형식');
+ assert(Object.keys(e.frames).length+Object.keys(e.frameAssets||{}).length>0,'추가 품목 자세 누락');
+ const frames=Object.entries(e.frames).map(([key,r])=>{assert.match(key,/^[a-z]+\/\d+$/);return `${name(key)}:${rect(r)}`;}).join(',');
+ let entry=`{key:${name(e.key)},art:${art(e.art)}${e.width!==undefined?',width:'+e.width:''},frames:{${frames}},frameAssets:{\n`;
+ for(const[key,asset]of Object.entries(e.frameAssets||{})){assert.match(key,/^[a-z]+\/\d+$/);assert(!Object.hasOwn(e.frames,key),'추가 품목 자세 중복: '+key);entry+=`  ${name(key)}:{art:${art(asset.art)},rect:${rect(asset.rect)}},\n`;}
+ entry+=' }';
+ if(e.transforms){const values=Object.entries(e.transforms).map(([key,m])=>{assert.match(key,/^[a-z]+\/\d+$/);assert(Object.hasOwn(e.frames,key)||Object.hasOwn(e.frameAssets||{},key),'착용 부품 없는 추가 품목 변환');return `${name(key)}:${matrix(m)}`;});entry+=`,transforms:{${values.join(',')}}`;}
+ entry+='}';const entries=extra.get(e.pet)||[];entries.push(`  '${e.slot}:${e.key}':${entry},\n`);extra.set(e.pet,entries);
+}
+text+='\nexport const WORN_PET_VARIANTS:Record<string,Record<string,WornPetAtlas>>={\n';
+for(const[pet,entries]of extra)text+=` ${pet}:{\n${entries.join('')} },\n`;
+text+='};\n';
 if(process.argv.includes('--check'))assert.equal(fs.readFileSync(target,'utf8'),text,'검수 데이터로 착용 지원표를 다시 생성해야 한다');
 else fs.writeFileSync(target,text);
 console.log('친구별 착용 지원표 '+(process.argv.includes('--check')?'일치 확인':'생성 완료'));

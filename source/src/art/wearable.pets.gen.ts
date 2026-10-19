@@ -95,3 +95,10 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
  persian:{hat:{key:'cap',art:'pet.persian.paint-wear-hat-cap',width:230,frames:{'front/0':[0,0,230,197,209,45]},frameAssets:{
  }}},
 };
+
+export const WORN_PET_VARIANTS:Record<string,Record<string,WornPetAtlas>>={
+ maltese:{
+  'hat:straw':{key:'straw',art:'pet.maltese.paint-wear-hat-straw',width:342,frames:{'front/0':[0,0,342,180,148,55]},frameAssets:{
+ }},
+ },
+};

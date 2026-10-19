@@ -1088,5 +1088,24 @@
         }
       }
     }
-  }
+  },
+  "variants": [
+    {
+      "pet": "maltese",
+      "slot": "hat",
+      "key": "straw",
+      "art": "pet.maltese.paint-wear-hat-straw",
+      "width": 342,
+      "frames": {
+        "front/0": [
+          0,
+          0,
+          342,
+          180,
+          148,
+          55
+        ]
+      }
+    }
+  ]
 }

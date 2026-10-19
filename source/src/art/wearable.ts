@@ -2,7 +2,7 @@
 import {WORN} from './wearable.gen';
 import {WORN_EXTRA} from './wearable.extra.gen';
 import {WORN_MOTION} from './wearable.motion.gen';
-import {WORN_PETS,type WornPetAtlas} from './wearable.pets.gen';
+import {WORN_PETS,WORN_PET_VARIANTS,type WornPetAtlas} from './wearable.pets.gen';
 import type {Mat} from './petanim';
 export type SelectedWear=Partial<Record<string,string|undefined>>;
 export function inverse(m:Mat):Mat{
@@ -15,6 +15,7 @@ const registered=new Map<string,RuntimeWorn>();
 for(const slot of slots)registered.set(`corgi:${slot}:${WORN[slot].key}`,WORN[slot]);
 for(const[key,entry]of Object.entries(WORN_EXTRA))registered.set(`corgi:${key}`,entry);
 for(const[pet,entries]of Object.entries(WORN_PETS))for(const[slot,entry]of Object.entries(entries))registered.set(`${pet}:${slot}:${entry.key}`,entry);
+for(const[pet,entries]of Object.entries(WORN_PET_VARIANTS))for(const[item,entry]of Object.entries(entries))registered.set(`${pet}:${item}`,entry);
 for(const key of WORN_MOTION.items){
  const id=`${WORN_MOTION.pet}:${key}`,entry=registered.get(id),reference=entry?.frames[WORN_MOTION.reference];
  if(!entry||!reference)continue;

@@ -613,6 +613,21 @@
             229
           ]
         }
+      },
+      "clothes": {
+        "key": "stripe",
+        "art": "pet.maltese.paint-wear-clothes-stripe",
+        "width": 202,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            202,
+            100,
+            231,
+            428
+          ]
+        }
       }
     },
     "poodle": {

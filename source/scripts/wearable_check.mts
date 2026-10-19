@@ -5,14 +5,14 @@ import {wornKeys,wornReady,wornSelection,drawWorn,wornEntry}from '../src/art/wea
 import {WORN}from '../src/art/wearable.gen';
 const wear={clothes:'stripe',hat:'straw',glasses:'round',neck:'scarf',shoes:'sneaker'},slots=Object.keys(wear);
 const image=()=>({}as CanvasImageSource);
-assert.deepEqual(wornKeys('maltese',wear),['pet.maltese.paint-wear-shoes-sneaker','pet.maltese.paint-wear-glasses-round']);
+assert.deepEqual(wornKeys('maltese',wear),['pet.maltese.paint-wear-clothes-stripe','pet.maltese.paint-wear-shoes-sneaker','pet.maltese.paint-wear-glasses-round']);
 assert.equal(wornKeys('corgi',wear).length,5);
 assert.equal(wornReady('corgi','front',0,{},image),false);
 assert.equal(wornReady('maltese','front',0,wear,image),false);
 assert.equal(wornReady('corgi','run',0,wear,image),false);
 assert.equal(wornReady('corgi','front',0,{...wear,hat:'unknown'},image),false);
 assert.equal(wornReady('corgi','front',0,wear,()=>undefined),false);
-assert.deepEqual(wornSelection('maltese','front',0,wear,image),{shoes:'sneaker',glasses:'round'});
+assert.deepEqual(wornSelection('maltese','front',0,wear,image),{clothes:'stripe',shoes:'sneaker',glasses:'round'});
 assert.deepEqual(wornSelection('corgi','run',0,wear,image),{hat:'straw',glasses:'round'});
 assert.deepEqual(wornSelection('corgi','front',0,{...wear,hat:'crown'},image),{clothes:'stripe',shoes:'sneaker',neck:'scarf',glasses:'round'});
 assert.deepEqual(wornSelection('corgi','front',0,wear,k=>k===WORN.hat.art?undefined:image()),{clothes:'stripe',shoes:'sneaker',neck:'scarf',glasses:'round'});
@@ -139,7 +139,7 @@ assert.deepEqual(wornSelection('koshort','sitstand',4,{clothes:'dots'},image),{}
 console.log('냥이 앉기 전환4칸: 해당 부품 선택·다른 파일 오선택 방지·미수신 기존 표시 통과');
 
 const malteseCap=wornEntry('maltese','hat','cap')!,malteseCapImage=image();assert.ok(malteseCap);assert.equal(malteseCap.width,274);
-assert.deepEqual(wornKeys('maltese',{hat:'cap',clothes:'stripe'}),[malteseCap.art,'pet.maltese.paint-wear-hat-cap-idle','pet.maltese.paint-wear-hat-cap-walk']);
+assert.deepEqual(wornKeys('maltese',{hat:'cap',clothes:'stripe'}),['pet.maltese.paint-wear-clothes-stripe',malteseCap.art,'pet.maltese.paint-wear-hat-cap-idle','pet.maltese.paint-wear-hat-cap-walk']);
 assert.deepEqual(wornSelection('maltese','front',0,{hat:'cap',clothes:'stripe'},key=>key===malteseCap.art?malteseCapImage:undefined),{hat:'cap'});
 assert.deepEqual(wornSelection('maltese','front',0,{hat:'cap'},()=>undefined),{});
 assert.deepEqual(wornSelection('maltese','front',1,{hat:'cap'},image),{});
@@ -204,7 +204,7 @@ for(const pose of ['sitstand','eat','liesleep','run','jump','scratch'])assert.de
 assert.deepEqual(wornSelection('maltese','front',1,{neck:'bowtie'},image),{});
 let neckMixed=0;for(const pose of ['front','idle','walk'])for(let mask=0;mask<32;mask++){
  const choices={...wear,hat:'cap',neck:'bowtie'},selected=Object.fromEntries(slots.map((s,i)=>[s,mask&(1<<i)?choices[s as keyof typeof choices]:undefined]));
- const expected={...(pose==='front'&&selected.shoes?{shoes:'sneaker'}:{}),...((pose==='front'||pose==='idle'||pose==='walk')&&selected.neck?{neck:'bowtie'}:{}),...(selected.hat?{hat:'cap'}:{}),...(pose==='front'&&selected.glasses?{glasses:'round'}:{})};assert.deepEqual(wornSelection('maltese',pose,0,selected,image),expected);neckMixed++;
+ const expected={...(pose==='front'&&selected.clothes?{clothes:'stripe'}:{}),...(pose==='front'&&selected.shoes?{shoes:'sneaker'}:{}),...((pose==='front'||pose==='idle'||pose==='walk')&&selected.neck?{neck:'bowtie'}:{}),...(selected.hat?{hat:'cap'}:{}),...(pose==='front'&&selected.glasses?{glasses:'round'}:{})};assert.deepEqual(wornSelection('maltese',pose,0,selected,image),expected);neckMixed++;
 }
 assert.equal(neckMixed,96);assert.deepEqual(wornSelection('maltese','front',0,{hat:'cap',neck:'bowtie'},key=>key===malteseTie.art?undefined:image()),{hat:'cap'});assert.deepEqual(wornSelection('maltese','front',0,{hat:'cap',neck:'bowtie'},key=>key===malteseCap.art?undefined:image()),{neck:'bowtie'});
 let tieDraws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...r:number[]){assert.equal(im,malteseTieImage);assert.deepEqual(r,[0,0,163,100,245,382,163,100]);tieDraws++;}}as unknown as CanvasRenderingContext2D,'front',0,{neck:'bowtie'},key=>key===malteseTie.art?malteseTieImage:undefined,undefined,'maltese');assert.equal(tieDraws,1);console.log('뭉치 나비넥타이 정면: 96혼합·모자와 개별 수신·다른 친구/자세 오선택 방지 통과');
@@ -253,3 +253,10 @@ const otherDogShoes=[{"pet":"poodle","art":"pet.poodle.paint-wear-shoes-sneaker"
  const four={hat:'cap',neck:'bowtie',glasses:'round',shoes:'sneaker'};for(const slot of ['hat','neck','glasses','shoes']as const){const missing=wornEntry(r.pet,slot,four[slot])!.art;assert.deepEqual(wornSelection(r.pet,'front',0,four,key=>key===missing?undefined:image()),Object.fromEntries(Object.entries(four).filter(([s])=>s!==slot)));}
  let draws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...rect:number[]){assert.equal(im,own);assert.deepEqual(rect,[...r.rect,r.rect[2],r.rect[3]]);draws++;}}as unknown as CanvasRenderingContext2D,'front',0,{shoes:'sneaker'},key=>key===r.art?own:undefined,undefined,r.pet);assert.equal(draws,1);
 }assert.equal(dogShoeMixed,96);console.log('초코·보리·콩이 정면 운동화: 96혼합·네 발 전용 부품·네 슬롯 독립 수신·미검수 자세 오선택 방지 통과');
+
+// 몸판과 좌우 소매를 검수한 뭉치 줄무늬옷은 정면 한 칸만 연결한다.
+const malteseShirt=wornEntry('maltese','clothes','stripe')!,malteseShirtImage=image();assert.ok(malteseShirt);assert.equal(malteseShirt.width,202);assert.deepEqual(wornKeys('maltese',{clothes:'stripe'}),[malteseShirt.art]);
+for(const pose of ['idle','walk','sitstand','eat','liesleep','run','jump','scratch'])assert.deepEqual(wornSelection('maltese',pose,0,{clothes:'stripe'},image),{});assert.deepEqual(wornSelection('maltese','front',1,{clothes:'stripe'},image),{});assert.deepEqual(wornSelection('maltese','front',0,{clothes:'hoodie'},image),{});for(const pet of ['poodle','shiba','schnauzer','russian','siamese','fold','persian'])assert.equal(wornEntry(pet,'clothes','stripe'),undefined);
+const fiveSlots={clothes:'stripe',shoes:'sneaker',neck:'bowtie',hat:'cap',glasses:'round'};for(let mask=0;mask<32;mask++){const selected=Object.fromEntries(Object.entries(fiveSlots).filter((_,i)=>mask&(1<<i)));assert.deepEqual(wornSelection('maltese','front',0,selected,image),selected);}
+for(const slot of Object.keys(fiveSlots)as(keyof typeof fiveSlots)[]){const missing=wornEntry('maltese',slot,fiveSlots[slot])!.art;assert.deepEqual(wornSelection('maltese','front',0,fiveSlots,key=>key===missing?undefined:image()),Object.fromEntries(Object.entries(fiveSlots).filter(([s])=>s!==slot)));}
+let shirtDraws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...r:number[]){assert.equal(im,malteseShirtImage);assert.deepEqual(r,[0,0,202,100,231,428,202,100]);shirtDraws++;}}as unknown as CanvasRenderingContext2D,'front',0,{clothes:'stripe'},key=>key===malteseShirt.art?malteseShirtImage:undefined,undefined,'maltese');assert.equal(shirtDraws,1);console.log('뭉치 줄무늬옷 정면: 몸판·좌우소매 전용 부품·32혼합·다섯 슬롯 독립 수신·미검수 자세/친구/후드티 대체 표시 통과');

@@ -48,6 +48,14 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
   'idle/1':{art:'pet.maltese.paint-wear-neck-bowtie-idle',rect:[110,2,104,54,217,182]},
   'idle/2':{art:'pet.maltese.paint-wear-neck-bowtie-idle',rect:[218,2,104,53,221,183]},
   'idle/3':{art:'pet.maltese.paint-wear-neck-bowtie-idle',rect:[326,2,106,54,219,184]},
+  'walk/0':{art:'pet.maltese.paint-wear-neck-bowtie-walk',rect:[2,2,87,48,267,179]},
+  'walk/1':{art:'pet.maltese.paint-wear-neck-bowtie-walk',rect:[93,2,90,54,263,181]},
+  'walk/2':{art:'pet.maltese.paint-wear-neck-bowtie-walk',rect:[187,2,90,47,269,172]},
+  'walk/3':{art:'pet.maltese.paint-wear-neck-bowtie-walk',rect:[281,2,89,46,266,164]},
+  'walk/4':{art:'pet.maltese.paint-wear-neck-bowtie-walk',rect:[374,2,88,48,265,177]},
+  'walk/5':{art:'pet.maltese.paint-wear-neck-bowtie-walk',rect:[466,2,87,47,268,179]},
+  'walk/6':{art:'pet.maltese.paint-wear-neck-bowtie-walk',rect:[557,2,89,47,263,179]},
+  'walk/7':{art:'pet.maltese.paint-wear-neck-bowtie-walk',rect:[650,2,89,46,264,177]},
  }},shoes:{key:'sneaker',art:'pet.maltese.paint-wear-shoes-sneaker',width:317,frames:{'front/0':[0,0,317,96,173,528]},frameAssets:{
  }},glasses:{key:'round',art:'pet.maltese.paint-wear-glasses-round',width:227,frames:{'front/0':[0,0,227,96,211,229]},frameAssets:{
  }}},

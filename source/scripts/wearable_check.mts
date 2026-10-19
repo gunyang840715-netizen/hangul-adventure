@@ -199,12 +199,12 @@ for(let frame=0;frame<8;frame++){
 assert.deepEqual(wornSelection('poodle','walk',8,{hat:'cap'},image),{});
 console.log('초코 걷기8칸: 실제 부품 재사용·개별 비퇴화변환·파일 미수신 기존 표시 통과');
 
-const malteseTie=wornEntry('maltese','neck','bowtie')!,malteseTieImage=image();assert.ok(malteseTie);assert.equal(malteseTie.width,163);assert.deepEqual(wornKeys('maltese',{neck:'bowtie'}),[malteseTie.art,'pet.maltese.paint-wear-neck-bowtie-idle']);
-for(const pose of ['walk','sitstand','eat','liesleep','run','jump','scratch'])assert.deepEqual(wornSelection('maltese',pose,0,{neck:'bowtie'},image),{});
+const malteseTie=wornEntry('maltese','neck','bowtie')!,malteseTieImage=image();assert.ok(malteseTie);assert.equal(malteseTie.width,163);assert.deepEqual(wornKeys('maltese',{neck:'bowtie'}),[malteseTie.art,'pet.maltese.paint-wear-neck-bowtie-idle','pet.maltese.paint-wear-neck-bowtie-walk']);
+for(const pose of ['sitstand','eat','liesleep','run','jump','scratch'])assert.deepEqual(wornSelection('maltese',pose,0,{neck:'bowtie'},image),{});
 assert.deepEqual(wornSelection('maltese','front',1,{neck:'bowtie'},image),{});
 let neckMixed=0;for(const pose of ['front','idle','walk'])for(let mask=0;mask<32;mask++){
  const choices={...wear,hat:'cap',neck:'bowtie'},selected=Object.fromEntries(slots.map((s,i)=>[s,mask&(1<<i)?choices[s as keyof typeof choices]:undefined]));
- const expected={...(pose==='front'&&selected.shoes?{shoes:'sneaker'}:{}),...((pose==='front'||pose==='idle')&&selected.neck?{neck:'bowtie'}:{}),...(selected.hat?{hat:'cap'}:{}),...(pose==='front'&&selected.glasses?{glasses:'round'}:{})};assert.deepEqual(wornSelection('maltese',pose,0,selected,image),expected);neckMixed++;
+ const expected={...(pose==='front'&&selected.shoes?{shoes:'sneaker'}:{}),...((pose==='front'||pose==='idle'||pose==='walk')&&selected.neck?{neck:'bowtie'}:{}),...(selected.hat?{hat:'cap'}:{}),...(pose==='front'&&selected.glasses?{glasses:'round'}:{})};assert.deepEqual(wornSelection('maltese',pose,0,selected,image),expected);neckMixed++;
 }
 assert.equal(neckMixed,96);assert.deepEqual(wornSelection('maltese','front',0,{hat:'cap',neck:'bowtie'},key=>key===malteseTie.art?undefined:image()),{hat:'cap'});assert.deepEqual(wornSelection('maltese','front',0,{hat:'cap',neck:'bowtie'},key=>key===malteseCap.art?undefined:image()),{neck:'bowtie'});
 let tieDraws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...r:number[]){assert.equal(im,malteseTieImage);assert.deepEqual(r,[0,0,163,100,245,382,163,100]);tieDraws++;}}as unknown as CanvasRenderingContext2D,'front',0,{neck:'bowtie'},key=>key===malteseTie.art?malteseTieImage:undefined,undefined,'maltese');assert.equal(tieDraws,1);console.log('뭉치 나비넥타이 정면: 96혼합·모자와 개별 수신·다른 친구/자세 오선택 방지 통과');
@@ -239,3 +239,8 @@ const otherDogGlasses=[{"pet":"poodle","art":"pet.poodle.paint-wear-glasses-roun
  const three={hat:'cap',neck:'bowtie',glasses:'round'};for(const slot of ['hat','neck','glasses']as const){const missing=wornEntry(r.pet,slot,three[slot])!.art;assert.deepEqual(wornSelection(r.pet,'front',0,three,key=>key===missing?undefined:image()),Object.fromEntries(Object.entries(three).filter(([s])=>s!==slot)));}
  let draws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...rect:number[]){assert.equal(im,own);assert.deepEqual(rect,[...r.rect,r.rect[2],r.rect[3]]);draws++;}}as unknown as CanvasRenderingContext2D,'front',0,{glasses:'round'},key=>key===r.art?own:undefined,undefined,r.pet);assert.equal(draws,1);
 }assert.equal(dogGlassesMixed,96);console.log('초코·보리·콩이 정면 금테안경: 96혼합·각자 눈 부품·세 슬롯 독립 수신·미검수 자세 오선택 방지 통과');
+
+// 걷기 각 칸은 몸 뒤 목끈과 턱털 가림을 따로 구운 전용 부품만 선택한다.
+const malteseTieWalk='pet.maltese.paint-wear-neck-bowtie-walk',malteseTieWalkImage=image(),malteseTieWalkRects=[[2,2,87,48,267,179],[93,2,90,54,263,181],[187,2,90,47,269,172],[281,2,89,46,266,164],[374,2,88,48,265,177],[466,2,87,47,268,179],[557,2,89,47,263,179],[650,2,89,46,264,177]];
+for(let frame=0;frame<8;frame++){assert.deepEqual(wornSelection('maltese','walk',frame,{hat:'cap',neck:'bowtie'},image),{neck:'bowtie',hat:'cap'});assert.deepEqual(wornSelection('maltese','walk',frame,{hat:'cap',neck:'bowtie'},key=>key===malteseTieWalk?undefined:image()),{hat:'cap'});assert.deepEqual(wornSelection('maltese','walk',frame,{hat:'cap',neck:'bowtie'},key=>key===malteseWalkArt?undefined:image()),{neck:'bowtie'});let draws=0;drawWorn({save(){},restore(){},drawImage(im:CanvasImageSource,...rect:number[]){assert.equal(im,malteseTieWalkImage);const r=malteseTieWalkRects[frame];assert.deepEqual(rect,[...r,r[2],r[3]]);draws++;}}as unknown as CanvasRenderingContext2D,'walk',frame,{neck:'bowtie'},key=>key===malteseTieWalk?malteseTieWalkImage:undefined,undefined,'maltese');assert.equal(draws,1);}
+assert.deepEqual(wornSelection('maltese','walk',8,{neck:'bowtie'},image),{});assert.deepEqual(wornSelection('poodle','walk',0,{neck:'bowtie'},image),{});console.log('뭉치 나비넥타이 걷기8칸: 전용 목끈·매듭 자산·모자 독립 수신·원래 정면/서기 보존 통과');

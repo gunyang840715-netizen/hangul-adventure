@@ -492,6 +492,94 @@
               219,
               184
             ]
+          },
+          "walk/0": {
+            "art": "pet.maltese.paint-wear-neck-bowtie-walk",
+            "rect": [
+              2,
+              2,
+              87,
+              48,
+              267,
+              179
+            ]
+          },
+          "walk/1": {
+            "art": "pet.maltese.paint-wear-neck-bowtie-walk",
+            "rect": [
+              93,
+              2,
+              90,
+              54,
+              263,
+              181
+            ]
+          },
+          "walk/2": {
+            "art": "pet.maltese.paint-wear-neck-bowtie-walk",
+            "rect": [
+              187,
+              2,
+              90,
+              47,
+              269,
+              172
+            ]
+          },
+          "walk/3": {
+            "art": "pet.maltese.paint-wear-neck-bowtie-walk",
+            "rect": [
+              281,
+              2,
+              89,
+              46,
+              266,
+              164
+            ]
+          },
+          "walk/4": {
+            "art": "pet.maltese.paint-wear-neck-bowtie-walk",
+            "rect": [
+              374,
+              2,
+              88,
+              48,
+              265,
+              177
+            ]
+          },
+          "walk/5": {
+            "art": "pet.maltese.paint-wear-neck-bowtie-walk",
+            "rect": [
+              466,
+              2,
+              87,
+              47,
+              268,
+              179
+            ]
+          },
+          "walk/6": {
+            "art": "pet.maltese.paint-wear-neck-bowtie-walk",
+            "rect": [
+              557,
+              2,
+              89,
+              47,
+              263,
+              179
+            ]
+          },
+          "walk/7": {
+            "art": "pet.maltese.paint-wear-neck-bowtie-walk",
+            "rect": [
+              650,
+              2,
+              89,
+              46,
+              264,
+              177
+            ]
           }
         }
       },

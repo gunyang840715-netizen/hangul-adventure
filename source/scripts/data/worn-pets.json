@@ -510,6 +510,21 @@
           ]
         },
         "frameAssets": {}
+      },
+      "glasses": {
+        "key": "round",
+        "art": "pet.maltese.paint-wear-glasses-round",
+        "width": 227,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            227,
+            96,
+            211,
+            229
+          ]
+        }
       }
     },
     "poodle": {

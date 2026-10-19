@@ -847,6 +847,21 @@
             547
           ]
         }
+      },
+      "clothes": {
+        "key": "stripe",
+        "art": "pet.poodle.paint-wear-clothes-stripe",
+        "width": 186,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            186,
+            102,
+            233,
+            412
+          ]
+        }
       }
     },
     "shiba": {
@@ -910,6 +925,21 @@
             524
           ]
         }
+      },
+      "clothes": {
+        "key": "stripe",
+        "art": "pet.shiba.paint-wear-clothes-stripe",
+        "width": 212,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            212,
+            102,
+            227,
+            432
+          ]
+        }
       }
     },
     "schnauzer": {
@@ -971,6 +1001,21 @@
             96,
             160,
             529
+          ]
+        }
+      },
+      "clothes": {
+        "key": "stripe",
+        "art": "pet.schnauzer.paint-wear-clothes-stripe",
+        "width": 193,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            193,
+            101,
+            230,
+            423
           ]
         }
       }

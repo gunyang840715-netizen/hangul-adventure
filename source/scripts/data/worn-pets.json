@@ -817,6 +817,21 @@
             248
           ]
         }
+      },
+      "shoes": {
+        "key": "sneaker",
+        "art": "pet.poodle.paint-wear-shoes-sneaker",
+        "width": 277,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            277,
+            78,
+            196,
+            547
+          ]
+        }
       }
     },
     "shiba": {
@@ -865,6 +880,21 @@
             225
           ]
         }
+      },
+      "shoes": {
+        "key": "sneaker",
+        "art": "pet.shiba.paint-wear-shoes-sneaker",
+        "width": 336,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            336,
+            101,
+            158,
+            524
+          ]
+        }
       }
     },
     "schnauzer": {
@@ -911,6 +941,21 @@
             79,
             203,
             247
+          ]
+        }
+      },
+      "shoes": {
+        "key": "sneaker",
+        "art": "pet.schnauzer.paint-wear-shoes-sneaker",
+        "width": 324,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            324,
+            96,
+            160,
+            529
           ]
         }
       }

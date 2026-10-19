@@ -714,6 +714,21 @@
           ]
         },
         "frameAssets": {}
+      },
+      "glasses": {
+        "key": "round",
+        "art": "pet.poodle.paint-wear-glasses-round",
+        "width": 192,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            192,
+            69,
+            223,
+            248
+          ]
+        }
       }
     },
     "shiba": {
@@ -747,6 +762,21 @@
           ]
         },
         "frameAssets": {}
+      },
+      "glasses": {
+        "key": "round",
+        "art": "pet.shiba.paint-wear-glasses-round",
+        "width": 226,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            226,
+            96,
+            213,
+            225
+          ]
+        }
       }
     },
     "schnauzer": {
@@ -780,6 +810,21 @@
           ]
         },
         "frameAssets": {}
+      },
+      "glasses": {
+        "key": "round",
+        "art": "pet.schnauzer.paint-wear-glasses-round",
+        "width": 236,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            236,
+            79,
+            203,
+            247
+          ]
+        }
       }
     },
     "russian": {

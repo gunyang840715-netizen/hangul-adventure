@@ -920,7 +920,9 @@ export const ART_MAP: Record<string, string> = {
   "pet.poodle.paint-wear-clothes-stripe": "art/pets/poodle.paint-wear-clothes-stripe.f5ecfc4a.webp",
   "pet.shiba.paint-wear-clothes-stripe": "art/pets/shiba.paint-wear-clothes-stripe.7fd002e5.webp",
   "pet.schnauzer.paint-wear-clothes-stripe": "art/pets/schnauzer.paint-wear-clothes-stripe.ace2a535.webp",
-  "pet.maltese.paint-wear-hat-straw": "art/pets/maltese.paint-wear-hat-straw.58c7ce09.webp"
+  "pet.maltese.paint-wear-hat-straw": "art/pets/maltese.paint-wear-hat-straw.58c7ce09.webp",
+  "pet.shiba.paint-wear-hat-straw": "art/pets/shiba.paint-wear-hat-straw.0a1da675.webp",
+  "pet.schnauzer.paint-wear-hat-straw": "art/pets/schnauzer.paint-wear-hat-straw.03aab8d7.webp"
 };
 
 export function artSrc(id: string): string | undefined {

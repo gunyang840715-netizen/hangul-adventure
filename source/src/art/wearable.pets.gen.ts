@@ -101,4 +101,16 @@ export const WORN_PET_VARIANTS:Record<string,Record<string,WornPetAtlas>>={
   'hat:straw':{key:'straw',art:'pet.maltese.paint-wear-hat-straw',width:342,frames:{'front/0':[0,0,342,180,148,55]},frameAssets:{
  }},
  },
+ poodle:{
+  'hat:straw':{key:'straw',art:'pet.maltese.paint-wear-hat-straw',width:342,frames:{'front/0':[0,0,342,180,148,55]},frameAssets:{
+ }},
+ },
+ shiba:{
+  'hat:straw':{key:'straw',art:'pet.shiba.paint-wear-hat-straw',width:343,frames:{'front/0':[0,0,343,179,148,55]},frameAssets:{
+ }},
+ },
+ schnauzer:{
+  'hat:straw':{key:'straw',art:'pet.schnauzer.paint-wear-hat-straw',width:343,frames:{'front/0':[0,0,343,180,148,80]},frameAssets:{
+ }},
+ },
 };

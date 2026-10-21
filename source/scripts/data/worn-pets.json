@@ -282,6 +282,21 @@
             ]
           }
         }
+      },
+      "neck": {
+        "key": "bell",
+        "art": "pet.koshort.paint-wear-neck-bell",
+        "width": 160,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            160,
+            94,
+            241,
+            325
+          ]
+        }
       }
     },
     "maltese": {
@@ -1035,6 +1050,21 @@
             40
           ]
         }
+      },
+      "neck": {
+        "key": "bell",
+        "art": "pet.russian.paint-wear-neck-bell",
+        "width": 170,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            170,
+            96,
+            236,
+            315
+          ]
+        }
       }
     },
     "siamese": {
@@ -1050,6 +1080,21 @@
             151,
             210,
             45
+          ]
+        }
+      },
+      "neck": {
+        "key": "bell",
+        "art": "pet.siamese.paint-wear-neck-bell",
+        "width": 148,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            148,
+            92,
+            247,
+            304
           ]
         }
       }
@@ -1069,6 +1114,21 @@
             25
           ]
         }
+      },
+      "neck": {
+        "key": "bell",
+        "art": "pet.fold.paint-wear-neck-bell",
+        "width": 204,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            204,
+            96,
+            219,
+            347
+          ]
+        }
       }
     },
     "persian": {
@@ -1084,6 +1144,21 @@
             197,
             209,
             45
+          ]
+        }
+      },
+      "neck": {
+        "key": "bell",
+        "art": "pet.persian.paint-wear-neck-bell",
+        "width": 176,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            176,
+            89,
+            233,
+            380
           ]
         }
       }

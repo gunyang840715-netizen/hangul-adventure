@@ -29,6 +29,7 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
   'sitstand/1':{art:'pet.koshort.paint-wear-clothes-dots-sitstand',rect:[261,2,259,185,38,130]},
   'sitstand/2':{art:'pet.koshort.paint-wear-clothes-dots-sitstand',rect:[524,2,259,182,34,128]},
   'sitstand/3':{art:'pet.koshort.paint-wear-clothes-dots-sitstand',rect:[787,2,153,131,143,185]},
+ }},neck:{key:'bell',art:'pet.koshort.paint-wear-neck-bell',width:160,frames:{'front/0':[0,0,160,94,241,325]},frameAssets:{
  }}},
  maltese:{hat:{key:'cap',art:'pet.maltese.paint-wear-hat-cap',width:274,frames:{'front/0':[0,0,274,207,182,50]},frameAssets:{
   'idle/0':{art:'pet.maltese.paint-wear-hat-cap-idle',rect:[2,2,184,104,212,-35]},
@@ -87,12 +88,16 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
  }},clothes:{key:'stripe',art:'pet.schnauzer.paint-wear-clothes-stripe',width:193,frames:{'front/0':[0,0,193,101,230,423]},frameAssets:{
  }}},
  russian:{hat:{key:'cap',art:'pet.russian.paint-wear-hat-cap',width:247,frames:{'front/0':[0,0,247,187,196,40]},frameAssets:{
+ }},neck:{key:'bell',art:'pet.russian.paint-wear-neck-bell',width:170,frames:{'front/0':[0,0,170,96,236,315]},frameAssets:{
  }}},
  siamese:{hat:{key:'cap',art:'pet.siamese.paint-wear-hat-cap',width:212,frames:{'front/0':[0,0,212,151,210,45]},frameAssets:{
+ }},neck:{key:'bell',art:'pet.siamese.paint-wear-neck-bell',width:148,frames:{'front/0':[0,0,148,92,247,304]},frameAssets:{
  }}},
  fold:{hat:{key:'cap',art:'pet.fold.paint-wear-hat-cap',width:241,frames:{'front/0':[0,0,241,165,196,25]},frameAssets:{
+ }},neck:{key:'bell',art:'pet.fold.paint-wear-neck-bell',width:204,frames:{'front/0':[0,0,204,96,219,347]},frameAssets:{
  }}},
  persian:{hat:{key:'cap',art:'pet.persian.paint-wear-hat-cap',width:230,frames:{'front/0':[0,0,230,197,209,45]},frameAssets:{
+ }},neck:{key:'bell',art:'pet.persian.paint-wear-neck-bell',width:176,frames:{'front/0':[0,0,176,89,233,380]},frameAssets:{
  }}},
 };
 

@@ -922,7 +922,12 @@ export const ART_MAP: Record<string, string> = {
   "pet.schnauzer.paint-wear-clothes-stripe": "art/pets/schnauzer.paint-wear-clothes-stripe.ace2a535.webp",
   "pet.maltese.paint-wear-hat-straw": "art/pets/maltese.paint-wear-hat-straw.58c7ce09.webp",
   "pet.shiba.paint-wear-hat-straw": "art/pets/shiba.paint-wear-hat-straw.0a1da675.webp",
-  "pet.schnauzer.paint-wear-hat-straw": "art/pets/schnauzer.paint-wear-hat-straw.03aab8d7.webp"
+  "pet.schnauzer.paint-wear-hat-straw": "art/pets/schnauzer.paint-wear-hat-straw.03aab8d7.webp",
+  "pet.koshort.paint-wear-neck-bell": "art/pets/koshort.paint-wear-neck-bell.4dc69b92.webp",
+  "pet.russian.paint-wear-neck-bell": "art/pets/russian.paint-wear-neck-bell.daf47433.webp",
+  "pet.siamese.paint-wear-neck-bell": "art/pets/siamese.paint-wear-neck-bell.fa8c96c5.webp",
+  "pet.fold.paint-wear-neck-bell": "art/pets/fold.paint-wear-neck-bell.58edd84d.webp",
+  "pet.persian.paint-wear-neck-bell": "art/pets/persian.paint-wear-neck-bell.fca8076e.webp"
 };
 
 export function artSrc(id: string): string | undefined {

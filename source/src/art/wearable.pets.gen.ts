@@ -4,7 +4,7 @@ import type {WornAtlas}from './wearable.gen';
 import type {Mat}from './petanim';
 export interface WornPetAtlas extends WornAtlas{width?:number;frameAssets?:Record<string,{art:string;rect:number[]}>;transforms?:Record<string,Mat>}
 export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
- koshort:{clothes:{key:'dots',art:'pet.koshort.paint-wear-clothes-dots',width:300,frames:{'front/0':[0,0,300,214,170,381]},frameAssets:{
+ koshort:{clothes:{key:'dots',art:'pet.koshort.paint-wear-clothes-dots',width:315,frames:{'front/0':[0,0,315,246,155,341]},frameAssets:{
   'idle/0':{art:'pet.koshort.paint-wear-clothes-dots-idle',rect:[2,2,260,182,48,89]},
   'idle/1':{art:'pet.koshort.paint-wear-clothes-dots-idle',rect:[266,2,258,183,49,89]},
   'idle/2':{art:'pet.koshort.paint-wear-clothes-dots-idle',rect:[528,2,260,183,49,88]},

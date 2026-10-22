@@ -6,7 +6,7 @@ export const ART_MAP: Record<string, string> = {
   "pet.koshort.paint-wear-clothes-dots-eat": "art/pets/koshort.paint-wear-clothes-dots-eat.971e0020.webp",
   "pet.koshort.paint-wear-clothes-dots-liesleep": "art/pets/koshort.paint-wear-clothes-dots-liesleep.7d4e658d.webp",
   "pet.koshort.paint-wear-clothes-dots-idle": "art/pets/koshort.paint-wear-clothes-dots-idle.d2142d38.webp",
-  "pet.koshort.paint-wear-clothes-dots": "art/pets/koshort.paint-wear-clothes-dots.a25d893f.webp",
+  "pet.koshort.paint-wear-clothes-dots": "art/pets/koshort.paint-wear-clothes-dots.caf95ed3.webp",
   "map.1": "art/backgrounds/map-1.long.1e16facc.webp",
   "map.2": "art/backgrounds/map-2.long.5164fc25.webp",
   "map.3": "art/backgrounds/map-3.long.71db26c0.webp",

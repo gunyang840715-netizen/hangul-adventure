@@ -5,15 +5,15 @@
       "clothes": {
         "key": "dots",
         "art": "pet.koshort.paint-wear-clothes-dots",
-        "width": 300,
+        "width": 315,
         "frames": {
           "front/0": [
             0,
             0,
-            300,
-            214,
-            170,
-            381
+            315,
+            246,
+            155,
+            341
           ]
         },
         "frameAssets": {

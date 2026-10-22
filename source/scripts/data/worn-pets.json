@@ -1295,6 +1295,21 @@
             315
           ]
         }
+      },
+      "clothes": {
+        "key": "dots",
+        "art": "pet.russian.paint-wear-clothes-dots",
+        "width": 308,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            308,
+            255,
+            166,
+            327
+          ]
+        }
       }
     },
     "siamese": {
@@ -1325,6 +1340,21 @@
             92,
             247,
             304
+          ]
+        }
+      },
+      "clothes": {
+        "key": "dots",
+        "art": "pet.siamese.paint-wear-clothes-dots",
+        "width": 292,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            292,
+            272,
+            186,
+            322
           ]
         }
       }
@@ -1359,6 +1389,21 @@
             347
           ]
         }
+      },
+      "clothes": {
+        "key": "dots",
+        "art": "pet.fold.paint-wear-clothes-dots",
+        "width": 356,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            356,
+            247,
+            139,
+            351
+          ]
+        }
       }
     },
     "persian": {
@@ -1389,6 +1434,21 @@
             89,
             233,
             380
+          ]
+        }
+      },
+      "clothes": {
+        "key": "dots",
+        "art": "pet.persian.paint-wear-clothes-dots",
+        "width": 322,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            322,
+            205,
+            157,
+            379
           ]
         }
       }

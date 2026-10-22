@@ -101,15 +101,19 @@ export const WORN_PETS:Record<string,Record<string,WornPetAtlas>>={
  }}},
  russian:{hat:{key:'cap',art:'pet.russian.paint-wear-hat-cap',width:247,frames:{'front/0':[0,0,247,187,196,40]},frameAssets:{
  }},neck:{key:'bell',art:'pet.russian.paint-wear-neck-bell',width:170,frames:{'front/0':[0,0,170,96,236,315]},frameAssets:{
+ }},clothes:{key:'dots',art:'pet.russian.paint-wear-clothes-dots',width:308,frames:{'front/0':[0,0,308,255,166,327]},frameAssets:{
  }}},
  siamese:{hat:{key:'cap',art:'pet.siamese.paint-wear-hat-cap',width:212,frames:{'front/0':[0,0,212,151,210,45]},frameAssets:{
  }},neck:{key:'bell',art:'pet.siamese.paint-wear-neck-bell',width:148,frames:{'front/0':[0,0,148,92,247,304]},frameAssets:{
+ }},clothes:{key:'dots',art:'pet.siamese.paint-wear-clothes-dots',width:292,frames:{'front/0':[0,0,292,272,186,322]},frameAssets:{
  }}},
  fold:{hat:{key:'cap',art:'pet.fold.paint-wear-hat-cap',width:241,frames:{'front/0':[0,0,241,165,196,25]},frameAssets:{
  }},neck:{key:'bell',art:'pet.fold.paint-wear-neck-bell',width:204,frames:{'front/0':[0,0,204,96,219,347]},frameAssets:{
+ }},clothes:{key:'dots',art:'pet.fold.paint-wear-clothes-dots',width:356,frames:{'front/0':[0,0,356,247,139,351]},frameAssets:{
  }}},
  persian:{hat:{key:'cap',art:'pet.persian.paint-wear-hat-cap',width:230,frames:{'front/0':[0,0,230,197,209,45]},frameAssets:{
  }},neck:{key:'bell',art:'pet.persian.paint-wear-neck-bell',width:176,frames:{'front/0':[0,0,176,89,233,380]},frameAssets:{
+ }},clothes:{key:'dots',art:'pet.persian.paint-wear-clothes-dots',width:322,frames:{'front/0':[0,0,322,205,157,379]},frameAssets:{
  }}},
 };
 

@@ -1522,6 +1522,91 @@
           80
         ]
       }
+    },
+    {
+      "pet": "koshort",
+      "slot": "hat",
+      "key": "crown",
+      "art": "pet.koshort.paint-wear-hat-crown",
+      "width": 187,
+      "frames": {
+        "front/0": [
+          0,
+          0,
+          187,
+          148,
+          239,
+          90
+        ]
+      }
+    },
+    {
+      "pet": "russian",
+      "slot": "hat",
+      "key": "crown",
+      "art": "pet.russian.paint-wear-hat-crown",
+      "width": 200,
+      "frames": {
+        "front/0": [
+          0,
+          0,
+          200,
+          136,
+          222,
+          66
+        ]
+      }
+    },
+    {
+      "pet": "siamese",
+      "slot": "hat",
+      "key": "crown",
+      "art": "pet.siamese.paint-wear-hat-crown",
+      "width": 191,
+      "frames": {
+        "front/0": [
+          0,
+          0,
+          191,
+          127,
+          226,
+          68
+        ]
+      }
+    },
+    {
+      "pet": "fold",
+      "slot": "hat",
+      "key": "crown",
+      "art": "pet.fold.paint-wear-hat-crown",
+      "width": 207,
+      "frames": {
+        "front/0": [
+          0,
+          0,
+          207,
+          136,
+          218,
+          55
+        ]
+      }
+    },
+    {
+      "pet": "persian",
+      "slot": "hat",
+      "key": "crown",
+      "art": "pet.persian.paint-wear-hat-crown",
+      "width": 206,
+      "frames": {
+        "front/0": [
+          0,
+          0,
+          206,
+          150,
+          218,
+          91
+        ]
+      }
     }
   ]
 }

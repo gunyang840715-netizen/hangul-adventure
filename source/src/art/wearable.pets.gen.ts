@@ -134,4 +134,24 @@ export const WORN_PET_VARIANTS:Record<string,Record<string,WornPetAtlas>>={
   'hat:straw':{key:'straw',art:'pet.schnauzer.paint-wear-hat-straw',width:343,frames:{'front/0':[0,0,343,180,148,80]},frameAssets:{
  }},
  },
+ koshort:{
+  'hat:crown':{key:'crown',art:'pet.koshort.paint-wear-hat-crown',width:187,frames:{'front/0':[0,0,187,148,239,90]},frameAssets:{
+ }},
+ },
+ russian:{
+  'hat:crown':{key:'crown',art:'pet.russian.paint-wear-hat-crown',width:200,frames:{'front/0':[0,0,200,136,222,66]},frameAssets:{
+ }},
+ },
+ siamese:{
+  'hat:crown':{key:'crown',art:'pet.siamese.paint-wear-hat-crown',width:191,frames:{'front/0':[0,0,191,127,226,68]},frameAssets:{
+ }},
+ },
+ fold:{
+  'hat:crown':{key:'crown',art:'pet.fold.paint-wear-hat-crown',width:207,frames:{'front/0':[0,0,207,136,218,55]},frameAssets:{
+ }},
+ },
+ persian:{
+  'hat:crown':{key:'crown',art:'pet.persian.paint-wear-hat-crown',width:206,frames:{'front/0':[0,0,206,150,218,91]},frameAssets:{
+ }},
+ },
 };

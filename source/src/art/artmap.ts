@@ -931,7 +931,12 @@ export const ART_MAP: Record<string, string> = {
   "pet.russian.paint-wear-clothes-dots": "art/pets/russian.paint-wear-clothes-dots.4c4a67e5.webp",
   "pet.siamese.paint-wear-clothes-dots": "art/pets/siamese.paint-wear-clothes-dots.0b710540.webp",
   "pet.fold.paint-wear-clothes-dots": "art/pets/fold.paint-wear-clothes-dots.8168041f.webp",
-  "pet.persian.paint-wear-clothes-dots": "art/pets/persian.paint-wear-clothes-dots.6e40b606.webp"
+  "pet.persian.paint-wear-clothes-dots": "art/pets/persian.paint-wear-clothes-dots.6e40b606.webp",
+  "pet.koshort.paint-wear-hat-crown": "art/pets/koshort.paint-wear-hat-crown.49cca365.webp",
+  "pet.russian.paint-wear-hat-crown": "art/pets/russian.paint-wear-hat-crown.673e2479.webp",
+  "pet.siamese.paint-wear-hat-crown": "art/pets/siamese.paint-wear-hat-crown.9c6bc395.webp",
+  "pet.fold.paint-wear-hat-crown": "art/pets/fold.paint-wear-hat-crown.8653802d.webp",
+  "pet.persian.paint-wear-hat-crown": "art/pets/persian.paint-wear-hat-crown.0d40fb8e.webp"
 };
 
 export function artSrc(id: string): string | undefined {

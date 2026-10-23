@@ -297,6 +297,21 @@
             325
           ]
         }
+      },
+      "glasses": {
+        "key": "heart",
+        "art": "pet.koshort.paint-wear-glasses-heart",
+        "width": 169,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            169,
+            88,
+            237,
+            216
+          ]
+        }
       }
     },
     "maltese": {
@@ -1310,6 +1325,21 @@
             327
           ]
         }
+      },
+      "glasses": {
+        "key": "heart",
+        "art": "pet.russian.paint-wear-glasses-heart",
+        "width": 198,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            198,
+            87,
+            219,
+            204
+          ]
+        }
       }
     },
     "siamese": {
@@ -1355,6 +1385,21 @@
             272,
             186,
             322
+          ]
+        }
+      },
+      "glasses": {
+        "key": "heart",
+        "art": "pet.siamese.paint-wear-glasses-heart",
+        "width": 186,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            186,
+            79,
+            225,
+            201
           ]
         }
       }
@@ -1404,6 +1449,21 @@
             351
           ]
         }
+      },
+      "glasses": {
+        "key": "heart",
+        "art": "pet.fold.paint-wear-glasses-heart",
+        "width": 207,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            207,
+            89,
+            215,
+            192
+          ]
+        }
       }
     },
     "persian": {
@@ -1449,6 +1509,21 @@
             205,
             157,
             379
+          ]
+        }
+      },
+      "glasses": {
+        "key": "heart",
+        "art": "pet.persian.paint-wear-glasses-heart",
+        "width": 225,
+        "frames": {
+          "front/0": [
+            0,
+            0,
+            225,
+            100,
+            206,
+            223
           ]
         }
       }

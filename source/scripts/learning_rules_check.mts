@@ -60,5 +60,33 @@ for (const kind of ['snack', 'item', 'mat']) {
   for (let i = 0; i < 4; i++) assert.equal(giftFor('traceSet')?.kind, 'snack', '꾸미기를 다 모으면 쓰기 선물은 간식');
   console.log(`선물 비율: 첫 단계 꾸미기 ${cnt.item} · 간식 ${cnt.snack} · 재료 ${cnt.mat}, 다 모으면 간식`);
 }
+// 꾸미기는 무작위·여러 종류로 (10-23 사용자 요청: 늘 야구 모자부터 같은 순서 X), 뽑기는 하루 4번쯤
+{
+  const { randomDrop, gachaPrize, gachaSlot, wantsGacha, GACHA_PER_DAY } = await import('../src/engine/gifts');
+  const { ITEM_LIST, ITEM } = await import('../src/data/pets');
+  store.replaceAll(store.fresh());
+  const first = Array.from({ length: 60 }, () => randomDrop()!);
+  assert.ok(new Set(first).size >= 15, `처음 받는 꾸미기가 매번 달라야 함: ${new Set(first).size}가지`);
+  assert.ok(new Set(first.map(id => ITEM[id].slot)).size >= 5, '처음 받는 꾸미기 종류가 골고루');
+  const got: string[] = [];
+  for (let n = 0; n <= ITEM_LIST.length; n++) {
+    const before = new Set(store.ownedNow());
+    const left = ITEM_LIST.filter(i => !before.has(i.id));
+    const pr = gachaPrize();
+    if (!left.length) { assert.equal(pr.item, null, '다 모았으면 뽑기는 간식'); assert.equal(pr.snacks.length, 3); break; }
+    assert.ok(pr.item && !before.has(pr.item), '아직 없는 꾸미기만');
+    const prev = got.at(-1);
+    if (prev && new Set(left.map(i => i.slot)).size > 1) assert.notEqual(ITEM[pr.item!].slot, ITEM[prev].slot, '바로 전과 다른 종류');
+    got.push(pr.item!);
+  }
+  assert.equal(new Set(got).size, ITEM_LIST.length, '꾸미기를 빠짐없이 다 받을 수 있음');
+  const m = 60000;
+  assert.deepEqual([0, 7.4, 7.6, 15.1, 22.6, 29.9, 40].map(x => gachaSlot(x * m, 30)), [0, 0, 1, 2, 3, 3, GACHA_PER_DAY], '30분이면 7분 30초마다, 하루 3번까지');
+  assert.equal(gachaSlot(8.1 * m, 0), 1, '시간 제한 없음이면 8분마다');
+  assert.equal(gachaSlot(4.9 * m, 12), 0, '아무리 짧아도 5분마다');
+  assert.ok(wantsGacha('hunt', 1, 0) && wantsGacha('traceSet', 2, 1), '놀이·쓰기를 끝냈을 때 뽑기');
+  assert.ok(!wantsGacha('hunt', 1, 1) && !wantsGacha('dictation', 1, 0) && !wantsGacha('reward', 1, 0) && !wantsGacha('greet', 1, 0), '같은 칸·시험·끝 뽑기·인사에는 X');
+  console.log(`꾸미기 무작위: 처음 60번 ${new Set(first).size}가지·${new Set(first.map(id => ITEM[id].slot)).size}종류, 140개 모두 받음 · 모험 중 뽑기 하루 ${GACHA_PER_DAY}번 + 모험 끝`);
+}
 store.flushSave();
 console.log(`새 글자 ${letters}개 40회·혼자 쓰기·${LESSONS.length}레슨 시험·다음날 복습·오답 보상 규칙 통과`);

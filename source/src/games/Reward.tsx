@@ -1,17 +1,18 @@
-// 모험을 끝내면 선물 뽑기: 꾸미기 아이템(다 모았으면 간식 세 개) + 별 세 개
+// 선물 뽑기: 꾸미기 아이템 무작위(다 모았으면 간식 세 개) + 별 세 개
+// 모험을 끝낼 때 + 모험 중에도 하루 3번(mid — 오늘 쓴 시간으로, engine/gifts.ts gachaSlot)
 import { useEffect, useState } from 'preact/hooks';
 import { Backdrop, burst } from '../art/Scene';
 import { Pet, ItemIcon, SnackIcon } from '../art/Pet';
 import { say, sayAll, sfx } from '../engine/audio';
 import { buddy } from '../engine/bus';
-import { addStars, addOwned, setLastItem, starsTotal, nextDrop, addSnack } from '../engine/store';
+import { addStars, starsTotal } from '../engine/store';
 import { ITEM } from '../data/pets';
 import { gotLine } from '../data/voice';
-import { randomSnack } from '../engine/gifts';
+import { gachaPrize } from '../engine/gifts';
 import { useScene, nameLine, type GameProps } from './common';
 import { pair } from './Buddies';
 
-export function Reward({ onDone }: GameProps<'reward'>) {
+export function Reward({ onDone, mid = false }: GameProps<'reward'> & { mid?: boolean }) {
   const { sleep } = useScene();
   const [phase, setPhase] = useState<'machine' | 'shake' | 'capsule' | 'open'>('machine');
   const [item, setItem] = useState<string | null>(null);
@@ -19,9 +20,8 @@ export function Reward({ onDone }: GameProps<'reward'>) {
 
   useEffect(() => {
     addStars(3);
-    const next = nextDrop();
-    if (next) { addOwned(next); setLastItem(next); setItem(next); }
-    else { const sn = [randomSnack(), randomSnack(), randomSnack()]; sn.forEach(x => addSnack(x)); setSnacks(sn); }
+    const pr = gachaPrize();
+    if (pr.item) setItem(pr.item); else setSnacks(pr.snacks);
     say('선물 뽑기 시간! 손잡이를 눌러 봐!');
   }, []);
 
@@ -89,7 +89,7 @@ export function Reward({ onDone }: GameProps<'reward'>) {
               </div>
               <div style={{ fontSize: 56, color: '#fff', textShadow: '0 4px 0 #9775fa' }}>{item ? ITEM[item].name : '간식 세 개'}</div>
               <div class="pill" style={{ fontSize: 34 }}>⭐ +3</div>
-              <button class="btn big" onClick={() => { sfx.tap(); onDone(); }}>지도로 ▶</button>
+              <button class="btn big" onClick={() => { sfx.tap(); onDone(); }}>{mid ? '계속 ▶' : '지도로 ▶'}</button>
             </div>
           </div>
         )}

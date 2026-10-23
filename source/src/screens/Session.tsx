@@ -1,11 +1,11 @@
 // 모험 진행: 단계(Step)들을 차례로 보여 준다
-// - 놀이·쓰기를 끝낼 때마다 선물(간식·꾸미기)
+// - 놀이·쓰기를 끝낼 때마다 선물(간식·꾸미기), 하루 3번은 그 선물 대신 선물 뽑기(모험 끝 뽑기와 합쳐 하루 4번쯤)
 // - 매 단계마다 '이어하기' 위치 저장 → 시간이 다 되면 이번 놀이까지만 하고 쉬고, 시간이 풀리면 그 자리부터
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { Step } from '../engine/session';
 import { sfx, stopVoice, say } from '../engine/audio';
-import { remainingMs, setResume } from '../engine/store';
-import { giftFor, type Gift } from '../engine/gifts';
+import { remainingMs, setResume, todayMs, load } from '../engine/store';
+import { giftFor, gachaSlot, wantsGacha, countStep, type Gift } from '../engine/gifts';
 import { Intro } from '../games/Intro';
 import { Trace, TraceSet } from '../games/Trace';
 import { Hunt, Mole, Memory, Feed } from '../games/More';
@@ -37,6 +37,7 @@ export function Session({ steps, lessonIdx, name, startAt = 0, replay = false, p
   const [i, setI] = useState(() => Math.max(0, Math.min(startAt, steps.length - 1)));
   const [started, setStarted] = useState(!resumed);
   const [gift, setGift] = useState<Gift | null>(null);
+  const [gacha, setGacha] = useState(false);        // 모험 중 선물 뽑기 (그 단계 선물 대신)
   const [confirmQuit, setConfirmQuit] = useState(false);
   const [late, setLate] = useState(false);          // 시간이 다 됨 → 이번 놀이까지만
   const overSince = useRef(0);
@@ -63,13 +64,28 @@ export function Session({ steps, lessonIdx, name, startAt = 0, replay = false, p
     return () => clearInterval(t);
   }, [i]);
 
+  // 모험 중 뽑기: 오늘 쓴 시간이 다음 칸에 들어간 뒤 처음 끝낸 놀이·쓰기에서 (하루 3번까지, engine/gifts.ts gachaSlot)
+  const slotNow = () => gachaSlot(todayMs(), load().settings.dailyMin);
+  const gachaDone = useRef<number | null>(null);
+  if (gachaDone.current === null) gachaDone.current = slotNow();
+
   const advance = () => {
-    setGift(null);
+    setGift(null); setGacha(false);
     if (i + 1 >= steps.length) { onFinish(); return; }
     if (timeUp()) { saveAt(i + 1); onPause(); return; }
     setI(i + 1);
   };
   const next = () => {
+    if (step) {
+      const now = slotNow();
+      if (now < gachaDone.current!) gachaDone.current = now;   // 날짜가 바뀜
+      // 곧 모험 끝 뽑기가 나오면 그때로 (연달아 두 번 나오지 않게)
+      const endSoon = steps.slice(i + 1, i + 4).some(s => s.t === 'reward');
+      if (!endSoon && wantsGacha(step.t, now, gachaDone.current!)) {
+        gachaDone.current = now; countStep(step.t); setGacha(true);
+        return;
+      }
+    }
     const g = step ? giftFor(step.t) : null;
     if (g) setGift(g); else advance();
   };
@@ -109,7 +125,7 @@ export function Session({ steps, lessonIdx, name, startAt = 0, replay = false, p
   const pos = playable.indexOf(step as any);
   return (
     <div class="screen">
-      <div class="screen" key={i}>{view}</div>
+      <div class="screen" key={i}>{gacha ? <Reward step={{ t: 'reward' }} onDone={advance} outfit={{}} name={name} mid /> : view}</div>
       {gift && <GiftPop key={'g' + i} gift={gift} onDone={advance} />}
       <div class="topbar">
         <button class="iconbtn" onClick={() => { sfx.tap(); setConfirmQuit(true); }} aria-label="지도로">🏠</button>

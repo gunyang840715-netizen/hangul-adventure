@@ -35,6 +35,14 @@ export function giftFor(stepType: string): Gift | null {
   }
   // 받아쓰기 시험 통과: 재료 하나 더
   if (stepType === 'dictation') { addMat(); return { kind: 'mat', id: 'mat' }; }
-  if (TRACE.has(stepType)) { const sn = randomSnack(); addSnack(sn); return { kind: 'snack', id: sn }; }
+  // 쓰기 세트를 끝내면 4번 중 3번은 꾸미기 아이템, 1번은 간식 (10-23 사용자 요청: 간식보다 꾸미기가 더 많이 나오게)
+  // 쓰기 세트 사이에는 놀이가 하나씩 있으므로 놀이 수로 순서를 정한다(새 저장 칸 없음). 꾸미기를 다 모았으면 간식
+  if (TRACE.has(stepType)) {
+    if (gamesTotal() % 4 !== 3) {
+      const it = nextDrop();
+      if (it) { addOwned(it); setLastItem(it); return { kind: 'item', id: it }; }
+    }
+    const sn = randomSnack(); addSnack(sn); return { kind: 'snack', id: sn };
+  }
   return null;
 }

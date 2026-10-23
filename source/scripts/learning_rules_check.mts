@@ -48,5 +48,17 @@ for (const kind of ['snack', 'item', 'mat']) {
   assert.equal(store.takeBack(), null, '보상이 없을 때 추가 차감 없음');
   if (kind === 'item') assert.equal(store.load().wear.maltese.hat, undefined, '회수한 꾸미기는 벗기기');
 }
+// 선물 비율 (10-23 사용자 요청): 꾸미기 아이템이 간식보다 많이 나온다. 꾸미기를 다 모았으면 간식으로 대신
+{
+  const { giftFor } = await import('../src/engine/gifts');
+  const { ITEM_LIST } = await import('../src/data/pets');
+  store.replaceAll(store.fresh());
+  const cnt = { snack: 0, item: 0, mat: 0 };
+  for (const st of buildLesson(0)) { const gf = giftFor(st.t); if (gf) cnt[gf.kind]++; }
+  assert.ok(cnt.item > cnt.snack, `선물은 꾸미기가 간식보다 많이: 꾸미기 ${cnt.item} · 간식 ${cnt.snack}`);
+  for (const it of ITEM_LIST) store.addOwned(it.id);
+  for (let i = 0; i < 4; i++) assert.equal(giftFor('traceSet')?.kind, 'snack', '꾸미기를 다 모으면 쓰기 선물은 간식');
+  console.log(`선물 비율: 첫 단계 꾸미기 ${cnt.item} · 간식 ${cnt.snack} · 재료 ${cnt.mat}, 다 모으면 간식`);
+}
 store.flushSave();
 console.log(`새 글자 ${letters}개 40회·혼자 쓰기·${LESSONS.length}레슨 시험·다음날 복습·오답 보상 규칙 통과`);

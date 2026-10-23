@@ -24,10 +24,14 @@ export function randomSnack(): string {
  *  종류(모자·옷·안경·목걸이·신발·장난감)를 먼저 고르게 뽑고 그 안에서 하나 — 옷이 많아도 한쪽으로 몰리지 않게,
  *  바로 전에 받은 것과 같은 종류는 되도록 피한다. 다 모았으면 null */
 export function randomDrop(s = load()): string | null {
-  const left = ITEM_LIST.filter(i => !hasItem(i.id, s));
+  return randomItemFrom(id => hasItem(id, s), s.lastItem);
+}
+/** 아직 없는 꾸미기 중 하나 (randomDrop과 같은 뽑는 법 — 수학 모드의 언니 옷장도 같이 씀). 다 모았으면 null */
+export function randomItemFrom(has: (id: string) => boolean, prevId?: string): string | null {
+  const left = ITEM_LIST.filter(i => !has(i.id));
   if (!left.length) return null;
   const slots = [...new Set(left.map(i => i.slot))];
-  const prev = s.lastItem ? ITEM[s.lastItem]?.slot : undefined;
+  const prev = prevId ? ITEM[prevId]?.slot : undefined;
   const pool = slots.length > 1 ? slots.filter(sl => sl !== prev) : slots;
   const sl = pool[Math.floor(Math.random() * pool.length)];
   const inSlot = left.filter(i => i.slot === sl);

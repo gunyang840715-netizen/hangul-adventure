@@ -48,6 +48,8 @@ GitHub Pages로 바로 공개되는 **공개 저장소**이고, 태블릿에서 
 - `src/data/` — 커리큘럼(`curriculum.ts`) · 자모(`jamo.ts`) · 말하는 문장(`voice.ts`) · 집 안/놀이터 꾸미기(`home.ts`) · 강아지/고양이(`pets.ts`)
 - `src/games/` — 놀이 화면(받아쓰기 `Dictation.tsx`, 쓰기 `Trace.tsx` 등), `src/screens/` — 지도 · 집 짓기 · 집 안 · 놀이터 · 부모 설정(`Extras.tsx`)
 - `src/art/` — 그림(SVG 코드), `src/App.tsx` — 화면 전환 · 시험 통과/불합격 처리
+- **수학 모드 (초등 2학년 언니용, 10-23~ — 한글 모드와 따로)**: `src/math/mathData.ts`(저장 모양·12단계·문제와 보기) · `src/math/mathStore.ts`(기록) ·
+  `src/screens/MathScreen.tsx`(하루 50문제 객관식) · `src/screens/MathCloset.tsx`(언니 옷장) · 첫 화면 '✏️ 수학' 버튼 · 부모 설정 '수학 (언니)' · 검사 `scripts/math_check.mts`
 - `shared/merge.js` — 두 기기 진도 합치기 규칙 (구글 Apps Script 서버와 같이 씀)
 - `scripts/` — 검사 스크립트, PWA 파일 만들기(`build_pwa.py`)
 - `backend/Code.template.gs` — 서버(구글 Apps Script) 원본. **자동 배포되지 않음** (사람이 Apps Script 편집기에 붙여 넣어야 함)
@@ -91,3 +93,7 @@ npm run build   # dist/index.html 이 생기면 성공
    놀이에서 틀리면 받은 보상 하나를 돌려받음(`takeBack`).
 6. **공개 저장소입니다.** 아이 실명, 연동 코드, 서버 주소(`script.google.com/macros/...`), API 키, 메일 주소를 절대 넣지 않습니다.
 7. UI 글자와 주석은 한국어.
+8. **수학 모드(초등 2학년 언니, 10-23 사용자 결정)는 한글 모드와 따로 돈다.** 기록은 `State.math` 한 칸에만(사용자 허락으로 추가한 칸 — 모양은 `src/math/mathData.ts`).
+   한글 진도·동생 옷장(`owned`·`wear`)·하루 사용 시간과 섞지 않는다(수학 화면은 `App.tsx` COUNTED·IDLE에 넣지 않음). 두 기기 합치기는 `shared/merge.js`의 `mergeMath`(한글 초기화 epoch와 상관없이 합침),
+   한글 전체 초기화·예전 백업 불러오기에도 수학 기록은 남긴다. 하루 50문제(부모 설정) · 객관식 4지선다 · 정답 10개마다 언니 옷장에 꾸미기 하나(틀려도 회수 없음) · 하루 문제의 90% 이상이면 다음 단계 —
+   이 규칙과 단계 순서는 사용자가 직접 말할 때만 바꾼다. `npm run check`의 `math_check`(문제·보기·규칙·분리)와 `merge_test`가 통과해야 한다.

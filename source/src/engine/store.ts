@@ -5,6 +5,7 @@ import { mergeState, sumMap } from '../../shared/merge.js';
 import { PET, DEFAULT_PETS, SNACK, DROP_ORDER, OLD_ITEM, ITEM, BUILDS, BUILD, levelOf, stageOf, type Species, type Slot } from '../data/pets';
 import { CURRICULUM_VER, migrateLessonIdx } from '../data/curriculum';
 import { isBackupPayload, isSyncPayload } from './backup';
+import { normalizeMath, type MathState } from '../math/mathData';
 
 export interface ItemStat { box: number; due: number; seen: number; right: number; wrong: number; last: number }
 
@@ -66,6 +67,8 @@ export interface State {
   // 집 안·놀이터 꾸미기
   bought: Record<string, number>;    // 가구·놀이 기구 id → 산 시각 (재료 1개씩)
   deco: Record<string, Record<string, string>>; decoT: Record<string, number>;   // 장소 → 자리 → 놓은 가구
+  // 수학 모드 (초등 2학년 언니 — 한글과 따로, 10-23 사용자 허락으로 추가). 없으면 아직 안 함. 한글 초기화·백업 불러오기와 상관없이 남긴다
+  math?: MathState;
 }
 
 export interface PassRec { lesson: number; day: number; items: string[] }
@@ -161,6 +164,8 @@ function normalize(o: any): State {
     s.resume = null;
     s.curVer = CURRICULUM_VER;
   }
+  // 수학 칸: 망가진 값은 버리고 고친 값만 (한글 진도 읽기에는 영향 없음)
+  if (o.math !== undefined) { const m = normalizeMath(o.math); if (m) s.math = m; else delete s.math; }
   return s;
 }
 
@@ -225,6 +230,7 @@ export function reset() {
   const s = fresh();
   s.name = cur.name; s.nameT = Date.now();
   s.settings = { ...cur.settings }; s.settingsT = Date.now();
+  if (cur.math) s.math = cur.math;   // 수학(언니) 기록은 한글 초기화와 따로
   replaceAll(s, true);
 }
 
@@ -251,7 +257,12 @@ export function exportCode(): string {
 export function importCode(code: string): boolean {
   try {
     const o = JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
-    if (isBackupPayload(o)) { replaceAll(normalize(o), true); return true; }
+    if (isBackupPayload(o)) {
+      const n = normalize(o);
+      const cur = readRecovery ? undefined : load().math;
+      if (!n.math && cur) n.math = cur;   // 수학 기록이 없는 예전 백업을 불러와도 언니 수학 기록은 그대로
+      replaceAll(n, true); return true;
+    }
   } catch { /* 무시 */ }
   return false;
 }

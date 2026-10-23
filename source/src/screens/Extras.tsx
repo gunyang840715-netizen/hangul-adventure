@@ -18,9 +18,12 @@ import { server, onServer, connectVoice } from '../engine/boot';
 import { stat } from '../engine/srs';
 import { josa } from '../lib/hangul';
 import { ITEM_LIST, STAGE_NAME } from '../data/pets';
+import { STAGES, PER_DAY_CHOICES, PASS_RATE, ITEM_EVERY, stageName } from '../math/mathData';
+import { mathState, todayMath, mathTotalCorrect, setMathLevel, setMathPerDay } from '../math/mathStore';
+import '../math/math.css';
 
 // ---------- 제목 ----------
-export function Title({ onStart }: { onStart: () => void }) {
+export function Title({ onStart, onMath }: { onStart: () => void; onMath?: () => void }) {
   const [, force] = useState(0);
   useEffect(() => { const off = onPackLoad(() => force(x => x + 1)); force(x => x + 1); return off; }, []);
   // 음성팩을 받는 동안에는 기다리기 (처음 설치할 때 한 번). 너무 오래 걸리면 그냥 시작
@@ -52,6 +55,8 @@ export function Title({ onStart }: { onStart: () => void }) {
         <button class={`btn big ${ready ? 'pulse' : ''}`} style={{ position: 'absolute', left: '50%', bottom: 44, transform: 'translateX(-50%)', opacity: ready ? 1 : 0.75 }}>
           {ready ? '시작하기 ▶' : `목소리 준비 중… ${Math.round(packLoad.progress * 100)}%`}
         </button>
+        {/* 수학 모드 (초등 2학년 언니 — 한글과 따로) */}
+        {onMath && <button class="btn sky m-math-btn" data-math-start="1" onClick={(e) => { e.stopPropagation(); onMath(); }}>✏️ 수학</button>}
       </div>
     </div>
   );
@@ -282,7 +287,7 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
         <div class="overlay" style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(40,20,60,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', borderRadius: 20, padding: '28px 34px', maxWidth: 560, boxShadow: '0 10px 30px rgba(0,0,0,.25)' }}>
             <div style={{ fontSize: 26, fontWeight: 'bold', marginBottom: 12 }}>{ask === 'all' ? '전체 초기화할까요?' : '공부 진도를 처음부터 할까요?'}</div>
-            <div style={{ fontSize: 18, color: '#555', marginBottom: 22 }}>{ask === 'all' ? '진도, 강아지·고양이 성장, 꾸미기 아이템, 간식, 별이 모두 지워집니다.' : '1단계부터 다시 시작합니다. 강아지·고양이·꾸미기·간식·별은 그대로입니다.'} 되돌릴 수 없습니다.</div>
+            <div style={{ fontSize: 18, color: '#555', marginBottom: 22 }}>{ask === 'all' ? '진도, 강아지·고양이 성장, 꾸미기 아이템, 간식, 별이 모두 지워집니다. 수학(언니) 기록은 그대로 둡니다.' : '1단계부터 다시 시작합니다. 강아지·고양이·꾸미기·간식·별은 그대로입니다.'} 되돌릴 수 없습니다.</div>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'flex-end' }}>
               <button class="opt" onClick={() => setAsk(null)}>취소</button>
               <button class="opt" data-reset-ok="1" style={{ background: '#c92a2a', color: '#fff' }} onClick={() => {
@@ -309,6 +314,8 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
       <div class="row">배경 음악 <Opt on={s.settings.music} onClick={() => { setSettings({ music: true }); done('저장했습니다.'); }}>켜기</Opt><Opt on={!s.settings.music} onClick={() => { setSettings({ music: false }); done('저장했습니다.'); }}>끄기</Opt></div>
       <div class="row">음성: {hasPack() ? '녹음 음성 사용 중' : '기기 내장 음성 사용 중 (녹음 음성 없음)'}</div>
       <div class="row" style={{ fontSize: 18, color: '#666' }} data-build={__BUILD__}>앱 버전: {__BUILD__}</div>
+
+      <MathParent onSaved={done} />
 
       <h3>글자별 숙련도 (0=처음 ~ 5=완전히 익힘)</h3>
       <div class="row" style={{ gap: 6 }}>
@@ -346,4 +353,25 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
 function fmtDay(d: number) {
   const dt = new Date(d * 86400000);
   return `${dt.getUTCMonth() + 1}/${dt.getUTCDate()}`;
+}
+
+// ---------- 부모 설정: 수학 (초등 2학년 언니 — 한글 진도와 따로) ----------
+function MathParent({ onSaved }: { onSaved: (m: string) => void }) {
+  const m = mathState();
+  const t = todayMath(m);
+  const Opt = ({ on, children, onClick }: any) => <button class={`opt ${on ? 'on' : ''}`} onClick={onClick}>{children}</button>;
+  return (
+    <>
+      <h3>수학 (언니)</h3>
+      <div class="row" data-math-parent="1">오늘 {t.solved}/{m.perDay}문제 · 맞힘 {t.correct}개 · 지금까지 맞힌 문제 {mathTotalCorrect(m)}개 · 언니 옷장 꾸미기 {m.owned.length}/{ITEM_LIST.length}</div>
+      <div class="row">지금 단계: {m.level + 1}. {stageName(m.level)}</div>
+      <div class="row" style={{ gap: 6 }}>{STAGES.map((st, i) => (
+        <Opt on={m.level === i} onClick={() => { setMathLevel(i); onSaved(`수학을 ${i + 1}단계(${st.name} ${st.sub})로 바꿨습니다.`); }}>{i + 1}. {st.name} · {st.sub}</Opt>
+      ))}</div>
+      <div class="row">하루 문제 수 {PER_DAY_CHOICES.map(n => <Opt on={m.perDay === n} onClick={() => { setMathPerDay(n); onSaved('저장했습니다.'); }}>{n}문제</Opt>)}</div>
+      <div class="row" style={{ fontSize: 16, color: '#868e96' }}>
+        하루 문제의 {Math.round(PASS_RATE * 100)}% 이상 맞히면 다음 날 다음 단계 · 정답 {ITEM_EVERY}개마다 언니 옷장에 꾸미기 하나(틀려도 안 가져감) · 한글 진도·하루 사용 시간·동생 옷장과 따로 · 두 기기 연동됨
+      </div>
+    </>
+  );
 }

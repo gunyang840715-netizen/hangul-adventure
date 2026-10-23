@@ -63,7 +63,9 @@
 
 1. 바꾸지 않음: 사이트 주소, manifest의 id('./')·start_url·scope, 저장 키(hangul-adventure-v2, hangul-device, hangul-sync-code, hangul-sync-url),
    IndexedDB 'hangul-voice', engine/store.ts의 State 구조, shared/merge.js, data/curriculum.ts, scripts/build_char_voice.py, backend/.
+   (예외 하나 — 10-23 사용자 허락: 수학 모드 칸 State.math와 merge.js의 mergeMath를 더함. 한글 칸은 그대로 — 12번)
 2. source/src/engine/ 안에서는 audio.ts(음량·녹음 묶음)와 gifts.ts(간식 가중치)만 고친다.
+   (10-23 수학 모드 예외: store.ts에는 State.math 칸과 그 읽기·초기화·백업 때 남기기만 더함)
 3. id는 지우거나 바꾸지 않고 뒤에 추가만 한다: 친구(PETS), 아이템(ITEM_LIST), 간식(SNACKS), 가구(FURN), 자리(ROOM_SLOTS·PARK_SLOTS),
    장소(doghouse·cathouse·park), 집 짓기 부품 key와 순서(BUILDS). scripts/id_keep_check.mts가 scripts/ids_baseline.json과 대조해 막는다.
    자리의 위치·크기(x·y·w·h)는 새 배경에 맞게 옮겨도 된다(저장에 영향 없음).
@@ -80,6 +82,9 @@
    코드·파일 이름·커밋 메시지·그림·HANDOFF 어디에도 넣지 않는다.
 10. 올리지 않는 폴더(맨 위 .gitignore): art-src/(GPT 원본 그림·참고 사진·주문서), review/(Claude 미리보기·목록·검사 결과).
 11. 업데이트가 늦은 기기가 새 아이템·가구 id를 받아도 지금 코드는 빈 그림으로 넘어가고 멈추지 않는다(확인함). 모르는 id에서 오류가 나게 바꾸지 않는다.
+12. 수학 모드(초등 2학년 언니 — 10장 J)는 한글과 따로: 기록은 State.math 한 칸(없으면 아직 안 한 것)에만 쓰고, 한글 진도·동생 옷장(owned·wear)·간식·하루 사용 시간에 쓰지 않는다.
+    State.math 모양을 바꿀 때는 src/math/mathData.ts normalizeMath · shared/merge.js mergeMath · scripts/merge_test.js · scripts/math_check.mts를 같이 고친다(예전 기록과 호환, 칸 이름 바꾸지 않기).
+    한글 전체 초기화·진도 초기화·예전 백업 불러오기·망가진 연동 상태에도 수학 기록은 그대로 남는다(math_check가 확인).
 
 ## 6. 이름 (반영함)
 
@@ -257,6 +262,13 @@
 - H. 집 짓기 (data/pets.ts BUILDS, art/Build.tsx BuildArt·MatIcon): 원문대로 완성 그림 1장을 부품 순서대로(또는 아래에서 위로) n/전체만큼 보이게.
   부품 이름·음성·순서는 그대로. 이름표의 친구 이름은 글자로.
 - I. (선택) 낱말 그림: data/curriculum.ts WORDS(159개)·data/jamo.ts ex(40개)의 이모지를 그림으로. 그림이 없으면 이모지 그대로.
+- J. 수학 모드 (10-23 사용자 요청 — 초등 2학년 언니용, 한글 모드와 따로 돈다):
+  - 들어가기: 첫 화면 '✏️ 수학' 버튼(한글 시간 제한·이어하기와 상관없음, 배경 음악 끔). 게임 없이 문제 풀이 — 문제 하나에 보기 4개(객관식), 틀리면 정답을 보여 줌.
+  - 하루 50문제(부모 설정 20·30·50·70·100) → '오늘 끝'. 정답 10개마다 언니 옷장에 꾸미기 하나(꾸미기 140개 그림을 같이 쓰되 동생 옷장과 따로, 틀려도 회수 없음).
+  - 단계 12개: 두 자리 덧셈(받아올림 없음→있음) → 두 자리 뺄셈(받아내림 없음→있음) → 세 자리 덧셈·뺄셈 → 곱셈구구(2~5단·6~9단·섞어서) → (두 자리)×(한 자리) → 나눗셈(나머지 없음·있음).
+    앞 단계 복습이 다섯 문제 중 하나쯤 섞임. 하루 문제의 90% 이상 맞히면 다음 단계(부모 설정에서 단계를 직접 바꿀 수 있음, 나중에 바꾼 쪽).
+  - 언니 옷장(MathCloset): 친구 10마리 중 골라 입히기(정면). 두 기기 연동은 한글과 같은 연동 코드(State.math).
+  - 그림·녹음은 새로 쓰지 않음(기존 꾸미기·친구·배경 그림, 효과음만). GPT가 수학 모드 그림을 더할 때도 9장 규칙(새 해시 파일 추가)을 따른다.
 
 ## 11. 소리 (반영함 — engine/audio.ts)
 

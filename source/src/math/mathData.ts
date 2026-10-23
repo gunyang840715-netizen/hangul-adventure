@@ -1,0 +1,192 @@
+// 수학 모드 (초등 2학년 언니용 — 한글 모드와 따로): 저장 모양·단계·문제 만들기
+// 저장은 한글 진도(State)의 'math' 한 칸에만 (10-23 사용자 허락). 두 기기 합치기는 shared/merge.js mergeMath.
+// 이 파일은 store.ts를 부르지 않는다 (store.ts가 이 파일의 normalizeMath를 쓰므로 서로 부르면 꼬임).
+import { ITEM, PET, type Slot } from '../data/pets';
+
+type DevMap = Record<string, number>;
+type DayMap = Record<string, DevMap>;
+
+export interface MathState {
+  level: number; levelT: number;          // 지금 단계 (90% 이상이면 자동으로 오르고, 부모가 바꾸면 나중에 바꾼 쪽)
+  perDay: number; perDayT: number;        // 하루 문제 수 (기본 50)
+  solved: DayMap; correct: DayMap;        // 날짜 → 기기 → 푼 문제 수 / 맞힌 수
+  total: DevMap;                          // 기기 → 지금까지 맞힌 수 (10개마다 꾸미기 하나)
+  owned: string[];                        // 언니 옷장 (동생 옷장과 따로, 돌려받기 없음)
+  lastItem?: string; lastItemT?: number;
+  wear: Record<string, Partial<Record<Slot, string>>>; wearT: Record<string, number>;
+  pet?: string; petT?: number;            // 옷장에서 마지막에 고른 친구
+}
+
+export const PER_DAY = 50;
+export const PER_DAY_CHOICES = [20, 30, 50, 70, 100];
+export const ITEM_EVERY = 10;             // 정답 10개마다 꾸미기 하나
+export const PASS_RATE = 0.9;             // 하루 문제의 90% 이상 맞히면 다음 단계
+
+export function freshMath(): MathState {
+  return { level: 0, levelT: 0, perDay: PER_DAY, perDayT: 0, solved: {}, correct: {}, total: {}, owned: [], wear: {}, wearT: {} };
+}
+
+const isNum = (x: any) => typeof x === 'number' && isFinite(x);
+const devMap = (m: any): DevMap => {
+  const o: DevMap = {};
+  if (m && typeof m === 'object') for (const k of Object.keys(m)) if (isNum(m[k]) && m[k] >= 0) o[k] = Math.floor(m[k]);
+  return o;
+};
+const dayMap = (m: any): DayMap => {
+  const o: DayMap = {};
+  if (m && typeof m === 'object') for (const k of Object.keys(m)) if (/^\d+$/.test(k)) o[k] = devMap(m[k]);
+  return o;
+};
+
+/** 저장·연동으로 받은 값을 안전하게 (틀린 칸은 버리고 기본값). 수학 칸이 망가져도 한글 진도는 그대로 읽힌다 */
+export function normalizeMath(o: any): MathState | undefined {
+  if (!o || typeof o !== 'object' || Array.isArray(o)) return undefined;
+  const f = freshMath();
+  const m: MathState = {
+    level: isNum(o.level) ? Math.max(0, Math.min(STAGES.length - 1, Math.floor(o.level))) : 0,
+    levelT: isNum(o.levelT) ? o.levelT : 0,
+    perDay: isNum(o.perDay) && o.perDay >= 5 && o.perDay <= 200 ? Math.floor(o.perDay) : f.perDay,
+    perDayT: isNum(o.perDayT) ? o.perDayT : 0,
+    solved: dayMap(o.solved), correct: dayMap(o.correct), total: devMap(o.total),
+    owned: Array.isArray(o.owned) ? [...new Set(o.owned.filter((x: any) => typeof x === 'string' && ITEM[x]))].sort() as string[] : [],
+    wear: {}, wearT: {},
+  };
+  if (typeof o.lastItem === 'string' && ITEM[o.lastItem]) { m.lastItem = o.lastItem; m.lastItemT = isNum(o.lastItemT) ? o.lastItemT : 0; }
+  if (o.wear && typeof o.wear === 'object') for (const p of Object.keys(o.wear)) {
+    const w = o.wear[p];
+    if (!PET[p] || !w || typeof w !== 'object') continue;
+    const clean: Partial<Record<Slot, string>> = {};
+    for (const sl of Object.keys(w)) if (typeof w[sl] === 'string' && ITEM[sl + ':' + w[sl]]) (clean as any)[sl] = w[sl];
+    m.wear[p] = clean;
+  }
+  if (o.wearT && typeof o.wearT === 'object') for (const p of Object.keys(o.wearT)) if (PET[p] && isNum(o.wearT[p])) m.wearT[p] = o.wearT[p];
+  if (typeof o.pet === 'string' && PET[o.pet]) { m.pet = o.pet; m.petT = isNum(o.petT) ? o.petT : 0; }
+  return m;
+}
+
+// ---------------- 단계 ----------------
+export interface Problem { q: string; ans: string; opts: string[]; stage: number }
+type Ans = number | [number, number];      // [몫, 나머지]
+interface Raw { q: string; ans: Ans; wrong: Ans[] }
+
+const R = (a: number, b: number) => a + Math.floor(Math.random() * (b - a + 1));
+const ones = (n: number) => n % 10, tens = (n: number) => Math.floor(n / 10) % 10, hund = (n: number) => Math.floor(n / 100) % 10;
+/** 받아올림 없이 각 자리를 더해 붙인 값 (자주 하는 실수: 47+38 → 715) */
+const noCarryJoin = (a: number, b: number) => Number(String(Math.floor(a / 10) + Math.floor(b / 10)) + String(ones(a) + ones(b)));
+/** 자리마다 큰 수에서 작은 수를 뺀 값 (자주 하는 실수: 52-38 → 26) */
+const absDigits = (a: number, b: number) => {
+  let r = 0, p = 1;
+  for (let x = a, y = b; x > 0 || y > 0; x = Math.floor(x / 10), y = Math.floor(y / 10), p *= 10) r += Math.abs(ones(x) - ones(y)) * p;
+  return r;
+};
+const hasCarry = (a: number, b: number) => { for (let x = a, y = b; x > 0 || y > 0; x = Math.floor(x / 10), y = Math.floor(y / 10)) if (ones(x) + ones(y) >= 10) return true; return false; };
+const hasBorrow = (a: number, b: number) => { for (let x = a, y = b; y > 0; x = Math.floor(x / 10), y = Math.floor(y / 10)) if (ones(x) < ones(y)) return true; return false; };
+
+function add2(carry: boolean): Raw {
+  let a = 0, b = 0;
+  for (let k = 0; k < 50; k++) {
+    if (!carry) { const ta = R(1, 8), tb = R(1, 9 - ta), oa = R(0, 9), ob = R(0, 9 - oa); a = ta * 10 + oa; b = tb * 10 + ob; }
+    else {
+      const oa = R(1, 9), ob = R(10 - oa, 9);
+      // 열 개 중 넷은 십의 자리에서도 받아올림 (답이 100이 넘음)
+      const both = Math.random() < 0.4;
+      const ta = R(1, 8), tb = both ? R(Math.max(1, 9 - ta), 9) : R(1, Math.max(1, 8 - ta));
+      a = ta * 10 + oa; b = tb * 10 + ob;
+    }
+    if (a >= 10 && b >= 10 && hasCarry(a, b) === carry) break;
+  }
+  const s = a + b;
+  return { q: `${a} + ${b}`, ans: s, wrong: [s - 10, s + 10, s + 1, s - 1, noCarryJoin(a, b), s + 2, s - 2] };
+}
+function sub2(borrow: boolean): Raw {
+  let a = 0, b = 0;
+  for (let k = 0; k < 50; k++) {
+    const ta = R(2, 9), tb = R(1, ta - 1);
+    const oa = borrow ? R(0, 8) : R(0, 9);
+    const ob = borrow ? R(oa + 1, 9) : R(0, oa);
+    a = ta * 10 + oa; b = tb * 10 + ob;
+    if (hasBorrow(a, b) === borrow) break;
+  }
+  const d = a - b;
+  return { q: `${a} − ${b}`, ans: d, wrong: [absDigits(a, b), d + 10, d - 10, d + 1, d - 1, d + 2] };
+}
+function add3(): Raw {
+  let a = 0, b = 0;
+  for (let k = 0; k < 50; k++) { a = R(100, 899); b = R(100, 999 - a); if (b >= 100 && (hasCarry(a, b) || Math.random() < 0.25)) break; }
+  const s = a + b;
+  return { q: `${a} + ${b}`, ans: s, wrong: [s - 10, s + 10, s - 100, s + 100, s + 1, s - 1] };
+}
+function sub3(): Raw {
+  let a = 0, b = 0;
+  for (let k = 0; k < 50; k++) { a = R(200, 999); b = R(100, a - 1); if (hund(b) > 0 && (hasBorrow(a, b) || Math.random() < 0.25)) break; }
+  const d = a - b;
+  return { q: `${a} − ${b}`, ans: d, wrong: [absDigits(a, b), d + 10, d - 10, d + 100, d - 100, d + 1, d - 1] };
+}
+function mulFact(lo: number, hi: number): Raw {
+  const x = R(lo, hi), y = R(2, 9);
+  const p = x * y;
+  return { q: `${x} × ${y}`, ans: p, wrong: [x * (y + 1), x * (y - 1), (x + 1) * y, (x - 1) * y, x + y, p + 1, p - 1] };
+}
+function mul21(): Raw {
+  let a = 0;
+  do { a = R(12, 98); } while (ones(a) === 0);
+  const b = R(2, 9), p = a * b;
+  const carry = Math.floor(ones(a) * b / 10);
+  return { q: `${a} × ${b}`, ans: p, wrong: [p - carry * 10, p + 10, p - 10, p + b, p - b, p + 1] };
+}
+function div(rem: boolean): Raw {
+  const d = R(2, 9), qn = R(rem ? 1 : 2, 9);
+  if (!rem) {
+    const n = d * qn;
+    return { q: `${n} ÷ ${d}`, ans: qn, wrong: [qn + 1, qn - 1, qn + 2, qn - 2, d === qn ? qn + 3 : d] };
+  }
+  const r = R(1, d - 1), n = d * qn + r;
+  return { q: `${n} ÷ ${d}`, ans: [qn, r], wrong: [[qn, r + 1], [qn, r - 1], [qn + 1, r], [qn - 1, r + d], [qn - 1, r], [qn + 1, r - 1]] };
+}
+
+export interface StageDef { name: string; sub: string; gen: () => Raw }
+export const STAGES: StageDef[] = [
+  { name: '두 자리 덧셈', sub: '받아올림 없음', gen: () => add2(false) },
+  { name: '두 자리 덧셈', sub: '받아올림', gen: () => add2(true) },
+  { name: '두 자리 뺄셈', sub: '받아내림 없음', gen: () => sub2(false) },
+  { name: '두 자리 뺄셈', sub: '받아내림', gen: () => sub2(true) },
+  { name: '세 자리 덧셈', sub: '받아올림', gen: add3 },
+  { name: '세 자리 뺄셈', sub: '받아내림', gen: sub3 },
+  { name: '곱셈구구', sub: '2·3·4·5단', gen: () => mulFact(2, 5) },
+  { name: '곱셈구구', sub: '6·7·8·9단', gen: () => mulFact(6, 9) },
+  { name: '곱셈구구', sub: '2~9단 섞어서', gen: () => mulFact(2, 9) },
+  { name: '곱셈', sub: '(두 자리)×(한 자리)', gen: mul21 },
+  { name: '나눗셈', sub: '나머지 없음', gen: () => div(false) },
+  { name: '나눗셈', sub: '나머지 있음', gen: () => div(true) },
+];
+export const stageName = (i: number) => { const s = STAGES[Math.max(0, Math.min(STAGES.length - 1, i))]; return `${s.name} (${s.sub})`; };
+
+/** 보기 글자: 나머지가 있는 나눗셈은 '몫 … 나머지' */
+export const show = (a: Ans) => Array.isArray(a) ? `${a[0]} … ${a[1]}` : String(a);
+
+/** 문제 하나: 단계 문제 (앞 단계가 있으면 다섯 문제 중 하나쯤은 앞 단계 복습), 보기 4개 */
+export function makeProblem(level: number, review = 0.2): Problem {
+  const lv = Math.max(0, Math.min(STAGES.length - 1, level));
+  const st = lv > 0 && Math.random() < review ? R(0, lv - 1) : lv;
+  const raw = STAGES[st].gen();
+  const ans = show(raw.ans);
+  const isDiv = raw.q.includes('÷');
+  // 보기에 쓸 수 없는 값: 음수, 나눗셈의 0·0보다 작은 몫, 0 이하 나머지
+  const usable = (a: Ans) => Array.isArray(a) ? a[0] >= 1 && a[1] >= 1 : a >= (isDiv ? 1 : 0);
+  const seen = new Set([ans]);
+  const wrong: string[] = [];
+  for (const w of raw.wrong) {
+    if (!usable(w)) continue;
+    const t = show(w);
+    if (seen.has(t)) continue;
+    seen.add(t); wrong.push(t);
+  }
+  // 그럴듯한 오답을 앞쪽에서 셋 (모자라면 가까운 수로 채움)
+  const pick = wrong.slice(0, 5).sort(() => Math.random() - 0.5).slice(0, 3);
+  for (let k = 3; pick.length < 3; k++) {
+    const t = Array.isArray(raw.ans) ? show([raw.ans[0] + k, raw.ans[1]]) : String((raw.ans as number) + k);
+    if (!seen.has(t)) { seen.add(t); pick.push(t); }
+  }
+  const opts = [ans, ...pick].sort(() => Math.random() - 0.5);
+  return { q: raw.q, ans, opts, stage: st };
+}

@@ -1,0 +1,20 @@
+/* 수학 모드 (언니) — 한글 화면 스타일과 겹치지 않게 m- 이름만 씀 */
+.m-card { position: absolute; left: 230px; top: 130px; width: 880px; height: 600px; background: rgba(255, 255, 255, .95); border-radius: 44px; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; text-align: center; }
+.m-q { font-size: 104px; color: #4a2f63; letter-spacing: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.m-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 30px; }
+.m-opt { width: 380px; height: 124px; border-radius: 30px; background: #fff; border: 5px solid #d0bfff; font-size: 60px; color: #4a2f63; box-shadow: 0 7px 0 #b197fc;
+  font-variant-numeric: tabular-nums; transition: transform .08s; }
+.m-opt:active { transform: translateY(4px); box-shadow: 0 3px 0 #b197fc; }
+.m-opt.ok { background: #d3f9d8; border-color: #2f9e44; color: #2b8a3e; box-shadow: 0 7px 0 #2f9e44; }
+.m-opt.no { background: #ffe3e3; border-color: #e03131; color: #c92a2a; box-shadow: 0 7px 0 #e03131; }
+.m-opt.dim { opacity: .45; }
+.m-msg { height: 54px; font-size: 44px; color: #2b8a3e; }
+.m-msg.no { color: #c92a2a; }
+.m-tab { padding: 10px 16px; border-radius: 16px; background: #fff; border: 3px solid #e5dbff; font-size: 24px; color: #5f3dc4; }
+.m-tab.on { background: #7048e8; border-color: #7048e8; color: #fff; }
+.m-items { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 16px; flex: 1; min-height: 0; overflow-y: auto; align-content: start; }
+.m-item { height: 132px; border-radius: 22px; background: #f8f9fa; border: 4px solid transparent; display: flex; align-items: center; justify-content: center; }
+.m-item.on { border-color: #7048e8; background: #f3efff; }
+.m-pets { display: flex; gap: 8px; flex-wrap: wrap; }
+.m-math-btn { position: absolute; right: 36px; bottom: 44px; }

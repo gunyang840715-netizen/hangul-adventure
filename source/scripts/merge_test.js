@@ -22,7 +22,18 @@ function randState(dev, epoch = 0) {
   s.lastPass = rnd(2) ? { lesson: rnd(5), day: 20700 + rnd(3), items: ['ㄱ', 'ㄴ'] } : null; s.lastPassT = rnd(3);
   s.reviewDay = rnd(2) ? 20700 + rnd(3) : -1; s.reviewDayT = rnd(3);
   s.hold = rnd(2) ? { lesson: rnd(5) } : null; s.holdT = rnd(3);
+  if (rnd(2)) s.math = randMath(dev);
   return s;
+}
+// 수학 모드(언니, 10-23): 단계·하루 문제 수는 나중에 바꾼 쪽, 푼 수·맞힌 수는 기기별, 옷장은 모으기
+function randMath(dev) {
+  const m = { level: rnd(5), levelT: rnd(3), perDay: pick([30, 50]), perDayT: rnd(3), solved: {}, correct: {}, total: { [dev]: rnd(40) }, owned: [], wear: {}, wearT: {} };
+  for (const d of ['20700', '20701', '20600']) if (rnd(2)) { const n = rnd(50); m.solved[d] = { [dev]: n }; m.correct[d] = { [dev]: rnd(n + 1) }; }
+  for (const it of ['hat:crown', 'toy:ball', 'neck:bell']) if (rnd(2)) m.owned.push(it);
+  for (const p of ['maltese', 'koshort']) if (rnd(2)) { m.wear[p] = { hat: pick(['crown', 'cap']) }; m.wearT[p] = rnd(3); }
+  if (rnd(2)) { m.lastItem = pick(['hat:crown', 'toy:ball']); m.lastItemT = rnd(3); }
+  if (rnd(2)) { m.pet = pick(['maltese', 'koshort']); m.petT = rnd(3); }
+  return m;
 }
 // 열쇠 순서와 상관없이 비교
 const canon = (o) => JSON.stringify(o, (k, v) => (v && typeof v === 'object' && !Array.isArray(v)) ? Object.keys(v).sort().reduce((r, x) => (r[x] = v[x], r), {}) : v);
@@ -37,6 +48,7 @@ for (let i = 0; i < 4000; i++) {
   if (canon(mergeState(ab, a)) !== canon(ab)) bad++;
 }
 const x = randState('dA'), y = randState('dB', 5);
+delete x.math; delete y.math;   // 수학 칸은 epoch와 상관없이 합치므로 여기서는 한글만
 console.log('epoch wins:', mergeState(x, y) === y && mergeState(y, x) === y);
 const p = randState('dA'), q = randState('dB');
 const m = mergeState(p, q);
@@ -48,5 +60,27 @@ console.log('wear lww ok:', mergeState(w1, w2).wear.maltese.hat === 'cap' && mer
 // 이어하기 지우기가 퍼지는지
 const r1 = randState('dA'), r2 = randState('dB'); r1.resume = { stepIdx: 3 }; r1.resumeT = 5; r2.resume = null; r2.resumeT = 8;
 console.log('resume clear ok:', mergeState(r1, r2).resume === null && mergeState(r2, r1).resume === null);
+// 수학: epoch가 달라도(한글 초기화·백업 불러오기) 수학 칸은 두 쪽을 합침 — 법칙 검사(epoch 섞어서)
+for (let i = 0; i < 3000; i++) {
+  const a = randState('dA', pick([0, 5])), b = randState('dB', pick([0, 5, 9])), c = randState(pick(['dA', 'dB', 'dC']), pick([0, 5]));
+  const ab = mergeState(a, b), ba = mergeState(b, a);
+  if (canon(ab) !== canon(ba)) bad++;
+  if (JSON.stringify(ab) !== JSON.stringify(ba)) badKeyOrder++;
+  if (canon(mergeState(mergeState(a, b), c)) !== canon(mergeState(a, mergeState(b, c)))) bad++;
+  // (epoch가 다르면 이긴 쪽 원본을 그대로 따르므로 전체 멱등은 예전처럼 같은 epoch 고리에서만 본다 — 수학 칸은 여기서도 멱등)
+  const abab = mergeState(ab, ab);
+  if (canon(mergeState(abab, abab).math) !== canon(abab.math)) bad++;
+}
+const chk = (name, ok) => { console.log(name, ok); if (!ok) bad++; };
+const m1 = randState('dA'), m2 = randState('dB', 7);
+m1.math = { level: 3, levelT: 9, perDay: 50, perDayT: 1, solved: { '20700': { dA: 30 } }, correct: { '20700': { dA: 28 } }, total: { dA: 28 }, owned: ['hat:crown'], wear: { maltese: { hat: 'crown' } }, wearT: { maltese: 5 } };
+m2.math = { level: 1, levelT: 4, perDay: 30, perDayT: 6, solved: { '20700': { dB: 20 } }, correct: { '20700': { dB: 19 } }, total: { dB: 19 }, owned: ['toy:ball', 'hat:crown'], wear: {}, wearT: {} };
+const mm = mergeState(m1, m2), mmr = mergeState(m2, m1);
+chk('math epoch-independent:', mm.epoch === 7 && mm.lessonIdx === m2.lessonIdx && sumMap(mm.math.solved['20700']) === 50 && sumMap(mm.math.total) === 47);
+chk('math lww/union ok:', mm.math.level === 3 && mm.math.perDay === 30 && mm.math.owned.join() === 'hat:crown,toy:ball' && mm.math.wear.maltese.hat === 'crown' && canon(mm) === canon(mmr));
+const n1 = randState('dA'), n2 = randState('dB', 3); delete n1.math; delete n2.math;
+chk('no math stays same:', mergeState(n1, n2) === n2);
+const o1 = randState('dA'), o2 = randState('dB'); delete o1.math; delete o2.math;
+chk('old states have no math key:', !('math' in mergeState(o1, o2)));
 console.log('violations:', bad, '| key-order differences:', badKeyOrder);
 process.exit(bad || badKeyOrder ? 1 : 0);

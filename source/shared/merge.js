@@ -2,6 +2,7 @@
 // - 기기마다 따로 세는 값(별, 모험 횟수, 사용 시간, 하루 단계 수, 간식, 성장)은 기기별로 저장하고 합계를 씀
 // - 글자별 기록은 더 많이 연습한 쪽을 따름
 // - 이름·설정·고른 친구·꾸미기·이어하기는 나중에 바꾼 쪽을 따름
+// - 수학 모드(언니) 칸은 mergeMath — 한글 초기화(epoch)와 상관없이 합침
 // 같은 두 상태를 몇 번 합쳐도, 어떤 순서로 합쳐도 결과가 같다.
 
 // 두 표의 열쇠를 모아 정렬 (결과 모양이 합치는 순서와 상관없이 같도록)
@@ -60,11 +61,59 @@ function lwwMap(av, at, bv, bt) {
   return [out, ot];
 }
 
+// 수학 모드 (초등 2학년 언니 — 한글과 따로, 10-23): 한글 초기화·백업 불러오기(epoch)와 상관없이 늘 두 쪽을 합친다
+// - 단계·하루 문제 수·마지막에 받은 것·고른 친구·꾸미기는 나중에 바꾼 쪽, 푼 수·맞힌 수는 기기별로 세고 합계, 옷장은 모으기
+function mergeMath(a, b) {
+  if (!a && !b) return undefined;
+  // 한쪽만 있어도 같은 모양으로 다시 만든다 (몇 번 합쳐도 결과가 같도록)
+  a = a || {}; b = b || {};
+  var out = {};
+  var lwwM = function (fields, tfield) {
+    var ta = a[tfield] || 0, tb = b[tfield] || 0;
+    var pa = fields.map(function (f) { return a[f]; }), pb = fields.map(function (f) { return b[f]; });
+    var da = pa.some(function (v) { return v !== undefined; }), db = pb.some(function (v) { return v !== undefined; });
+    // 값이 있는 쪽 우선 → 나중에 바꾼 쪽 → 같으면 글자로 비교
+    var src = !db ? a : !da ? b : tb > ta ? b : ta > tb ? a : (JSON.stringify(pb) > JSON.stringify(pa) ? b : a);
+    fields.forEach(function (f) { if (src[f] !== undefined) out[f] = src[f]; });
+    out[tfield] = Math.max(ta, tb);
+  };
+  lwwM(['level'], 'levelT');
+  lwwM(['perDay'], 'perDayT');
+  out.solved = mergeNested(a.solved, b.solved);
+  out.correct = mergeNested(a.correct, b.correct);
+  out.total = mergeMaxMap(a.total, b.total);
+  var owned = (a.owned || []).slice();
+  (b.owned || []).forEach(function (x) { if (owned.indexOf(x) < 0) owned.push(x); });
+  out.owned = owned.sort();
+  var w = lwwMap(a.wear, a.wearT, b.wear, b.wearT);
+  out.wear = w[0]; out.wearT = w[1];
+  var has = function (f, tf) { return a[f] !== undefined || b[f] !== undefined || a[tf] !== undefined || b[tf] !== undefined; };
+  if (has('lastItem', 'lastItemT')) lwwM(['lastItem'], 'lastItemT');
+  if (has('pet', 'petT')) lwwM(['pet'], 'petT');
+  // 90일 지난 날짜 기록은 정리 (지금까지 맞힌 수는 total에 그대로)
+  var days = Object.keys(out.solved).concat(Object.keys(out.correct)).map(Number);
+  if (days.length) {
+    var newest = Math.max.apply(null, days);
+    [out.solved, out.correct].forEach(function (m) {
+      Object.keys(m).forEach(function (d) { if (Number(d) < newest - 90) delete m[d]; });
+    });
+  }
+  return out;
+}
+
 function mergeState(a, b) {
   if (!a) return b;
   if (!b) return a;
   // 초기화·단계 이동 같은 부모 조작은 epoch(시각)를 새로 찍는다 → 더 새 epoch 쪽을 통째로 따름
-  if ((a.epoch || 0) !== (b.epoch || 0)) return (a.epoch || 0) > (b.epoch || 0) ? a : b;
+  // (수학 칸만은 한글 초기화와 따로라 두 쪽을 합친다)
+  if ((a.epoch || 0) !== (b.epoch || 0)) {
+    var win = (a.epoch || 0) > (b.epoch || 0) ? a : b, lose = win === a ? b : a;
+    if (!lose.math) return win;
+    var o = {};
+    for (var k in win) o[k] = win[k];
+    o.math = mergeMath(win.math, lose.math);
+    return o;
+  }
   var out = {};
   out.v = 3;
   out.epoch = a.epoch || 0;
@@ -121,6 +170,9 @@ function mergeState(a, b) {
   if (out.lastPass === undefined) out.lastPass = null;
   if (out.hold === undefined) out.hold = null;
   if (out.resume === undefined) out.resume = null;
+  // 수학 모드 (언니)
+  var mm = mergeMath(a.math, b.math);
+  if (mm) out.math = mm;
   // 90일 지난 사용 기록은 정리
   var days = Object.keys(out.usage).concat(Object.keys(out.lessonsByDay)).map(Number);
   if (days.length) {

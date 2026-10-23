@@ -2,7 +2,7 @@
 // - 기기마다 따로 세는 값(별, 모험 횟수, 사용 시간, 하루 단계 수, 간식, 성장)은 기기별로 저장하고 합계를 씀
 // - 글자별 기록은 더 많이 연습한 쪽을 따름
 // - 이름·설정·고른 친구·꾸미기·이어하기는 나중에 바꾼 쪽을 따름
-// - 수학 모드(언니) 칸은 mergeMath — 한글 초기화(epoch)와 상관없이 합침
+// - 수학 모드 칸은 mergeMath — 한글 초기화(epoch)와 상관없이 합침
 // 같은 두 상태를 몇 번 합쳐도, 어떤 순서로 합쳐도 결과가 같다.
 
 // 두 표의 열쇠를 모아 정렬 (결과 모양이 합치는 순서와 상관없이 같도록)
@@ -61,8 +61,9 @@ function lwwMap(av, at, bv, bt) {
   return [out, ot];
 }
 
-// 수학 모드 (초등 2학년 언니 — 한글과 따로, 10-23): 한글 초기화·백업 불러오기(epoch)와 상관없이 늘 두 쪽을 합친다
-// - 단계·하루 문제 수·마지막에 받은 것·고른 친구·꾸미기는 나중에 바꾼 쪽, 푼 수·맞힌 수는 기기별로 세고 합계, 옷장은 모으기
+// 수학 모드 (초등 2학년 아이 — 한글과 따로, 10-23): 한글 초기화·백업 불러오기(epoch)와 상관없이 늘 두 쪽을 합친다
+// - 단계(항목마다)·하루 문제 수·문제 시간·이름·마지막에 받은 것·고른 친구·꾸미기·집 꾸민 자리는 나중에 바꾼 쪽
+// - 푼 수·맞힌 수·지은 부분은 기기별로 세고 합계, 옷장·산 가구는 모으기 (칸 순서는 mathData.ts normalizeMath와 같게)
 function mergeMath(a, b) {
   if (!a && !b) return undefined;
   // 한쪽만 있어도 같은 모양으로 다시 만든다 (몇 번 합쳐도 결과가 같도록)
@@ -87,15 +88,28 @@ function mergeMath(a, b) {
   out.owned = owned.sort();
   var w = lwwMap(a.wear, a.wearT, b.wear, b.wearT);
   out.wear = w[0]; out.wearT = w[1];
-  var has = function (f, tf) { return a[f] !== undefined || b[f] !== undefined || a[tf] !== undefined || b[tf] !== undefined; };
-  if (has('lastItem', 'lastItemT')) lwwM(['lastItem'], 'lastItemT');
-  if (has('pet', 'petT')) lwwM(['pet'], 'petT');
+  var has = function (fs, tf) { return a[tf] !== undefined || b[tf] !== undefined || fs.some(function (f) { return a[f] !== undefined || b[f] !== undefined; }); };
+  if (has(['lastItem'], 'lastItemT')) lwwM(['lastItem'], 'lastItemT');
+  if (has(['pet'], 'petT')) lwwM(['pet'], 'petT');
+  // 2차(10-23): 항목별 단계 · 항목별 하루 기록 · 문제 시간 · 이름 · 집에 사는 친구 · 집 짓기·꾸미기
+  var lv = lwwMap(a.lv, a.lvT, b.lv, b.lvT);
+  out.lv = lv[0]; out.lvT = lv[1];
+  out.solvedC = mergeNested(a.solvedC, b.solvedC);
+  out.correctC = mergeNested(a.correctC, b.correctC);
+  lwwM(['timeMul'], 'timeMulT');
+  lwwM(['name'], 'nameT');
+  if (has(['dog', 'cat'], 'petsT')) lwwM(['dog', 'cat'], 'petsT');
+  out.built = mergeNested(a.built, b.built);
+  out.bought = mergeMaxMap(a.bought, b.bought);
+  var dc = lwwMap(a.deco, a.decoT, b.deco, b.decoT);
+  out.deco = dc[0]; out.decoT = dc[1];
   // 90일 지난 날짜 기록은 정리 (지금까지 맞힌 수는 total에 그대로)
-  var days = Object.keys(out.solved).concat(Object.keys(out.correct)).map(Number);
+  var dayOf = function (k) { return Number(String(k).split(':')[0]); };
+  var days = Object.keys(out.solved).concat(Object.keys(out.correct), Object.keys(out.solvedC), Object.keys(out.correctC)).map(dayOf);
   if (days.length) {
     var newest = Math.max.apply(null, days);
-    [out.solved, out.correct].forEach(function (m) {
-      Object.keys(m).forEach(function (d) { if (Number(d) < newest - 90) delete m[d]; });
+    [out.solved, out.correct, out.solvedC, out.correctC].forEach(function (m) {
+      Object.keys(m).forEach(function (d) { if (dayOf(d) < newest - 90) delete m[d]; });
     });
   }
   return out;
@@ -170,7 +184,7 @@ function mergeState(a, b) {
   if (out.lastPass === undefined) out.lastPass = null;
   if (out.hold === undefined) out.hold = null;
   if (out.resume === undefined) out.resume = null;
-  // 수학 모드 (언니)
+  // 수학 모드
   var mm = mergeMath(a.math, b.math);
   if (mm) out.math = mm;
   // 90일 지난 사용 기록은 정리

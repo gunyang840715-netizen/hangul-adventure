@@ -12,7 +12,8 @@ import { FurnPic, tileSrc } from '../art/Home';
 import { PaintedBg, useArtSwap } from '../art/paintbg';
 import { artSrc } from '../art/artmap';
 import { say, sfx, newScene } from '../engine/audio';
-import { petView, matsLeft, onChange, decoOf, setDeco, buyFurn, isBought, type PetView } from '../engine/store';
+import { onChange, type PetView } from '../engine/store';
+import { useHome, HANGUL_HOME, type HomeApi } from './homeApi';
 import { ROOM_SLOTS, PARK_SLOTS, PARK_W, FURN_BY, optionsFor, DEFAULT_DECO, FULL_SLOTS, yardSlots, YARD_FULL, HOUSE_COLOR, type SlotDef, type Place } from '../data/home';
 import { HOME_DECO, PARK_DECO } from '../data/voice';
 
@@ -22,8 +23,8 @@ function useRefresh() {
 }
 
 /** 놓인 가구 (없으면 기본) */
-function placed(place: Place, slot: string) {
-  const d = decoOf(place);
+function placed(H: HomeApi, place: Place, slot: string) {
+  const d = H.decoOf(place);
   return d[slot] ?? (place !== 'park' ? DEFAULT_DECO[slot] : undefined);
 }
 
@@ -41,28 +42,29 @@ function SlotView({ s, id, edit, sel, onTap, dx = 0 }: { s: SlotDef; id?: string
 
 /** 아래 고르기 판 */
 function Tray({ place, slot, onClose }: { place: Place; slot: SlotDef; onClose: () => void }) {
+  const H = useHome();
   const park = place === 'park';
   const opts = optionsFor(slot.id, park);
-  const cur = placed(place, slot.id);
-  const left = matsLeft();
+  const cur = placed(H, place, slot.id);
+  const left = H.matsLeft();
   const choose = (id: string, e: any) => {
     const f = FURN_BY[id];
-    if (!f.free && !isBought(id)) {
-      if (left <= 0) { sfx.boing(); say('재료가 없어! 놀이를 하면 받을 수 있어!'); return; }
-      buyFurn(id);
+    if (!f.free && !H.isBought(id)) {
+      if (left <= 0) { sfx.boing(); say(H.noMat); return; }
+      H.buyFurn(id);
       sfx.drum(); setTimeout(() => sfx.pop(), 200);
     } else sfx.pop();
     const [x, y] = centerOf(e.currentTarget); burst(x, y);
     // 같은 것을 다시 누르면 빼기 (벽지·창문·집 색은 빼지 않음)
-    if (cur === id && !FULL_SLOTS.includes(slot.id) && slot.id !== 'window' && !YARD_FULL.includes(slot.id)) setDeco(place, slot.id, null);
-    else setDeco(place, slot.id, id);
+    if (cur === id && !FULL_SLOTS.includes(slot.id) && slot.id !== 'window' && !YARD_FULL.includes(slot.id)) H.setDeco(place, slot.id, null);
+    else H.setDeco(place, slot.id, id);
   };
   return (
     <div class="home-tray slide-up" onPointerDown={e => e.stopPropagation()}>
       <div class="tray-head"><b>{slot.name}</b><span class="tray-mats"><MatIcon size={34} /> {left}</span><button class="iconbtn" style={{ width: 64, height: 64, fontSize: 30 }} onClick={() => { sfx.tap(); onClose(); }}>✕</button></div>
       <div class="tray-list">
         {opts.map(o => {
-          const own = o.free || isBought(o.id);
+          const own = o.free || H.isBought(o.id);
           const on = cur === o.id;
           const full = FULL_SLOTS.includes(slot.id) || YARD_FULL.includes(slot.id);
           const vb: [number, number] = full ? [120, 90] : slot.vb;
@@ -125,17 +127,18 @@ export function RoomScreen({ place, onBack }: { place: 'doghouse' | 'cathouse'; 
   useRefresh();
   const [sel, setSel] = useState<string | null>(null);
   const [act, setAct] = useActivity();
-  const pet: PetView = petView(place === 'doghouse' ? 'dog' : 'cat');
+  const H = useHome();
+  const pet: PetView = H.petView(place === 'doghouse' ? 'dog' : 'cat');
   useEffect(() => { newScene(); say(HOME_DECO); }, []);
-  const wall = placed(place, 'wall') ?? 'wall:dots';
-  const floor = placed(place, 'floor') ?? 'floor:wood';
+  const wall = placed(H, place, 'wall') ?? 'wall:dots';
+  const floor = placed(H, place, 'floor') ?? 'floor:wood';
   const wallT = tileSrc(wall), floorT = tileSrc(floor);
-  const bed = placed(place, 'bed'), toy = placed(place, 'toy'), rug = placed(place, 'rug');
+  const bed = placed(H, place, 'bed'), toy = placed(H, place, 'toy'), rug = placed(H, place, 'rug');
   const S = (id: string) => ROOM_SLOTS.find(s => s.id === id)!;
   // 자는 곳: 침대 > 깔개 > 바닥 / 노는 곳: 장난감 옆 > 가운데
   const sleepAt = bed ? [S('bed').x + 120, S('bed').y - 30] : rug ? [S('rug').x + 160, S('rug').y - 60] : [430, 470];
   const playAt = toy ? [S('toy').x - 170, S('toy').y - 120] : [560, 420];
-  const bowl = placed(place, 'bowl');
+  const bowl = placed(H, place, 'bowl');
   // 새 그림 친구는 방 안을 스스로 돌아다닌다(걷기·달리기·쉬기·밥그릇·장난감), 잘 때는 잠자리로 걸어가 엎드려 잔다
   const live = canWander(pet.id);
   const touch = usePetTouch({ area: { x0: 110, x1: 860, y0: 380, y1: 468 }, onTap: () => tapPet() });
@@ -155,22 +158,22 @@ export function RoomScreen({ place, onBack }: { place: 'doghouse' | 'cathouse'; 
       <div class={`room-wall ${wall.replace(':', '-')}`}>{wallT && <div class="room-tile" style={{ backgroundImage: `url(${wallT})` }} />}</div>
       <div class="room-floor">{floorT && <div class="room-tile floor" style={{ backgroundImage: `url(${floorT})` }} />}</div>
       <div class="layer">
-        {order.filter(s => !s.front).map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
+        {order.filter(s => !s.front).map(s => <SlotView s={s} id={placed(H, place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
         <button class="pill home-wall-btn" onPointerDown={(e) => { e.stopPropagation(); sfx.tap(); setSel('wall'); }}>🎨 벽지</button>
         <button class="pill home-floor-btn" onPointerDown={(e) => { e.stopPropagation(); sfx.tap(); setSel('floor'); }}>🪵 바닥</button>
-        {order.filter(s => s.front && s.id === 'rug').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
-        {order.filter(s => s.front && s.id === 'bed').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
+        {order.filter(s => s.front && s.id === 'rug').map(s => <SlotView s={s} id={placed(H, place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
+        {order.filter(s => s.front && s.id === 'bed').map(s => <SlotView s={s} id={placed(H, place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
         <div class={`home-pet ${act}`} style={{ left: w.x, top: w.y, ...w.style }} onTransitionEnd={w.onArrive} {...touch.bind} role="button" tabIndex={0} aria-label={`${pet.name}와 놀기`} data-petting={touch.petting ? 1 : 0} data-dragging={touch.dragging ? 1 : 0} data-act={act} data-move={w.act}>
           <Pet pet={pet.id} stage={pet.stage} level={pet.level} wear={pet.wear} size={230} mood={touch.petting ? 'love' : act === 'sleep' ? 'sleep' : 'happy'}
             motion={live ? 'none' : act === 'sleep' ? 'none' : 'jump'} act={live ? w.act : undefined} flip={live ? w.flip : undefined} poke={w.poke} autoTalk={false} />
           {!touch.active && (live ? w.act === 'sleep' : act === 'sleep') && <Zzz low={live} />}
         </div>
-        {order.filter(s => s.front && s.id !== 'rug' && s.id !== 'bed').map(s => <SlotView s={s} id={placed(place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
+        {order.filter(s => s.front && s.id !== 'rug' && s.id !== 'bed').map(s => <SlotView s={s} id={placed(H, place, s.id)} edit sel={sel === s.id} onTap={() => { sfx.tap(); setSel(s.id); }} />)}
       </div>
       <div class="topbar">
         <button class="iconbtn" onClick={() => { sfx.tap(); onBack(); }}>🏠</button>
         <div class="pill" style={{ fontSize: 30 }}>{place === 'doghouse' ? '🐶' : '🐱'} {pet.name}네 집 안</div>
-        <div class="pill mat-pill"><MatIcon size={44} /> 재료 {matsLeft()}개</div>
+        <div class="pill mat-pill"><MatIcon size={44} /> 재료 {H.matsLeft()}개</div>
       </div>
       {slotSel && <Tray place={place} slot={slotSel} onClose={() => setSel(null)} />}
     </div>
@@ -184,11 +187,12 @@ export function ParkScreen({ onBack }: { onBack: () => void }) {
   useRefresh();
   const [sel, setSel] = useState<string | null>(null);
   const [act, setAct] = useActivity(10000);
-  const dog = petView('dog'), cat = petView('cat');
+  const H = useHome();
+  const dog = H.petView('dog'), cat = H.petView('cat');
   const scroller = useRef<HTMLDivElement>(null);
   const [art, onReady] = useArtSwap();
   useEffect(() => { newScene(); say(PARK_DECO); }, []);
-  const P = (id: string) => placed('park', id);
+  const P = (id: string) => placed(H, 'park', id);
   const S = (id: string) => PARK_SLOTS.find(s => s.id === id)!;
   const slotSel = sel ? PARK_SLOTS.find(s => s.id === sel)! : null;
   const OFF = 0;
@@ -226,7 +230,7 @@ export function ParkScreen({ onBack }: { onBack: () => void }) {
       <div class="topbar">
         <button class="iconbtn" onClick={() => { sfx.tap(); onBack(); }}>🏠</button>
         <div class="pill" style={{ fontSize: 30 }}>🎠 우리 놀이터</div>
-        <div class="pill mat-pill"><MatIcon size={44} /> 재료 {matsLeft()}개</div>
+        <div class="pill mat-pill"><MatIcon size={44} /> 재료 {H.matsLeft()}개</div>
       </div>
       <div class="park-hint pill">👉 옆으로 밀면 더 있어요</div>
       {slotSel && <Tray place="park" slot={slotSel} onClose={() => setSel(null)} />}
@@ -261,7 +265,7 @@ function ParkPet({ v, s, off, onTap }: { v: PetView; s: { x: number; y: number; 
 // =====================================================================
 const yardScene = (house: 'doghouse' | 'cathouse') => (house === 'doghouse' ? 'yard-dog' : 'yard-cat');
 /** 집 색(마당 'y-color' 자리) → CSS 필터 */
-export const houseFilter = (house: 'doghouse' | 'cathouse') => HOUSE_COLOR[placed(`${house}-out` as Place, 'y-color') ?? 'y-color:base'] ?? 'none';
+export const houseFilter = (house: 'doghouse' | 'cathouse', H: HomeApi = HANGUL_HOME) => HOUSE_COLOR[placed(H, `${house}-out` as Place, 'y-color') ?? 'y-color:base'] ?? 'none';
 
 /** 마당 배경(손그림 마을, 받기 전·없으면 예전 하늘·풀밭) — 집 짓기 화면도 같이 씀 */
 export function YardBack({ house }: { house: 'doghouse' | 'cathouse' }) {
@@ -271,9 +275,10 @@ export function YardBack({ house }: { house: 'doghouse' | 'cathouse' }) {
 
 /** 마당에 놓인 것(누를 수 없음) — 꾸민 마당을 집 짓기 화면에도 보여 준다(원문 E). front: 집 앞에 놓는 것 */
 export function YardDeco({ house, front }: { house: 'doghouse' | 'cathouse'; front: boolean }) {
+  const H = useHome();
   const place = `${house}-out` as Place;
   return <>{yardSlots(house).filter(sl => !YARD_FULL.includes(sl.id) && !!sl.front === front).map(sl => {
-    const id = placed(place, sl.id);
+    const id = placed(H, place, sl.id);
     return id ? <div class="home-slot yard-deco" data-slot={sl.id} style={{ left: sl.x, top: sl.y, width: sl.w, height: sl.h }}>
       <svg viewBox={`0 0 ${sl.vb[0]} ${sl.vb[1]}`} width={sl.w} height={sl.h} style={{ overflow: 'visible' }}><FurnPic id={id} vb={sl.vb} /></svg></div> : null;
   })}</>;
@@ -284,7 +289,8 @@ export function YardScreen({ house, onBack }: { house: 'doghouse' | 'cathouse'; 
   const place = `${house}-out` as Place;
   const [sel, setSel] = useState<string | null>(null);
   const [act, setAct] = useActivity();
-  const pet: PetView = petView(house === 'doghouse' ? 'dog' : 'cat');
+  const H = useHome();
+  const pet: PetView = H.petView(house === 'doghouse' ? 'dog' : 'cat');
   useEffect(() => { newScene(); say(HOME_DECO); }, []);
   const slots = yardSlots(house);
   const slotSel = sel ? slots.find(sl => sl.id === sel)! : null;
@@ -305,12 +311,12 @@ export function YardScreen({ house, onBack }: { house: 'doghouse' | 'cathouse'; 
     <div class="screen" onPointerDown={() => setSel(null)} data-yard={place}>
       <YardBack house={house} />
       <div class="layer">
-        {slots.filter(sl => !sl.front && !YARD_FULL.includes(sl.id)).map(sl => <SlotView s={sl} id={placed(place, sl.id)} edit sel={sel === sl.id} onTap={tap(sl.id)} />)}
-        <div class="yard-house" data-color={placed(place, 'y-color') ?? 'y-color:base'}>
-          <BuildArt id={house} n={8} next={false} name={pet.name} size={700} tint={houseFilter(house)} />
+        {slots.filter(sl => !sl.front && !YARD_FULL.includes(sl.id)).map(sl => <SlotView s={sl} id={placed(H, place, sl.id)} edit sel={sel === sl.id} onTap={tap(sl.id)} />)}
+        <div class="yard-house" data-color={placed(H, place, 'y-color') ?? 'y-color:base'}>
+          <BuildArt id={house} n={8} next={false} name={pet.name} size={700} tint={houseFilter(house, H)} />
         </div>
         <button class="pill home-wall-btn" data-yard-color="1" onPointerDown={(e) => { e.stopPropagation(); sfx.tap(); setSel('y-color'); }}>🎨 집 색</button>
-        {slots.filter(sl => sl.front && !YARD_FULL.includes(sl.id)).map(sl => <SlotView s={sl} id={placed(place, sl.id)} edit sel={sel === sl.id} onTap={tap(sl.id)} />)}
+        {slots.filter(sl => sl.front && !YARD_FULL.includes(sl.id)).map(sl => <SlotView s={sl} id={placed(H, place, sl.id)} edit sel={sel === sl.id} onTap={tap(sl.id)} />)}
         <div class={`home-pet ${act}`} style={{ left: w.x, top: w.y, ...w.style }} onTransitionEnd={w.onArrive} {...touch.bind} role="button" tabIndex={0} aria-label={`${pet.name}와 놀기`} data-petting={touch.petting ? 1 : 0} data-dragging={touch.dragging ? 1 : 0} data-act={act} data-move={w.act}>
           <Pet pet={pet.id} stage={pet.stage} level={pet.level} wear={pet.wear} size={200} mood={touch.petting ? 'love' : act === 'sleep' ? 'sleep' : 'happy'}
             motion={live ? 'none' : act === 'sleep' ? 'none' : 'bob'} act={live ? w.act : undefined} flip={live ? w.flip : undefined} poke={w.poke} autoTalk={false} />
@@ -320,7 +326,7 @@ export function YardScreen({ house, onBack }: { house: 'doghouse' | 'cathouse'; 
       <div class="topbar">
         <button class="iconbtn" onClick={() => { sfx.tap(); onBack(); }}>🏠</button>
         <div class="pill" style={{ fontSize: 30 }}>{house === 'doghouse' ? '🐶' : '🐱'} {pet.name}네 마당</div>
-        <div class="pill mat-pill"><MatIcon size={44} /> 재료 {matsLeft()}개</div>
+        <div class="pill mat-pill"><MatIcon size={44} /> 재료 {H.matsLeft()}개</div>
       </div>
       {slotSel && <Tray place={place} slot={slotSel} onClose={() => setSel(null)} />}
     </div>

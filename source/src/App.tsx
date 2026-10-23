@@ -6,6 +6,9 @@ import { Session } from './screens/Session';
 import { Title, Book, Parent, Sleep } from './screens/Extras';
 import { MathScreen } from './screens/MathScreen';
 import { MathCloset } from './screens/MathCloset';
+import { MathHome } from './screens/MathHome';
+import { HomeCtx, MATH_HOME } from './screens/homeApi';
+import type { Mode } from './math/mathData';
 import { House, Dress, Adopt } from './screens/House';
 import { BuildScreen } from './screens/Build';
 import { RoomScreen, ParkScreen, YardScreen } from './screens/Home';
@@ -86,7 +89,8 @@ function Icon() {
 }
 
 type Screen = 'title' | 'map' | 'session' | 'book' | 'house' | 'dress' | 'adopt' | 'build' | 'room' | 'park' | 'yard' | 'parent' | 'sleep'
-  | 'math' | 'mathCloset';   // 수학 모드(언니): 한글 사용 시간에 안 셈(COUNTED·IDLE에 넣지 않음)
+  // 수학 모드(초등 2학년 아이): 첫 화면·문제·옷장·집 짓기·집 안·놀이터·마당 — 한글 사용 시간에 안 셈(COUNTED·IDLE에 넣지 않음)
+  | 'math' | 'mathPlay' | 'mathCloset' | 'mathBuild' | 'mathRoom' | 'mathPark' | 'mathYard';
 const GALLERY = /[?&]gallery=/.test(location.search);
 const ICON = /[?&]icon=/.test(location.search);
 /** 사용 시간을 세는 화면 */
@@ -104,6 +108,7 @@ export function App() {
   const [sess, setSess] = useState<Sess | null>(null);
   const [room, setRoom] = useState<'doghouse' | 'cathouse'>('doghouse');
   const [yardBack, setYardBack] = useState<'build' | 'house'>('build');
+  const [mathMode, setMathMode] = useState<Mode>('add');
   const [demo, setDemo] = useState(() => /[?&]demo=1/.test(location.search));
   const [ver, tick] = useState(0);
   const s = load();
@@ -130,7 +135,7 @@ export function App() {
     const sc = q.get('screen');
     if (!sc) return;
     if (sc === 'room' || sc === 'yard') setRoom(q.get('place') === 'cathouse' ? 'cathouse' : 'doghouse');
-    if (['room', 'park', 'yard', 'build', 'house', 'map', 'sleep', 'book', 'math', 'mathCloset'].includes(sc)) setScreen(sc as Screen);
+    if (['room', 'park', 'yard', 'build', 'house', 'map', 'sleep', 'book', 'math', 'mathCloset', 'mathBuild'].includes(sc)) setScreen(sc as Screen);
   }, []);
 
   // 시험용: ?play=feed&lesson=6 → 그 놀이를 바로 열기
@@ -207,7 +212,7 @@ export function App() {
     if (timeOver()) { go('sleep'); return; }
     if (!resumeSession()) go('map');
   };
-  // 수학 모드 (언니 — 한글과 따로): 한글 시간 제한·이어하기와 상관없이 바로 (배경 음악은 끔)
+  // 수학 모드 (한글과 따로): 한글 시간 제한·이어하기와 상관없이 바로 (배경 음악은 끔)
   const startMath = () => {
     unlock();
     wantFull = true;
@@ -270,8 +275,14 @@ export function App() {
   let view;
   switch (screen) {
     case 'title': view = <Title onStart={start} onMath={startMath} />; break;
-    case 'math': view = <MathScreen onBack={() => { syncSoon(300); go('title'); }} onCloset={() => go('mathCloset')} />; break;
+    // 수학 모드 — 집 짓기·집 안·놀이터·마당은 한글과 같은 화면을 수학 기록(MATH_HOME)으로
+    case 'math': view = <MathHome onBack={() => { syncSoon(300); go('title'); }} onPlay={(md) => { setMathMode(md); go('mathPlay'); }} onCloset={() => go('mathCloset')} onHouse={() => go('mathBuild')} />; break;
+    case 'mathPlay': view = <MathScreen key={mathMode} mode={mathMode} onBack={() => { syncSoon(300); go('math'); }} onCloset={() => go('mathCloset')} />; break;
     case 'mathCloset': view = <MathCloset onBack={() => { syncSoon(300); go('math'); }} />; break;
+    case 'mathBuild': view = <HomeCtx.Provider value={MATH_HOME}><BuildScreen onBack={() => { syncSoon(500); go('math'); }} onEnter={(pl) => { if (pl === 'park') go('mathPark'); else { setRoom(pl); go('mathRoom'); } }} onYard={(h) => { setRoom(h); go('mathYard'); }} /></HomeCtx.Provider>; break;
+    case 'mathRoom': view = <HomeCtx.Provider value={MATH_HOME}><RoomScreen key={'m-' + room} place={room} onBack={() => { syncSoon(500); go('mathBuild'); }} /></HomeCtx.Provider>; break;
+    case 'mathPark': view = <HomeCtx.Provider value={MATH_HOME}><ParkScreen onBack={() => { syncSoon(500); go('mathBuild'); }} /></HomeCtx.Provider>; break;
+    case 'mathYard': view = <HomeCtx.Provider value={MATH_HOME}><YardScreen key={'m-yard-' + room} house={room} onBack={() => { syncSoon(500); go('mathBuild'); }} /></HomeCtx.Provider>; break;
     case 'map': view = <MapScreen key={`${s.lessonIdx}:${todayDone}:${demo}:${ver > 0 ? s.epoch : 0}`} onStart={startLesson} onPlay={startPlay} onBook={() => go('book')} onHouse={() => go('house')} onParent={openParent} todayDone={todayDone} demo={demo} resumeIdx={validResume()?.lessonIdx ?? -1} />; break;
     case 'session': view = sess && <Session key={sess.steps.length + ':' + (sess.startAt ?? 0) + ':' + sess.idx} steps={sess.steps} lessonIdx={sess.idx} name={s.name} startAt={sess.startAt} resumed={sess.resumed} replay={sess.replay} play={sess.play} onFinish={finish} onPause={pause} onQuit={() => { setSess(null); syncSoon(500); go('map'); }} demo={demo} onFail={sess.review || !sess.replay ? failTest : undefined} />; break;
     case 'book': view = <Book onBack={() => go('map')} />; break;

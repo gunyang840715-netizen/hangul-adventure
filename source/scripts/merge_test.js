@@ -25,7 +25,7 @@ function randState(dev, epoch = 0) {
   if (rnd(2)) s.math = randMath(dev);
   return s;
 }
-// 수학 모드(언니, 10-23): 단계·하루 문제 수는 나중에 바꾼 쪽, 푼 수·맞힌 수는 기기별, 옷장은 모으기
+// 수학 모드(10-23): 단계·하루 문제 수·시간·이름·친구·꾸민 자리는 나중에 바꾼 쪽, 푼 수·맞힌 수·지은 부분은 기기별, 옷장·산 가구는 모으기
 function randMath(dev) {
   const m = { level: rnd(5), levelT: rnd(3), perDay: pick([30, 50]), perDayT: rnd(3), solved: {}, correct: {}, total: { [dev]: rnd(40) }, owned: [], wear: {}, wearT: {} };
   for (const d of ['20700', '20701', '20600']) if (rnd(2)) { const n = rnd(50); m.solved[d] = { [dev]: n }; m.correct[d] = { [dev]: rnd(n + 1) }; }
@@ -33,6 +33,19 @@ function randMath(dev) {
   for (const p of ['maltese', 'koshort']) if (rnd(2)) { m.wear[p] = { hat: pick(['crown', 'cap']) }; m.wearT[p] = rnd(3); }
   if (rnd(2)) { m.lastItem = pick(['hat:crown', 'toy:ball']); m.lastItemT = rnd(3); }
   if (rnd(2)) { m.pet = pick(['maltese', 'koshort']); m.petT = rnd(3); }
+  // 2차: 없을 수도 있음(예전 판 기기)
+  if (rnd(3)) {
+    m.lv = { add: rnd(3), sub: rnd(3), mul: rnd(4), div: rnd(2) }; m.lvT = {};
+    for (const c of ['add', 'mul']) if (rnd(2)) m.lvT[c] = rnd(3);
+    m.solvedC = {}; m.correctC = {};
+    for (const k of ['20700:add', '20700:mul', '20600:sub']) if (rnd(2)) { const n = rnd(30); m.solvedC[k] = { [dev]: n }; m.correctC[k] = { [dev]: rnd(n + 1) }; }
+    m.timeMul = pick([1, 1.5, 0]); m.timeMulT = rnd(3);
+    m.name = pick(['', '가나', '다라']); m.nameT = rnd(3);
+    if (rnd(2)) { m.dog = pick(['maltese', 'poodle']); m.cat = pick(['koshort', 'persian']); m.petsT = rnd(3); }
+    m.built = {}; for (const b of ['doghouse', 'park']) if (rnd(2)) m.built[b] = { [dev]: rnd(6) };
+    m.bought = {}; for (const f of ['bed:basket', 'y-tree:pine']) if (rnd(2)) m.bought[f] = rnd(5);
+    m.deco = {}; m.decoT = {}; for (const pl of ['doghouse', 'doghouse-out']) if (rnd(2)) { m.deco[pl] = { bed: pick(['bed:basket', 'bed:round']) }; m.decoT[pl] = rnd(3); }
+  }
   return m;
 }
 // 열쇠 순서와 상관없이 비교
@@ -78,6 +91,20 @@ m2.math = { level: 1, levelT: 4, perDay: 30, perDayT: 6, solved: { '20700': { dB
 const mm = mergeState(m1, m2), mmr = mergeState(m2, m1);
 chk('math epoch-independent:', mm.epoch === 7 && mm.lessonIdx === m2.lessonIdx && sumMap(mm.math.solved['20700']) === 50 && sumMap(mm.math.total) === 47);
 chk('math lww/union ok:', mm.math.level === 3 && mm.math.perDay === 30 && mm.math.owned.join() === 'hat:crown,toy:ball' && mm.math.wear.maltese.hat === 'crown' && canon(mm) === canon(mmr));
+// 2차 칸: 항목 단계는 항목마다 나중에 바꾼 쪽, 항목별 하루 기록·지은 부분은 기기별 합계, 산 가구는 모으기, 집 꾸민 자리·이름·친구는 나중에 바꾼 쪽
+const k1 = randState('dA'), k2 = randState('dB');
+k1.math = { ...m1.math, lv: { add: 2, sub: 0, mul: 1, div: 0 }, lvT: { add: 9, mul: 1 }, solvedC: { '20700:add': { dA: 25 } }, correctC: { '20700:add': { dA: 25 } }, timeMul: 1.5, timeMulT: 3,
+  name: '가나', nameT: 2, dog: 'poodle', cat: 'koshort', petsT: 8, built: { doghouse: { dA: 3 } }, bought: { 'bed:basket': 4 }, deco: { doghouse: { bed: 'bed:basket' } }, decoT: { doghouse: 2 } };
+k2.math = { ...m2.math, lv: { add: 1, sub: 1, mul: 2, div: 1 }, lvT: { add: 4, mul: 6, sub: 5 }, solvedC: { '20700:add': { dB: 10 }, '20700:mul': { dB: 15 } }, correctC: { '20700:add': { dB: 9 } }, timeMul: 0, timeMulT: 7,
+  name: '다라', nameT: 5, built: { doghouse: { dB: 2 }, park: { dB: 1 } }, bought: { 'y-tree:pine': 6 }, deco: { doghouse: { bed: 'bed:round' } }, decoT: { doghouse: 6 } };
+const kk = mergeState(k1, k2).math, kr = mergeState(k2, k1).math;
+chk('math 2nd lww ok:', kk.lv.add === 2 && kk.lv.mul === 2 && kk.lv.sub === 1 && kk.timeMul === 0 && kk.name === '다라' && kk.dog === 'poodle' && kk.deco.doghouse.bed === 'bed:round');
+chk('math 2nd sums ok:', sumMap(kk.solvedC['20700:add']) === 35 && sumMap(kk.solvedC['20700:mul']) === 15 && sumMap(kk.built.doghouse) === 5 && sumMap(kk.built.park) === 1
+  && Object.keys(kk.bought).sort().join() === 'bed:basket,y-tree:pine' && canon(kk) === canon(kr) && JSON.stringify(kk) === JSON.stringify(kr));
+// 예전 판 기기(2차 칸 없음)와 합쳐도 새 칸은 그대로
+const o3 = randState('dA'); o3.math = { ...m1.math };
+const oo = mergeState(k2, o3).math;
+chk('math old device keeps 2nd fields:', oo.lv.mul === 2 && oo.name === '다라' && sumMap(oo.built.doghouse) === 2 && oo.bought['y-tree:pine'] === 6);
 const n1 = randState('dA'), n2 = randState('dB', 3); delete n1.math; delete n2.math;
 chk('no math stays same:', mergeState(n1, n2) === n2);
 const o1 = randState('dA'), o2 = randState('dB'); delete o1.math; delete o2.math;

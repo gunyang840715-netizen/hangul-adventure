@@ -248,6 +248,7 @@ export function allLines(name: string): string[] {
   ITEM_LIST.forEach(it => L.add(it.name));
   SNACKS.forEach(sn => L.add(sn.name));
   nameLines(name).forEach(l => L.add(l));
+  L.add(MATH_NO_MAT);
   L.delete('');
   return [...L];
 }
@@ -278,3 +279,5 @@ export function crispLines(): string[] {
   return [...L];
 }
 export const REPS_COUNT = ['하나!', '둘!', '셋!', '넷!', '다섯!', '여섯!', '일곱!', '여덟!', '아홉!', '열!', '열하나!', '열둘!', '열셋!', '열넷!', '열다섯!'];
+// 수학 모드(10-23): 수학 집에서 재료가 없을 때 — 수학 재료는 놀이가 아니라 정답으로 받음 (녹음 없음, 기기 음성으로 읽힘)
+export const MATH_NO_MAT = '재료가 없어! 수학 문제를 맞히면 받을 수 있어!';

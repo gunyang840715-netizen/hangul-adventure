@@ -1,71 +1,141 @@
-// 수학 모드 (초등 2학년 언니용 — 한글 모드와 따로): 저장 모양·단계·문제 만들기
+// 수학 모드 (초등 2학년 아이용 — 한글 모드와 따로): 저장 모양·항목·단계·문제 만들기
 // 저장은 한글 진도(State)의 'math' 한 칸에만 (10-23 사용자 허락). 두 기기 합치기는 shared/merge.js mergeMath.
+// 아이 이름은 저장소에 쓰지 않는다 — 부모 설정에서 넣은 이름(math.name)을 실행할 때만 읽어 보여 준다.
 // 이 파일은 store.ts를 부르지 않는다 (store.ts가 이 파일의 normalizeMath를 쓰므로 서로 부르면 꼬임).
-import { ITEM, PET, type Slot } from '../data/pets';
+import { ITEM, PET, BUILD, type Slot } from '../data/pets';
+import { FURN_BY } from '../data/home';
 
 type DevMap = Record<string, number>;
 type DayMap = Record<string, DevMap>;
+export type Cat = 'add' | 'sub' | 'mul' | 'div';
+export type Mode = Cat | 'mix';
 
 export interface MathState {
-  level: number; levelT: number;          // 지금 단계 (90% 이상이면 자동으로 오르고, 부모가 바꾸면 나중에 바꾼 쪽)
+  level: number; levelT: number;          // (예전) 12단계 한 줄 — 항목별 단계(lv)로 옮기기 전 기록. 새 코드는 lv를 씀
   perDay: number; perDayT: number;        // 하루 문제 수 (기본 50)
-  solved: DayMap; correct: DayMap;        // 날짜 → 기기 → 푼 문제 수 / 맞힌 수
-  total: DevMap;                          // 기기 → 지금까지 맞힌 수 (10개마다 꾸미기 하나)
-  owned: string[];                        // 언니 옷장 (동생 옷장과 따로, 돌려받기 없음)
-  lastItem?: string; lastItemT?: number;
+  solved: DayMap; correct: DayMap;        // 날짜 → 기기 → 푼 문제 수 / 맞힌 수 (모든 항목 합계)
+  total: DevMap;                          // 기기 → 지금까지 맞힌 수 (10개마다 꾸미기, 5개마다 재료)
+  owned: string[];                        // 수학 옷장 (동생 옷장과 따로, 돌려받기 없음)
   wear: Record<string, Partial<Record<Slot, string>>>; wearT: Record<string, number>;
+  lastItem?: string; lastItemT?: number;
   pet?: string; petT?: number;            // 옷장에서 마지막에 고른 친구
+  // ---- 10-23 2차: 항목별 단계 · 문제 시간 · 이름 · 집 짓기·꾸미기 (한글 집과 따로) ----
+  lv: Record<Cat, number>; lvT: Record<string, number>;   // 항목 → 지금 단계 (항목마다 나중에 바꾼 쪽)
+  solvedC: DayMap; correctC: DayMap;      // '날짜:항목' → 기기 → 푼 수 / 맞힌 수
+  timeMul: number; timeMulT: number;      // 문제 시간 배율 (1 보통 · 1.5 넉넉하게 · 0.75 짧게 · 0 끄기)
+  name: string; nameT: number;            // 화면에 보일 이름 (부모 설정 → 기기 저장값에만, 저장소에는 없음)
+  dog?: string; cat?: string; petsT?: number;   // 수학 집에 사는 강아지·고양이
+  built: DayMap;                          // 짓기 id → 기기 → 지은 부분 수
+  bought: Record<string, number>;         // 산 가구·놀이 기구 → 시각 (재료 1개씩)
+  deco: Record<string, Record<string, string>>; decoT: Record<string, number>;   // 장소 → 자리 → 놓은 가구
 }
 
 export const PER_DAY = 50;
 export const PER_DAY_CHOICES = [20, 30, 50, 70, 100];
 export const ITEM_EVERY = 10;             // 정답 10개마다 꾸미기 하나
-export const PASS_RATE = 0.9;             // 하루 문제의 90% 이상 맞히면 다음 단계
+export const MAT_EVERY = 5;               // 정답 5개마다 집 짓기·꾸미기 재료 하나
+export const PASS_RATE = 0.9;             // 그날 그 항목 문제의 90% 이상 맞히면 그 항목 다음 단계
+export const UP_MIN = 20;                 // 그 항목을 그날 이만큼은 풀어야 다음 단계 판정 (하루 문제 수보다 크면 하루 문제 수)
+export const TIME_CHOICES: [number, string][] = [[1.5, '넉넉하게'], [1, '보통'], [0.75, '짧게'], [0, '끄기']];
+const PLACES = ['doghouse', 'cathouse', 'park', 'doghouse-out', 'cathouse-out'];
+
+// ---------------- 항목 ----------------
+export interface CatDef { id: Cat; name: string; icon: string; stages: number[] }
+/** 항목마다 단계(아래 STAGES 번호) — 쉬운 것부터 */
+export const CATS: CatDef[] = [
+  { id: 'add', name: '덧셈', icon: '➕', stages: [0, 1, 4] },
+  { id: 'sub', name: '뺄셈', icon: '➖', stages: [2, 3, 5] },
+  { id: 'mul', name: '곱셈', icon: '✖️', stages: [6, 7, 8, 9] },
+  { id: 'div', name: '나눗셈', icon: '➗', stages: [10, 11] },
+];
+export const CAT: Record<Cat, CatDef> = Object.fromEntries(CATS.map(c => [c.id, c])) as any;
+const isCat = (x: any): x is Cat => typeof x === 'string' && !!(CAT as any)[x];
+/** 예전 12단계 한 줄의 위치 → 항목마다 단계 (그 앞 단계는 끝낸 것으로) */
+export function lvFromLevel(level: number): Record<Cat, number> {
+  const o = {} as Record<Cat, number>;
+  for (const c of CATS) o[c.id] = Math.min(c.stages.length - 1, c.stages.filter(st => st < level).length);
+  return o;
+}
 
 export function freshMath(): MathState {
-  return { level: 0, levelT: 0, perDay: PER_DAY, perDayT: 0, solved: {}, correct: {}, total: {}, owned: [], wear: {}, wearT: {} };
+  return {
+    level: 0, levelT: 0, perDay: PER_DAY, perDayT: 0, solved: {}, correct: {}, total: {}, owned: [], wear: {}, wearT: {},
+    lv: lvFromLevel(0), lvT: {}, solvedC: {}, correctC: {}, timeMul: 1, timeMulT: 0, name: '', nameT: 0,
+    built: {}, bought: {}, deco: {}, decoT: {},
+  };
 }
 
 const isNum = (x: any) => typeof x === 'number' && isFinite(x);
+const obj = (x: any) => !!x && typeof x === 'object' && !Array.isArray(x);
 const devMap = (m: any): DevMap => {
   const o: DevMap = {};
-  if (m && typeof m === 'object') for (const k of Object.keys(m)) if (isNum(m[k]) && m[k] >= 0) o[k] = Math.floor(m[k]);
+  if (obj(m)) for (const k of Object.keys(m)) if (isNum(m[k]) && m[k] >= 0) o[k] = Math.floor(m[k]);
   return o;
 };
-const dayMap = (m: any): DayMap => {
+const dayMap = (m: any, ok: (k: string) => boolean = k => /^\d+$/.test(k)): DayMap => {
   const o: DayMap = {};
-  if (m && typeof m === 'object') for (const k of Object.keys(m)) if (/^\d+$/.test(k)) o[k] = devMap(m[k]);
+  if (obj(m)) for (const k of Object.keys(m)) if (ok(k)) o[k] = devMap(m[k]);
   return o;
 };
+const timeMap = (m: any, ok: (k: string) => boolean): Record<string, number> => {
+  const o: Record<string, number> = {};
+  if (obj(m)) for (const k of Object.keys(m)) if (ok(k) && isNum(m[k]) && m[k] >= 0) o[k] = m[k];
+  return o;
+};
+const dayCatKey = (k: string) => /^\d+:(add|sub|mul|div)$/.test(k);
 
 /** 저장·연동으로 받은 값을 안전하게 (틀린 칸은 버리고 기본값). 수학 칸이 망가져도 한글 진도는 그대로 읽힌다 */
 export function normalizeMath(o: any): MathState | undefined {
-  if (!o || typeof o !== 'object' || Array.isArray(o)) return undefined;
+  if (!obj(o)) return undefined;
   const f = freshMath();
+  const level = isNum(o.level) ? Math.max(0, Math.min(STAGES.length - 1, Math.floor(o.level))) : 0;
   const m: MathState = {
-    level: isNum(o.level) ? Math.max(0, Math.min(STAGES.length - 1, Math.floor(o.level))) : 0,
+    level,
     levelT: isNum(o.levelT) ? o.levelT : 0,
     perDay: isNum(o.perDay) && o.perDay >= 5 && o.perDay <= 200 ? Math.floor(o.perDay) : f.perDay,
     perDayT: isNum(o.perDayT) ? o.perDayT : 0,
     solved: dayMap(o.solved), correct: dayMap(o.correct), total: devMap(o.total),
     owned: Array.isArray(o.owned) ? [...new Set(o.owned.filter((x: any) => typeof x === 'string' && ITEM[x]))].sort() as string[] : [],
     wear: {}, wearT: {},
-  };
-  if (typeof o.lastItem === 'string' && ITEM[o.lastItem]) { m.lastItem = o.lastItem; m.lastItemT = isNum(o.lastItemT) ? o.lastItemT : 0; }
-  if (o.wear && typeof o.wear === 'object') for (const p of Object.keys(o.wear)) {
+  } as MathState;
+  if (obj(o.wear)) for (const p of Object.keys(o.wear)) {
     const w = o.wear[p];
-    if (!PET[p] || !w || typeof w !== 'object') continue;
+    if (!PET[p] || !obj(w)) continue;
     const clean: Partial<Record<Slot, string>> = {};
     for (const sl of Object.keys(w)) if (typeof w[sl] === 'string' && ITEM[sl + ':' + w[sl]]) (clean as any)[sl] = w[sl];
     m.wear[p] = clean;
   }
-  if (o.wearT && typeof o.wearT === 'object') for (const p of Object.keys(o.wearT)) if (PET[p] && isNum(o.wearT[p])) m.wearT[p] = o.wearT[p];
+  m.wearT = timeMap(o.wearT, p => !!PET[p]);
+  if (typeof o.lastItem === 'string' && ITEM[o.lastItem]) { m.lastItem = o.lastItem; m.lastItemT = isNum(o.lastItemT) ? o.lastItemT : 0; }
   if (typeof o.pet === 'string' && PET[o.pet]) { m.pet = o.pet; m.petT = isNum(o.petT) ? o.petT : 0; }
+  // 항목별 단계: 없으면 예전 12단계 위치에서 옮김
+  const lv = lvFromLevel(level);
+  if (obj(o.lv)) for (const c of CATS) if (isNum(o.lv[c.id])) lv[c.id] = Math.max(0, Math.min(c.stages.length - 1, Math.floor(o.lv[c.id])));
+  m.lv = lv;
+  m.lvT = timeMap(o.lvT, isCat);
+  m.solvedC = dayMap(o.solvedC, dayCatKey); m.correctC = dayMap(o.correctC, dayCatKey);
+  m.timeMul = TIME_CHOICES.some(([v]) => v === o.timeMul) ? o.timeMul : 1;
+  m.timeMulT = isNum(o.timeMulT) ? o.timeMulT : 0;
+  m.name = typeof o.name === 'string' ? o.name.trim().slice(0, 10) : '';
+  m.nameT = isNum(o.nameT) ? o.nameT : 0;
+  const dog = typeof o.dog === 'string' && PET[o.dog]?.species === 'dog' ? o.dog : undefined;
+  const cat = typeof o.cat === 'string' && PET[o.cat]?.species === 'cat' ? o.cat : undefined;
+  if (dog || cat || isNum(o.petsT)) { if (dog) m.dog = dog; if (cat) m.cat = cat; m.petsT = isNum(o.petsT) ? o.petsT : 0; }
+  m.built = dayMap(o.built, k => !!BUILD[k]);
+  m.bought = timeMap(o.bought, k => !!FURN_BY[k]);
+  m.deco = {};
+  if (obj(o.deco)) for (const pl of Object.keys(o.deco)) {
+    if (!PLACES.includes(pl) || !obj(o.deco[pl])) continue;
+    const d: Record<string, string> = {};
+    for (const sl of Object.keys(o.deco[pl])) if (typeof o.deco[pl][sl] === 'string' && FURN_BY[o.deco[pl][sl]]) d[sl] = o.deco[pl][sl];
+    m.deco[pl] = d;
+  }
+  m.decoT = timeMap(o.decoT, k => PLACES.includes(k));
   return m;
 }
 
 // ---------------- 단계 ----------------
-export interface Problem { q: string; ans: string; opts: string[]; stage: number }
+export interface Problem { q: string; ans: string; opts: string[]; stage: number; cat: Cat; sec: number }
 type Ans = number | [number, number];      // [몫, 나머지]
 interface Raw { q: string; ans: Ans; wrong: Ans[] }
 
@@ -144,30 +214,44 @@ function div(rem: boolean): Raw {
   return { q: `${n} ÷ ${d}`, ans: [qn, r], wrong: [[qn, r + 1], [qn, r - 1], [qn + 1, r], [qn - 1, r + d], [qn - 1, r], [qn + 1, r - 1]] };
 }
 
-export interface StageDef { name: string; sub: string; gen: () => Raw }
+/** sec: 문제 하나 제한 시간(초, 부모 설정 배율을 곱함) — 2학년이 보기 4개 중에서 고르는 시간을 넉넉히 잡은 값(추정) */
+export interface StageDef { name: string; sub: string; sec: number; gen: () => Raw }
 export const STAGES: StageDef[] = [
-  { name: '두 자리 덧셈', sub: '받아올림 없음', gen: () => add2(false) },
-  { name: '두 자리 덧셈', sub: '받아올림', gen: () => add2(true) },
-  { name: '두 자리 뺄셈', sub: '받아내림 없음', gen: () => sub2(false) },
-  { name: '두 자리 뺄셈', sub: '받아내림', gen: () => sub2(true) },
-  { name: '세 자리 덧셈', sub: '받아올림', gen: add3 },
-  { name: '세 자리 뺄셈', sub: '받아내림', gen: sub3 },
-  { name: '곱셈구구', sub: '2·3·4·5단', gen: () => mulFact(2, 5) },
-  { name: '곱셈구구', sub: '6·7·8·9단', gen: () => mulFact(6, 9) },
-  { name: '곱셈구구', sub: '2~9단 섞어서', gen: () => mulFact(2, 9) },
-  { name: '곱셈', sub: '(두 자리)×(한 자리)', gen: mul21 },
-  { name: '나눗셈', sub: '나머지 없음', gen: () => div(false) },
-  { name: '나눗셈', sub: '나머지 있음', gen: () => div(true) },
+  { name: '두 자리 덧셈', sub: '받아올림 없음', sec: 15, gen: () => add2(false) },
+  { name: '두 자리 덧셈', sub: '받아올림', sec: 20, gen: () => add2(true) },
+  { name: '두 자리 뺄셈', sub: '받아내림 없음', sec: 15, gen: () => sub2(false) },
+  { name: '두 자리 뺄셈', sub: '받아내림', sec: 25, gen: () => sub2(true) },
+  { name: '세 자리 덧셈', sub: '받아올림', sec: 30, gen: add3 },
+  { name: '세 자리 뺄셈', sub: '받아내림', sec: 35, gen: sub3 },
+  { name: '곱셈구구', sub: '2·3·4·5단', sec: 10, gen: () => mulFact(2, 5) },
+  { name: '곱셈구구', sub: '6·7·8·9단', sec: 12, gen: () => mulFact(6, 9) },
+  { name: '곱셈구구', sub: '2~9단 섞어서', sec: 12, gen: () => mulFact(2, 9) },
+  { name: '곱셈', sub: '(두 자리)×(한 자리)', sec: 30, gen: mul21 },
+  { name: '나눗셈', sub: '나머지 없음', sec: 15, gen: () => div(false) },
+  { name: '나눗셈', sub: '나머지 있음', sec: 25, gen: () => div(true) },
 ];
 export const stageName = (i: number) => { const s = STAGES[Math.max(0, Math.min(STAGES.length - 1, i))]; return `${s.name} (${s.sub})`; };
+/** 단계 번호 → 항목 */
+export const catOf = (stage: number): Cat => (CATS.find(c => c.stages.includes(stage)) ?? CATS[0]).id;
+/** 항목의 n번째 단계 → STAGES 번호 */
+export const catStage = (cat: Cat, i: number) => { const st = CAT[cat].stages; return st[Math.max(0, Math.min(st.length - 1, i))]; };
+/** 항목의 문제 시간 범위(초, 보통) — 부모 설정 안내용 */
+export const catSecRange = (cat: Cat): [number, number] => { const s = CAT[cat].stages.map(st => STAGES[st].sec); return [Math.min(...s), Math.max(...s)]; };
 
 /** 보기 글자: 나머지가 있는 나눗셈은 '몫 … 나머지' */
 export const show = (a: Ans) => Array.isArray(a) ? `${a[0]} … ${a[1]}` : String(a);
 
-/** 문제 하나: 단계 문제 (앞 단계가 있으면 다섯 문제 중 하나쯤은 앞 단계 복습), 보기 4개 */
-export function makeProblem(level: number, review = 0.2): Problem {
-  const lv = Math.max(0, Math.min(STAGES.length - 1, level));
-  const st = lv > 0 && Math.random() < review ? R(0, lv - 1) : lv;
+/** 고른 항목(골고루면 네 항목 중 하나)의 지금 단계 문제 — 그 항목의 앞 단계가 있으면 다섯 문제 중 하나쯤은 앞 단계 복습 */
+export function makeProblemFor(mode: Mode, lv: Record<Cat, number>, review = 0.2): Problem {
+  const cat: Cat = mode === 'mix' ? CATS[R(0, CATS.length - 1)].id : mode;
+  const stages = CAT[cat].stages;
+  const i = Math.max(0, Math.min(stages.length - 1, lv[cat] ?? 0));
+  return makeStageProblem(stages[i > 0 && Math.random() < review ? R(0, i - 1) : i]);
+}
+
+/** 그 단계 문제 하나, 보기 4개 */
+export function makeStageProblem(stage: number): Problem {
+  const st = Math.max(0, Math.min(STAGES.length - 1, stage));
   const raw = STAGES[st].gen();
   const ans = show(raw.ans);
   const isDiv = raw.q.includes('÷');
@@ -188,5 +272,5 @@ export function makeProblem(level: number, review = 0.2): Problem {
     if (!seen.has(t)) { seen.add(t); pick.push(t); }
   }
   const opts = [ans, ...pick].sort(() => Math.random() - 0.5);
-  return { q: raw.q, ans, opts, stage: st };
+  return { q: raw.q, ans, opts, stage: st, cat: catOf(st), sec: STAGES[st].sec };
 }

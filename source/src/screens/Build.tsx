@@ -1,4 +1,4 @@
-// 집 짓기: 놀이로 모은 재료를 하나씩 써서 강아지 집 · 고양이 집 · 놀이터를 한 부분씩 짓기
+// 집 짓기: 놀이로 모은 재료(수학 모드는 정답으로 모은 재료)를 하나씩 써서 강아지 집 · 고양이 집 · 놀이터를 한 부분씩 짓기
 import { useEffect, useState } from 'preact/hooks';
 import { Backdrop, burst } from '../art/Scene';
 import { YardBack, YardDeco, houseFilter } from './Home';
@@ -6,7 +6,8 @@ import { Pet } from '../art/Pet';
 import { BuildArt, MatIcon } from '../art/Build';
 import { say, sayAll, sfx, newScene } from '../engine/audio';
 import { buddy } from '../engine/bus';
-import { petView, matsLeft, builtCount, buildPart, nextBuild, onChange } from '../engine/store';
+import { onChange } from '../engine/store';
+import { useHome } from './homeApi';
 import { BUILDS, BUILD, partLine, doneBuildLine } from '../data/pets';
 import { HOME_IN, HOME_LOCKED, HOME_DECO } from '../data/voice';
 
@@ -17,17 +18,18 @@ function useRefresh() {
 
 export function BuildScreen({ onBack, onEnter, onYard }: { onBack: () => void; onEnter?: (place: 'doghouse' | 'cathouse' | 'park') => void; onYard?: (house: 'doghouse' | 'cathouse') => void }) {
   useRefresh();
-  const [sel, setSel] = useState<string>(() => nextBuild()?.id ?? 'doghouse');
+  const H = useHome();   // 한글(동생) 또는 수학 집 기록 (App.tsx가 고름)
+  const [sel, setSel] = useState<string>(() => H.nextBuild()?.id ?? 'doghouse');
   const [pop, setPop] = useState(-1);
   const [busy, setBusy] = useState(false);
   const [cheer, setCheer] = useState(false);
   const b = BUILD[sel];
-  const n = builtCount(sel);
-  const left = matsLeft();
+  const n = H.builtCount(sel);
+  const left = H.matsLeft();
   const done = n >= b.parts.length;
-  const dog = petView('dog'), cat = petView('cat');
+  const dog = H.petView('dog'), cat = H.petView('cat');
 
-  useEffect(() => { newScene(); say(left > 0 ? '망치를 눌러서 지어 보자!' : '재료가 없어! 놀이를 하면 받을 수 있어!'); }, []);
+  useEffect(() => { newScene(); say(left > 0 ? '망치를 눌러서 지어 보자!' : H.noMat); }, []);
 
   const pick = (id: string) => {
     if (id === sel) return;
@@ -38,8 +40,8 @@ export function BuildScreen({ onBack, onEnter, onYard }: { onBack: () => void; o
   const build = async () => {
     if (busy) return;
     if (done) { sfx.pop(); setCheer(true); setTimeout(() => setCheer(false), 1200); return; }
-    if (matsLeft() <= 0) { sfx.boing(); say('재료가 없어! 놀이를 하면 받을 수 있어!'); return; }
-    const k = buildPart(sel);
+    if (H.matsLeft() <= 0) { sfx.boing(); say(H.noMat); return; }
+    const k = H.buildPart(sel);
     if (k == null) return;
     setBusy(true);
     sfx.drum(); setTimeout(() => sfx.pop(), 220);
@@ -85,7 +87,7 @@ export function BuildScreen({ onBack, onEnter, onYard }: { onBack: () => void; o
       <div class="layer">
         <div class="build-tabs">
           {BUILDS.map(x => {
-            const k = builtCount(x.id);
+            const k = H.builtCount(x.id);
             return (
               <button class={`build-tab ${sel === x.id ? 'on' : ''}`} data-build-tab={x.id} onClick={() => pick(x.id)}>
                 <span style={{ fontSize: 40 }}>{x.icon}</span>
@@ -97,7 +99,7 @@ export function BuildScreen({ onBack, onEnter, onYard }: { onBack: () => void; o
         </div>
         {house && done && <YardDeco house={house} front={false} />}
         <div class="build-stage" key={sel} data-enter={done ? 1 : 0} onClick={enter}>
-          <BuildArt id={sel} n={n} name={sel === 'doghouse' ? dog.name : sel === 'cathouse' ? cat.name : ''} size={700} pop={pop} tint={house && done ? houseFilter(house) : undefined} />
+          <BuildArt id={sel} n={n} name={sel === 'doghouse' ? dog.name : sel === 'cathouse' ? cat.name : ''} size={700} pop={pop} tint={house && done ? houseFilter(house, H) : undefined} />
         </div>
         {house && done && <YardDeco house={house} front />}
         {petFor.map((v, i) => (

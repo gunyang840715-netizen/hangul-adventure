@@ -18,8 +18,8 @@ import { server, onServer, connectVoice } from '../engine/boot';
 import { stat } from '../engine/srs';
 import { josa } from '../lib/hangul';
 import { ITEM_LIST, STAGE_NAME } from '../data/pets';
-import { STAGES, PER_DAY_CHOICES, PASS_RATE, ITEM_EVERY, stageName } from '../math/mathData';
-import { mathState, todayMath, mathTotalCorrect, setMathLevel, setMathPerDay } from '../math/mathStore';
+import { STAGES, CATS, PER_DAY_CHOICES, TIME_CHOICES, PASS_RATE, ITEM_EVERY, MAT_EVERY, UP_MIN, catSecRange } from '../math/mathData';
+import { mathState, todayMath, mathTotalCorrect, mathMatsLeft, setMathLv, setMathPerDay, setMathTime, setMathName } from '../math/mathStore';
 import '../math/math.css';
 
 // ---------- 제목 ----------
@@ -55,8 +55,8 @@ export function Title({ onStart, onMath }: { onStart: () => void; onMath?: () =>
         <button class={`btn big ${ready ? 'pulse' : ''}`} style={{ position: 'absolute', left: '50%', bottom: 44, transform: 'translateX(-50%)', opacity: ready ? 1 : 0.75 }}>
           {ready ? '시작하기 ▶' : `목소리 준비 중… ${Math.round(packLoad.progress * 100)}%`}
         </button>
-        {/* 수학 모드 (초등 2학년 언니 — 한글과 따로) */}
-        {onMath && <button class="btn sky m-math-btn" data-math-start="1" onClick={(e) => { e.stopPropagation(); onMath(); }}>✏️ 수학</button>}
+        {/* 수학 모드 (초등 2학년 아이 — 한글과 따로). 이름은 부모 설정의 '수학 이름'(기기 저장값) */}
+        {onMath && <button class="btn sky m-math-btn" data-math-start="1" onClick={(e) => { e.stopPropagation(); onMath(); }}>✏️ {mathState().name ? `${mathState().name} 수학` : '수학'}</button>}
       </div>
     </div>
   );
@@ -287,7 +287,7 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
         <div class="overlay" style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(40,20,60,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', borderRadius: 20, padding: '28px 34px', maxWidth: 560, boxShadow: '0 10px 30px rgba(0,0,0,.25)' }}>
             <div style={{ fontSize: 26, fontWeight: 'bold', marginBottom: 12 }}>{ask === 'all' ? '전체 초기화할까요?' : '공부 진도를 처음부터 할까요?'}</div>
-            <div style={{ fontSize: 18, color: '#555', marginBottom: 22 }}>{ask === 'all' ? '진도, 강아지·고양이 성장, 꾸미기 아이템, 간식, 별이 모두 지워집니다. 수학(언니) 기록은 그대로 둡니다.' : '1단계부터 다시 시작합니다. 강아지·고양이·꾸미기·간식·별은 그대로입니다.'} 되돌릴 수 없습니다.</div>
+            <div style={{ fontSize: 18, color: '#555', marginBottom: 22 }}>{ask === 'all' ? '진도, 강아지·고양이 성장, 꾸미기 아이템, 간식, 별이 모두 지워집니다. 수학 기록은 그대로 둡니다.' : '1단계부터 다시 시작합니다. 강아지·고양이·꾸미기·간식·별은 그대로입니다.'} 되돌릴 수 없습니다.</div>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'flex-end' }}>
               <button class="opt" onClick={() => setAsk(null)}>취소</button>
               <button class="opt" data-reset-ok="1" style={{ background: '#c92a2a', color: '#fff' }} onClick={() => {
@@ -355,22 +355,30 @@ function fmtDay(d: number) {
   return `${dt.getUTCMonth() + 1}/${dt.getUTCDate()}`;
 }
 
-// ---------- 부모 설정: 수학 (초등 2학년 언니 — 한글 진도와 따로) ----------
+// ---------- 부모 설정: 수학 (초등 2학년 아이 — 한글 진도와 따로) ----------
 function MathParent({ onSaved }: { onSaved: (m: string) => void }) {
   const m = mathState();
   const t = todayMath(m);
+  const [nameIn, setNameIn] = useState(m.name);
   const Opt = ({ on, children, onClick }: any) => <button class={`opt ${on ? 'on' : ''}`} onClick={onClick}>{children}</button>;
   return (
     <>
-      <h3>수학 (언니)</h3>
-      <div class="row" data-math-parent="1">오늘 {t.solved}/{m.perDay}문제 · 맞힘 {t.correct}개 · 지금까지 맞힌 문제 {mathTotalCorrect(m)}개 · 언니 옷장 꾸미기 {m.owned.length}/{ITEM_LIST.length}</div>
-      <div class="row">지금 단계: {m.level + 1}. {stageName(m.level)}</div>
-      <div class="row" style={{ gap: 6 }}>{STAGES.map((st, i) => (
-        <Opt on={m.level === i} onClick={() => { setMathLevel(i); onSaved(`수학을 ${i + 1}단계(${st.name} ${st.sub})로 바꿨습니다.`); }}>{i + 1}. {st.name} · {st.sub}</Opt>
-      ))}</div>
+      <h3>수학{m.name ? ` (${m.name})` : ''}</h3>
+      <div class="row" data-math-parent="1">오늘 {t.solved}/{m.perDay}문제 · 맞힘 {t.correct}개 · 지금까지 맞힌 문제 {mathTotalCorrect(m)}개 · 수학 옷장 꾸미기 {m.owned.length}/{ITEM_LIST.length} · 재료 {mathMatsLeft(m)}개</div>
+      <div class="row">수학 이름 <input type="text" value={nameIn} onInput={(e: any) => setNameIn(e.target.value)} style={{ width: 160 }} data-math-name="1" />
+        <button class="opt" onClick={() => { setMathName(nameIn); setNameIn(mathState().name); onSaved(nameIn.trim() ? `수학 화면에 '${nameIn.trim().slice(0, 10)}'(으)로 보입니다.` : '수학 이름을 비웠습니다.'); }}>저장</button>
+        <span style={{ fontSize: 16, color: '#868e96' }}>'○○ 옷장', '○○ 집 꾸미기'처럼 보임 (이 기기와 연동된 기기에만 저장)</span></div>
+      {CATS.map(c => (
+        <div class="row" style={{ gap: 6 }} data-math-cat={c.id}>{c.icon} {c.name}
+          {c.stages.map((st, i) => <Opt on={m.lv[c.id] === i} onClick={() => { setMathLv(c.id, i); onSaved(`${c.name}을 ${i + 1}단계(${STAGES[st].name} ${STAGES[st].sub})로 바꿨습니다.`); }}>{i + 1}. {STAGES[st].name} · {STAGES[st].sub}</Opt>)}
+        </div>
+      ))}
       <div class="row">하루 문제 수 {PER_DAY_CHOICES.map(n => <Opt on={m.perDay === n} onClick={() => { setMathPerDay(n); onSaved('저장했습니다.'); }}>{n}문제</Opt>)}</div>
+      <div class="row">문제마다 시간 {TIME_CHOICES.map(([v, l]) => <Opt on={m.timeMul === v} onClick={() => { setMathTime(v); onSaved('다음 문제부터 적용됩니다.'); }}>{l}</Opt>)}
+        <span style={{ fontSize: 16, color: '#868e96' }}>보통: {CATS.map(c => { const [a, b] = catSecRange(c.id); return `${c.name} ${a === b ? a : `${a}~${b}`}초`; }).join(' · ')} (단계마다 다름, 넉넉하게 ×1.5 · 짧게 ×0.75) — 시간이 다 되면 틀린 것으로 하고 정답을 보여 줌</span></div>
       <div class="row" style={{ fontSize: 16, color: '#868e96' }}>
-        하루 문제의 {Math.round(PASS_RATE * 100)}% 이상 맞히면 다음 날 다음 단계 · 정답 {ITEM_EVERY}개마다 언니 옷장에 꾸미기 하나(틀려도 안 가져감) · 한글 진도·하루 사용 시간·동생 옷장과 따로 · 두 기기 연동됨
+        항목마다 단계가 따로 · 하루 문제를 다 푼 날, 그날 그 항목을 {UP_MIN}문제 이상 풀고 {Math.round(PASS_RATE * 100)}% 이상 맞히면 그 항목만 다음 단계 · 정답 {ITEM_EVERY}개마다 꾸미기, {MAT_EVERY}개마다 집 재료(틀려도 안 가져감) ·
+        한글 진도·하루 사용 시간·한글 옷장·한글 집과 따로 · '골고루'만 풀면 항목마다 문제 수가 적어 단계가 거의 안 오름(복습용) · 두 기기 연동됨
       </div>
     </>
   );

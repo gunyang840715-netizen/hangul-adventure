@@ -237,7 +237,7 @@ export function Dress({ onBack }: { onBack: () => void }) {
           ))}
         </div>
         <div key={v.id} class="slide-up" style={{ position: 'absolute', left: 50, top: 220 }}>
-          <Pet pet={v.id} stage={v.stage} level={v.level} wear={v.wear} size={440} motion="bob" />
+          <Pet pet={v.id} stage={v.stage} level={v.level} wear={v.wear} size={440} motion="none" />
         </div>
         <div style={{ position: 'absolute', left: 530, top: 110, right: 20, display: 'flex', gap: 8 }}>
           {SLOTS.map(k => (

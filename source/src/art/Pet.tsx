@@ -9,6 +9,7 @@ import type { Mat } from './petanim';
 import { artSrc } from './artmap';
 import { ITEM_ART } from './items.gen';
 import {wornEntry} from './wearable';
+import {prepareFrontWear,frontWearLoaded,type FrontWearLayer} from './frontwear';
 
 export type Mood = 'happy' | 'wow' | 'think' | 'sleep' | 'love';
 export type Motion = 'bob' | 'jump' | 'cheer' | 'wiggle' | 'none' | 'fly' | 'hop';
@@ -157,8 +158,13 @@ export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}
 // ======================= 새 그림(손그림 수채) =======================
 const mtx = (a: ArrayLike<number>) => `matrix(${Array.from(a, v => +v.toFixed(4)).join(' ')})`;
 const VB = `${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`;
+function FittedFront({pet,slot,item}:{pet:string;slot:string;item?:string}){
+  const[layer,setLayer]=useState<FrontWearLayer|null>(null);
+  useEffect(()=>{let live=true;setLayer(null);const prepare=()=>prepareFrontWear(pet,slot,item).then(value=>{if(live)setLayer(value);});prepare();window.addEventListener('online',prepare);return()=>{live=false;window.removeEventListener('online',prepare);};},[pet,slot,item]);
+  return layer&&item?<image data-front-fit="1" href={layer.url} x={layer.x} y={layer.y} width={layer.width} height={layer.height} onLoad={()=>frontWearLoaded(pet,slot,item,layer.url)}/>:null;
+}
 function WornFront({pet,slot,item}:{pet:string;slot:string;item?:string}){
-  const entry=wornEntry(pet,slot,item),rect=entry?.frames['front/0'];if(!entry||!rect)return null;
+  const entry=wornEntry(pet,slot,item),rect=entry?.frames['front/0'];if(!entry||!rect)return <FittedFront pet={pet} slot={slot} item={item}/>;
   const [x,y,w,h,dx,dy]=rect,height=Math.max(...Object.values(entry.frames).map(r=>r[1]+r[3]));
   return <svg x={dx} y={dy} width={w} height={h} viewBox={`${x} ${y} ${w} ${h}`} overflow="hidden"><image href={artSrc(entry.art)} x="0" y="0" width={entry.width||2048} height={height}/></svg>;
 }

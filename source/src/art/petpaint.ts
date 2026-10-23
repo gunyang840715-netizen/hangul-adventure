@@ -11,6 +11,7 @@ import { PAINT_RIG } from './petpaint.gen';
 import { PetAnim, type AnimIn, type Pose, type Mat } from './petanim';
 import { sideFrame, sideArt, sideRig, placeM, mul, SIDE_SLOTS, type SideFrame, type SideSlot } from './petside';
 import {wornKeys,wornSelection,drawWorn,type SelectedWear} from './wearable';
+import {frontWearReady} from './frontwear';
 
 export type { Act } from './petanim';
 type Pt = [number, number];
@@ -423,7 +424,7 @@ export class PaintPet {
   }
   private frontWear() {
     // 정면은 Pet의 몸/머리 SVG 순서에 부품을 넣어, 기존 아이템과 섞어도 가림 순서가 유지된다.
-    this.fittedSlots=Object.keys(wornSelection(this.o.id,'front',0,this.selectedWear,k=>IMGS[k]?.img));
+    this.fittedSlots=[...new Set([...Object.keys(wornSelection(this.o.id,'front',0,this.selectedWear,k=>IMGS[k]?.img)),...frontWearReady(this.o.id,this.selectedWear)])];
   }
   destroy() { this.io?.disconnect(); }
 }

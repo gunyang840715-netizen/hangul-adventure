@@ -18,8 +18,8 @@ import { server, onServer, connectVoice } from '../engine/boot';
 import { stat } from '../engine/srs';
 import { josa } from '../lib/hangul';
 import { ITEM_LIST, STAGE_NAME } from '../data/pets';
-import { STAGES, CATS, PER_DAY_CHOICES, TIME_CHOICES, PASS_RATE, ITEM_EVERY, MAT_EVERY, UP_MIN, catSecRange } from '../math/mathData';
-import { mathState, todayMath, mathTotalCorrect, mathMatsLeft, setMathLv, setMathPerDay, setMathTime, setMathName } from '../math/mathStore';
+import { STAGES, CATS, DAY_MIN_CHOICES, CAT_MAX, TIME_CHOICES, PASS_RATE, ITEM_EVERY, MAT_EVERY, UP_MIN, catSecRange } from '../math/mathData';
+import { mathState, todayMath, mathTotalCorrect, mathMatsLeft, setMathLv, setMathDayMin, setMathTime, setMathName } from '../math/mathStore';
 import '../math/math.css';
 
 // ---------- 제목 ----------
@@ -364,7 +364,7 @@ function MathParent({ onSaved }: { onSaved: (m: string) => void }) {
   return (
     <>
       <h3>수학{m.name ? ` (${m.name})` : ''}</h3>
-      <div class="row" data-math-parent="1">오늘 {t.solved}/{m.perDay}문제 · 맞힘 {t.correct}개 · 지금까지 맞힌 문제 {mathTotalCorrect(m)}개 · 수학 옷장 꾸미기 {m.owned.length}/{ITEM_LIST.length} · 재료 {mathMatsLeft(m)}개</div>
+      <div class="row" data-math-parent="1">오늘 공부 {Math.floor(t.ms / 60000)}분/{m.dayMin}분 · {t.solved}문제 · 맞힘 {t.correct}개 · 지금까지 맞힌 문제 {mathTotalCorrect(m)}개 · 수학 옷장 꾸미기 {m.owned.length}/{ITEM_LIST.length} · 재료 {mathMatsLeft(m)}개</div>
       <div class="row">수학 이름 <input type="text" value={nameIn} onInput={(e: any) => setNameIn(e.target.value)} style={{ width: 160 }} data-math-name="1" />
         <button class="opt" onClick={() => { setMathName(nameIn); setNameIn(mathState().name); onSaved(nameIn.trim() ? `수학 화면에 '${nameIn.trim().slice(0, 10)}'(으)로 보입니다.` : '수학 이름을 비웠습니다.'); }}>저장</button>
         <span style={{ fontSize: 16, color: '#868e96' }}>'○○ 옷장', '○○ 집 꾸미기'처럼 보임 (이 기기와 연동된 기기에만 저장)</span></div>
@@ -373,11 +373,12 @@ function MathParent({ onSaved }: { onSaved: (m: string) => void }) {
           {c.stages.map((st, i) => <Opt on={m.lv[c.id] === i} onClick={() => { setMathLv(c.id, i); onSaved(`${c.name}을 ${i + 1}단계(${STAGES[st].name} ${STAGES[st].sub})로 바꿨습니다.`); }}>{i + 1}. {STAGES[st].name} · {STAGES[st].sub}</Opt>)}
         </div>
       ))}
-      <div class="row">하루 문제 수 {PER_DAY_CHOICES.map(n => <Opt on={m.perDay === n} onClick={() => { setMathPerDay(n); onSaved('저장했습니다.'); }}>{n}문제</Opt>)}</div>
+      <div class="row" data-math-daymin="1">하루 공부 시간 {DAY_MIN_CHOICES.map(n => <Opt on={m.dayMin === n} onClick={() => { setMathDayMin(n); onSaved(`하루 ${n >= 60 ? `${n / 60}시간` : `${n}분`}으로 바꿨습니다. 오늘 공부한 시간은 그대로 셉니다.`); }}>{n >= 60 ? `${n / 60}시간` : `${n}분`}</Opt>)}
+        <span style={{ fontSize: 16, color: '#868e96' }}>문제 화면에서만 셈(3분 넘게 안 만지면 멈춤) · 시간이 다 되면 풀던 문제까지 풀고 끝 · 한 항목은 하루 {CAT_MAX}문제까지</span></div>
       <div class="row">문제마다 시간 {TIME_CHOICES.map(([v, l]) => <Opt on={m.timeMul === v} onClick={() => { setMathTime(v); onSaved('다음 문제부터 적용됩니다.'); }}>{l}</Opt>)}
         <span style={{ fontSize: 16, color: '#868e96' }}>보통: {CATS.map(c => { const [a, b] = catSecRange(c.id); return `${c.name} ${a === b ? a : `${a}~${b}`}초`; }).join(' · ')} (단계마다 다름, 넉넉하게 ×1.5 · 짧게 ×0.75) — 시간이 다 되면 틀린 것으로 하고 정답을 보여 줌</span></div>
       <div class="row" style={{ fontSize: 16, color: '#868e96' }}>
-        항목마다 단계가 따로 · 하루 문제를 다 푼 날, 그날 그 항목을 {UP_MIN}문제 이상 풀고 {Math.round(PASS_RATE * 100)}% 이상 맞히면 그 항목만 다음 단계 · 정답 {ITEM_EVERY}개마다 꾸미기, {MAT_EVERY}개마다 집 재료(틀려도 안 가져감) ·
+        항목마다 단계가 따로 · 하루 공부 시간이 끝날 때(또는 그 항목을 {CAT_MAX}문제 다 풀 때), 그날 그 항목을 {UP_MIN}문제 이상 풀고 {Math.round(PASS_RATE * 100)}% 이상 맞혔으면 그 항목만 다음 단계(하루 한 단계까지 — 그날 단계를 직접 바꾼 항목은 다음 날 판정) · 정답 {ITEM_EVERY}개마다 꾸미기, {MAT_EVERY}개마다 집 재료(틀려도 안 가져감) ·
         한글 진도·하루 사용 시간·한글 옷장·한글 집과 따로 · '골고루'만 풀면 항목마다 문제 수가 적어 단계가 거의 안 오름(복습용) · 두 기기 연동됨
       </div>
     </>

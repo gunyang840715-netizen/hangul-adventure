@@ -12,7 +12,7 @@ export type Mode = Cat | 'mix';
 
 export interface MathState {
   level: number; levelT: number;          // (예전) 12단계 한 줄 — 항목별 단계(lv)로 옮기기 전 기록. 새 코드는 lv를 씀
-  perDay: number; perDayT: number;        // 하루 문제 수 (기본 50)
+  perDay: number; perDayT: number;        // (예전) 하루 문제 수 — 10-24부터 하루 공부 시간(dayMin)으로 바꿈. 칸은 예전 기록·기기와 맞추려고 남김
   solved: DayMap; correct: DayMap;        // 날짜 → 기기 → 푼 문제 수 / 맞힌 수 (모든 항목 합계)
   total: DevMap;                          // 기기 → 지금까지 맞힌 수 (10개마다 꾸미기, 5개마다 재료)
   owned: string[];                        // 수학 옷장 (동생 옷장과 따로, 돌려받기 없음)
@@ -28,14 +28,20 @@ export interface MathState {
   built: DayMap;                          // 짓기 id → 기기 → 지은 부분 수
   bought: Record<string, number>;         // 산 가구·놀이 기구 → 시각 (재료 1개씩)
   deco: Record<string, Record<string, string>>; decoT: Record<string, number>;   // 장소 → 자리 → 놓은 가구
+  // ---- 10-24 3차: 문제 수 대신 하루 공부 시간 ----
+  dayMin: number; dayMinT: number;        // 하루 공부 시간(분, 부모 설정 30분·1시간)
+  ms: DayMap;                             // 날짜 → 기기 → 문제 화면에서 공부한 시간(ms)
 }
 
-export const PER_DAY = 50;
-export const PER_DAY_CHOICES = [20, 30, 50, 70, 100];
+export const PER_DAY = 50;                // (예전) 하루 문제 수 기본값 — perDay 칸 읽기용으로만 남김
+export const DAY_MIN = 30;                // 하루 공부 시간 기본 30분 (10-24 사용자 요청)
+export const DAY_MIN_CHOICES = [30, 60];  // 부모 설정: 30분 · 1시간
+export const CAT_MAX = 150;               // 한 항목(덧셈·뺄셈·곱셈·나눗셈)은 하루 150문제까지 (10-24 사용자 요청)
+export const IDLE_MS = 180000;            // 3분 넘게 안 만지면 공부 시간을 안 셈 (한글 사용 시간과 같은 기준)
 export const ITEM_EVERY = 10;             // 정답 10개마다 꾸미기 하나
 export const MAT_EVERY = 5;               // 정답 5개마다 집 짓기·꾸미기 재료 하나
 export const PASS_RATE = 0.9;             // 그날 그 항목 문제의 90% 이상 맞히면 그 항목 다음 단계
-export const UP_MIN = 20;                 // 그 항목을 그날 이만큼은 풀어야 다음 단계 판정 (하루 문제 수보다 크면 하루 문제 수)
+export const UP_MIN = 20;                 // 그 항목을 그날 이만큼은 풀어야 다음 단계 판정
 export const TIME_CHOICES: [number, string][] = [[1.5, '넉넉하게'], [1, '보통'], [0.75, '짧게'], [0, '끄기']];
 const PLACES = ['doghouse', 'cathouse', 'park', 'doghouse-out', 'cathouse-out'];
 
@@ -61,7 +67,7 @@ export function freshMath(): MathState {
   return {
     level: 0, levelT: 0, perDay: PER_DAY, perDayT: 0, solved: {}, correct: {}, total: {}, owned: [], wear: {}, wearT: {},
     lv: lvFromLevel(0), lvT: {}, solvedC: {}, correctC: {}, timeMul: 1, timeMulT: 0, name: '', nameT: 0,
-    built: {}, bought: {}, deco: {}, decoT: {},
+    built: {}, bought: {}, deco: {}, decoT: {}, dayMin: DAY_MIN, dayMinT: 0, ms: {},
   };
 }
 
@@ -131,6 +137,10 @@ export function normalizeMath(o: any): MathState | undefined {
     m.deco[pl] = d;
   }
   m.decoT = timeMap(o.decoT, k => PLACES.includes(k));
+  // 3차(10-24): 하루 공부 시간 · 공부한 시간 (없으면 30분 · 아직 0)
+  m.dayMin = DAY_MIN_CHOICES.includes(o.dayMin) ? o.dayMin : DAY_MIN;
+  m.dayMinT = isNum(o.dayMinT) ? o.dayMinT : 0;
+  m.ms = dayMap(o.ms);
   return m;
 }
 
@@ -241,9 +251,11 @@ export const catSecRange = (cat: Cat): [number, number] => { const s = CAT[cat].
 /** 보기 글자: 나머지가 있는 나눗셈은 '몫 … 나머지' */
 export const show = (a: Ans) => Array.isArray(a) ? `${a[0]} … ${a[1]}` : String(a);
 
-/** 고른 항목(골고루면 네 항목 중 하나)의 지금 단계 문제 — 그 항목의 앞 단계가 있으면 다섯 문제 중 하나쯤은 앞 단계 복습 */
-export function makeProblemFor(mode: Mode, lv: Record<Cat, number>, review = 0.2): Problem {
-  const cat: Cat = mode === 'mix' ? CATS[R(0, CATS.length - 1)].id : mode;
+/** 고른 항목(골고루면 네 항목 중 하나 — open이 있으면 그중에서, 오늘 150문제를 다 푼 항목은 빼려고)의 지금 단계 문제
+ *  — 그 항목의 앞 단계가 있으면 다섯 문제 중 하나쯤은 앞 단계 복습 */
+export function makeProblemFor(mode: Mode, lv: Record<Cat, number>, review = 0.2, open?: Cat[]): Problem {
+  const pool: Cat[] = open && open.length ? open : CATS.map(c => c.id);
+  const cat: Cat = mode === 'mix' ? pool[R(0, pool.length - 1)] : mode;
   const stages = CAT[cat].stages;
   const i = Math.max(0, Math.min(stages.length - 1, lv[cat] ?? 0));
   return makeStageProblem(stages[i > 0 && Math.random() < review ? R(0, i - 1) : i]);

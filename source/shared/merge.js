@@ -62,8 +62,8 @@ function lwwMap(av, at, bv, bt) {
 }
 
 // 수학 모드 (초등 2학년 아이 — 한글과 따로, 10-23): 한글 초기화·백업 불러오기(epoch)와 상관없이 늘 두 쪽을 합친다
-// - 단계(항목마다)·하루 문제 수·문제 시간·이름·마지막에 받은 것·고른 친구·꾸미기·집 꾸민 자리는 나중에 바꾼 쪽
-// - 푼 수·맞힌 수·지은 부분은 기기별로 세고 합계, 옷장·산 가구는 모으기 (칸 순서는 mathData.ts normalizeMath와 같게)
+// - 단계(항목마다)·하루 문제 수(예전)·하루 공부 시간·문제 시간·이름·마지막에 받은 것·고른 친구·꾸미기·집 꾸민 자리는 나중에 바꾼 쪽
+// - 푼 수·맞힌 수·공부한 시간·지은 부분은 기기별로 세고 합계, 옷장·산 가구는 모으기 (칸 순서는 mathData.ts normalizeMath와 같게)
 function mergeMath(a, b) {
   if (!a && !b) return undefined;
   // 한쪽만 있어도 같은 모양으로 다시 만든다 (몇 번 합쳐도 결과가 같도록)
@@ -103,12 +103,15 @@ function mergeMath(a, b) {
   out.bought = mergeMaxMap(a.bought, b.bought);
   var dc = lwwMap(a.deco, a.decoT, b.deco, b.decoT);
   out.deco = dc[0]; out.decoT = dc[1];
+  // 3차(10-24): 하루 공부 시간(분)은 나중에 바꾼 쪽, 공부한 시간은 기기별로 세고 합계
+  lwwM(['dayMin'], 'dayMinT');
+  out.ms = mergeNested(a.ms, b.ms);
   // 90일 지난 날짜 기록은 정리 (지금까지 맞힌 수는 total에 그대로)
   var dayOf = function (k) { return Number(String(k).split(':')[0]); };
-  var days = Object.keys(out.solved).concat(Object.keys(out.correct), Object.keys(out.solvedC), Object.keys(out.correctC)).map(dayOf);
+  var days = Object.keys(out.solved).concat(Object.keys(out.correct), Object.keys(out.solvedC), Object.keys(out.correctC), Object.keys(out.ms)).map(dayOf);
   if (days.length) {
     var newest = Math.max.apply(null, days);
-    [out.solved, out.correct, out.solvedC, out.correctC].forEach(function (m) {
+    [out.solved, out.correct, out.solvedC, out.correctC, out.ms].forEach(function (m) {
       Object.keys(m).forEach(function (d) { if (dayOf(d) < newest - 90) delete m[d]; });
     });
   }

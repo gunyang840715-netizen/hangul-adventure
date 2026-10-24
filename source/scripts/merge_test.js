@@ -25,7 +25,7 @@ function randState(dev, epoch = 0) {
   if (rnd(2)) s.math = randMath(dev);
   return s;
 }
-// 수학 모드(10-23): 단계·하루 문제 수·시간·이름·친구·꾸민 자리는 나중에 바꾼 쪽, 푼 수·맞힌 수·지은 부분은 기기별, 옷장·산 가구는 모으기
+// 수학 모드(10-23·10-24): 단계·하루 문제 수(예전)·하루 공부 시간·문제 시간·이름·친구·꾸민 자리는 나중에 바꾼 쪽, 푼 수·맞힌 수·공부한 시간·지은 부분은 기기별, 옷장·산 가구는 모으기
 function randMath(dev) {
   const m = { level: rnd(5), levelT: rnd(3), perDay: pick([30, 50]), perDayT: rnd(3), solved: {}, correct: {}, total: { [dev]: rnd(40) }, owned: [], wear: {}, wearT: {} };
   for (const d of ['20700', '20701', '20600']) if (rnd(2)) { const n = rnd(50); m.solved[d] = { [dev]: n }; m.correct[d] = { [dev]: rnd(n + 1) }; }
@@ -45,6 +45,11 @@ function randMath(dev) {
     m.built = {}; for (const b of ['doghouse', 'park']) if (rnd(2)) m.built[b] = { [dev]: rnd(6) };
     m.bought = {}; for (const f of ['bed:basket', 'y-tree:pine']) if (rnd(2)) m.bought[f] = rnd(5);
     m.deco = {}; m.decoT = {}; for (const pl of ['doghouse', 'doghouse-out']) if (rnd(2)) { m.deco[pl] = { bed: pick(['bed:basket', 'bed:round']) }; m.decoT[pl] = rnd(3); }
+    // 3차(10-24): 하루 공부 시간·공부한 시간 — 없을 수도 있음(2차 판 기기)
+    if (rnd(3)) {
+      m.dayMin = pick([30, 60]); m.dayMinT = rnd(3);
+      m.ms = {}; for (const d of ['20700', '20701', '20500']) if (rnd(2)) m.ms[d] = { [dev]: rnd(4e6) };
+    }
   }
   return m;
 }
@@ -101,6 +106,17 @@ const kk = mergeState(k1, k2).math, kr = mergeState(k2, k1).math;
 chk('math 2nd lww ok:', kk.lv.add === 2 && kk.lv.mul === 2 && kk.lv.sub === 1 && kk.timeMul === 0 && kk.name === '다라' && kk.dog === 'poodle' && kk.deco.doghouse.bed === 'bed:round');
 chk('math 2nd sums ok:', sumMap(kk.solvedC['20700:add']) === 35 && sumMap(kk.solvedC['20700:mul']) === 15 && sumMap(kk.built.doghouse) === 5 && sumMap(kk.built.park) === 1
   && Object.keys(kk.bought).sort().join() === 'bed:basket,y-tree:pine' && canon(kk) === canon(kr) && JSON.stringify(kk) === JSON.stringify(kr));
+// 3차 칸: 하루 공부 시간은 나중에 바꾼 쪽, 공부한 시간은 기기별 합계, 90일 지난 날짜는 정리
+const t1 = randState('dA'), t2 = randState('dB');
+t1.math = { ...k1.math, dayMin: 60, dayMinT: 9, ms: { '20700': { dA: 600000 }, '20601': { dA: 5 } } };
+t2.math = { ...k2.math, dayMin: 30, dayMinT: 4, ms: { '20700': { dB: 900000 }, '20701': { dB: 1000 } } };
+const tt = mergeState(t1, t2).math, tr = mergeState(t2, t1).math;
+chk('math 3rd lww/sums ok:', tt.dayMin === 60 && tt.dayMinT === 9 && sumMap(tt.ms['20700']) === 1500000 && sumMap(tt.ms['20701']) === 1000
+  && !('20601' in tt.ms) && canon(tt) === canon(tr) && JSON.stringify(tt) === JSON.stringify(tr));
+// 2차 판 기기(3차 칸 없음)와 합쳐도 공부 시간·설정은 그대로
+const o4 = randState('dB'); o4.math = { ...k2.math };
+const oq = mergeState(t1, o4).math;
+chk('math old device keeps 3rd fields:', oq.dayMin === 60 && sumMap(oq.ms['20700']) === 600000);
 // 예전 판 기기(2차 칸 없음)와 합쳐도 새 칸은 그대로
 const o3 = randState('dA'); o3.math = { ...m1.math };
 const oo = mergeState(k2, o3).math;

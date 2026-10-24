@@ -49,7 +49,7 @@ GitHub Pages로 바로 공개되는 **공개 저장소**이고, 태블릿에서 
 - `src/games/` — 놀이 화면(받아쓰기 `Dictation.tsx`, 쓰기 `Trace.tsx` 등), `src/screens/` — 지도 · 집 짓기 · 집 안 · 놀이터 · 부모 설정(`Extras.tsx`)
 - `src/art/` — 그림(SVG 코드), `src/App.tsx` — 화면 전환 · 시험 통과/불합격 처리
 - **수학 모드 (초등 2학년 아이용, 10-23~ — 한글 모드와 따로)**: `src/math/mathData.ts`(저장 모양·항목 4개·12단계·문제와 보기·문제 시간) · `src/math/mathStore.ts`(기록·수학 집) ·
-  `src/screens/MathHome.tsx`(항목 고르기) · `src/screens/MathScreen.tsx`(하루 50문제 객관식·시간 막대) · `src/screens/MathCloset.tsx`(수학 옷장) ·
+  `src/screens/MathHome.tsx`(항목 고르기) · `src/screens/MathScreen.tsx`(객관식·문제 시간 막대·하루 공부 시간) · `src/screens/MathCloset.tsx`(수학 옷장) ·
   수학 집은 한글과 같은 `Build.tsx`·`Home.tsx`를 `src/screens/homeApi.ts`의 `MATH_HOME`으로 · 첫 화면 '✏️ 수학' 버튼 · 부모 설정 '수학' · 검사 `scripts/math_check.mts`
 - `shared/merge.js` — 두 기기 진도 합치기 규칙 (구글 Apps Script 서버와 같이 씀)
 - `scripts/` — 검사 스크립트, PWA 파일 만들기(`build_pwa.py`)
@@ -97,8 +97,8 @@ npm run build   # dist/index.html 이 생기면 성공
 8. **수학 모드(초등 2학년 아이, 10-23 사용자 결정)는 한글 모드와 따로 돈다.** 기록은 `State.math` 한 칸에만(사용자 허락으로 추가한 칸 — 모양은 `src/math/mathData.ts`).
    한글 진도·한글 옷장(`owned`·`wear`)·한글 집(`built`·`bought`·`deco`·`mats`)·하루 사용 시간과 섞지 않는다(수학 화면은 `App.tsx` COUNTED·IDLE에 넣지 않음, 수학 집 화면은 `<HomeCtx.Provider value={MATH_HOME}>`).
    두 기기 합치기는 `shared/merge.js`의 `mergeMath`(한글 초기화 epoch와 상관없이 합침), 한글 전체 초기화·예전 백업 불러오기에도 수학 기록은 남긴다.
-   사용자가 직접 말할 때만 바꾸는 규칙: 항목(덧셈·뺄셈·곱셈·나눗셈 + 골고루)을 골라 풀고 항목마다 단계가 따로 · 하루 50문제(부모 설정) · 객관식 4지선다 ·
+   사용자가 직접 말할 때만 바꾸는 규칙: 항목(덧셈·뺄셈·곱셈·나눗셈 + 골고루)을 골라 풀고 항목마다 단계가 따로 · 하루 공부 시간(10-24 사용자 요청 — 문제 수 제한 대신, 부모 설정 30분·1시간, 문제 화면이 보이고 최근 3분 안에 만졌을 때만 셈, 다 되면 풀던 문제까지) · 한 항목은 하루 150문제까지 · 객관식 4지선다 ·
    문제마다 제한 시간(단계마다 초, 부모 설정 넉넉하게·보통·짧게·끄기 — 시간이 다 되면 틀린 것으로 하고 정답 표시) · 정답 10개마다 수학 옷장에 꾸미기 하나 · 5개마다 수학 집 재료 하나(틀려도 회수 없음) ·
-   하루 문제를 다 푼 날, 그날 그 항목을 20문제 이상 풀고 90% 이상 맞히면 그 항목만 다음 단계 · 단계 순서.
+   공부 시간이 끝날 때(또는 그 항목을 150문제째 풀 때), 그날 그 항목을 20문제 이상 풀고 90% 이상 맞혔으면 그 항목만 다음 단계(하루 한 단계 — 그날 이미 바뀐 항목은 다음 날) · 단계 순서.
    화면에 '언니'라고 쓰지 않는다(10-23 사용자 요청). 아이 이름은 부모 설정 '수학 이름'(`State.math.name`, 기기·연동에만 저장)으로만 보이고 저장소에는 쓰지 않는다(규칙 6).
    `npm run check`의 `math_check`(문제·보기·항목·시간·규칙·수학 집·분리)와 `merge_test`가 통과해야 한다.

@@ -7,6 +7,7 @@ import { Title, Book, Parent, Sleep } from './screens/Extras';
 import { MathScreen } from './screens/MathScreen';
 import { MathCloset } from './screens/MathCloset';
 import { MathHome } from './screens/MathHome';
+import { MathFeed } from './screens/MathFeed';
 import { HomeCtx, MATH_HOME } from './screens/homeApi';
 import type { Mode } from './math/mathData';
 import { House, Dress, Adopt } from './screens/House';
@@ -89,8 +90,8 @@ function Icon() {
 }
 
 type Screen = 'title' | 'map' | 'session' | 'book' | 'house' | 'dress' | 'adopt' | 'build' | 'room' | 'park' | 'yard' | 'parent' | 'sleep'
-  // 수학 모드(초등 2학년 아이): 첫 화면·문제·옷장·집 짓기·집 안·놀이터·마당 — 한글 사용 시간에 안 셈(COUNTED·IDLE에 넣지 않음)
-  | 'math' | 'mathPlay' | 'mathCloset' | 'mathBuild' | 'mathRoom' | 'mathPark' | 'mathYard';
+  // 수학 모드(초등 2학년 아이): 첫 화면·문제·옷장·집 짓기·집 안·놀이터·마당·간식 주기 — 한글 사용 시간에 안 셈(COUNTED·IDLE에 넣지 않음)
+  | 'math' | 'mathPlay' | 'mathCloset' | 'mathBuild' | 'mathRoom' | 'mathPark' | 'mathYard' | 'mathFeed';
 const GALLERY = /[?&]gallery=/.test(location.search);
 const ICON = /[?&]icon=/.test(location.search);
 /** 사용 시간을 세는 화면 */
@@ -135,7 +136,7 @@ export function App() {
     const sc = q.get('screen');
     if (!sc) return;
     if (sc === 'room' || sc === 'yard') setRoom(q.get('place') === 'cathouse' ? 'cathouse' : 'doghouse');
-    if (['room', 'park', 'yard', 'build', 'house', 'map', 'sleep', 'book', 'math', 'mathCloset', 'mathBuild'].includes(sc)) setScreen(sc as Screen);
+    if (['room', 'park', 'yard', 'build', 'house', 'map', 'sleep', 'book', 'math', 'mathCloset', 'mathBuild', 'mathFeed'].includes(sc)) setScreen(sc as Screen);
   }, []);
 
   // 시험용: ?play=feed&lesson=6 → 그 놀이를 바로 열기
@@ -276,9 +277,10 @@ export function App() {
   switch (screen) {
     case 'title': view = <Title onStart={start} onMath={startMath} />; break;
     // 수학 모드 — 집 짓기·집 안·놀이터·마당은 한글과 같은 화면을 수학 기록(MATH_HOME)으로
-    case 'math': view = <MathHome onBack={() => { syncSoon(300); go('title'); }} onPlay={(md) => { setMathMode(md); go('mathPlay'); }} onCloset={() => go('mathCloset')} onHouse={() => go('mathBuild')} />; break;
+    case 'math': view = <MathHome onBack={() => { syncSoon(300); go('title'); }} onPlay={(md) => { setMathMode(md); go('mathPlay'); }} onCloset={() => go('mathCloset')} onHouse={() => go('mathBuild')} onFeed={() => go('mathFeed')} />; break;
     case 'mathPlay': view = <MathScreen key={mathMode} mode={mathMode} onBack={() => { syncSoon(300); go('math'); }} onCloset={() => go('mathCloset')} />; break;
     case 'mathCloset': view = <MathCloset onBack={() => { syncSoon(300); go('math'); }} />; break;
+    case 'mathFeed': view = <MathFeed onBack={() => { syncSoon(300); go('math'); }} />; break;
     case 'mathBuild': view = <HomeCtx.Provider value={MATH_HOME}><BuildScreen onBack={() => { syncSoon(500); go('math'); }} onEnter={(pl) => { if (pl === 'park') go('mathPark'); else { setRoom(pl); go('mathRoom'); } }} onYard={(h) => { setRoom(h); go('mathYard'); }} /></HomeCtx.Provider>; break;
     case 'mathRoom': view = <HomeCtx.Provider value={MATH_HOME}><RoomScreen key={'m-' + room} place={room} onBack={() => { syncSoon(500); go('mathBuild'); }} /></HomeCtx.Provider>; break;
     case 'mathPark': view = <HomeCtx.Provider value={MATH_HOME}><ParkScreen onBack={() => { syncSoon(500); go('mathBuild'); }} /></HomeCtx.Provider>; break;

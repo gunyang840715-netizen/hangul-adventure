@@ -3,18 +3,18 @@
 // - 문제마다 제한 시간(단계마다, 부모 설정 배율) — 시간이 다 되면 틀린 것으로 하고 정답을 보여 줌. 앱이 가려진 동안은 멈춤
 // - 하루 공부 시간(부모 설정 30분·1시간, 10-24 — 문제 수 제한 대신): 이 문제 화면이 보이고 최근 3분 안에 만졌을 때만 셈.
 //   시간이 다 되면 풀던 문제까지 풀고 '오늘 끝'. 한 항목은 하루 150문제까지(골고루는 다 푼 항목을 빼고 냄)
-// - 정답 10개마다 수학 옷장에 꾸미기, 5개마다 수학 집 재료 (틀려도 가져가지 않음)
+// - 정답 10개마다 수학 옷장에 꾸미기, 5개마다 수학 집 재료와 간식 하나씩 (틀려도 가져가지 않음, 간식은 '간식 주기'에서 먹임)
 // - 공부 시간이 끝날 때(또는 그 항목 150문제째) 그날 20문제 이상 푼 항목 중 90% 이상인 항목만 다음 단계 (하루 한 단계)
 // - 한글 진도·하루 사용 시간·한글 옷장·한글 집과 섞이지 않는다 (기록은 State.math 한 칸)
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Backdrop, burst } from '../art/Scene';
-import { Pet, ItemIcon } from '../art/Pet';
+import { Pet, ItemIcon, SnackIcon } from '../art/Pet';
 import { MatIcon } from '../art/Build';
 import { sfx } from '../engine/audio';
 import { syncSoon } from '../engine/sync';
 import { ITEM, ITEM_LIST } from '../data/pets';
 import { makeProblemFor, stageName, catStage, CATS, CAT, ITEM_EVERY, MAT_EVERY, PASS_RATE, UP_MIN, CAT_MAX, IDLE_MS, type Problem, type Mode, type Cat } from '../math/mathData';
-import { mathState, todayMath, todayCat, answerMath, addMathMs, mathTimeUp, catFull, openCats, toNextItem, mathPet, mathWear, mathWho, mathMatsLeft } from '../math/mathStore';
+import { mathState, todayMath, todayCat, answerMath, addMathMs, mathTimeUp, catFull, openCats, toNextItem, mathPet, mathWear, mathWho, mathMatsLeft, mathSnackTotal } from '../math/mathStore';
 import '../math/math.css';
 
 /** 남은 시간(ms): key(문제)가 바뀌면 처음부터, active가 아니면(답을 보여 주는 중·선물 창) 그 자리에서 멈춤, 앱이 가려진 동안도 멈춤 */
@@ -73,7 +73,7 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
   const [item, setItem] = useState<string | null>(null);     // 방금 받은 꾸미기
   const [done, setDone] = useState<Done>(() => doneNow(mode));
   const [ups, setUps] = useState<Cat[]>([]);                 // 오늘 다음 단계로 올라간 항목
-  const [matPop, setMatPop] = useState(0);                   // 재료 하나 받음 (+1 보여 주기)
+  const [pop, setPop] = useState<{ k: number; mat: boolean; snack: string | null } | null>(null);   // 재료·간식 하나 받음 (+1 보여 주기)
   const [lastOne, setLastOne] = useState(false);             // 오늘 공부 시간이 끝남 — 지금 문제까지 풀고 끝
   const [, redraw] = useState(0);                            // 남은 공부 시간 글자 다시 그리기
   const busy = useRef(false);
@@ -127,7 +127,7 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
     setPick(o ?? '⏰');
     if (ok) sfx.ding(); else sfx.boing();
     const r = answerMath(ok, p.cat);
-    if (r.mat) setMatPop(x => x + 1);
+    if (r.mat || r.snack) setPop({ k: Date.now(), mat: r.mat, snack: r.snack });
     if (r.ups.length) upsRef.current = [...upsRef.current, ...r.ups];
     syncSoon(4000);
     timer.current = window.setTimeout(() => {
@@ -170,8 +170,9 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
         <div class="pill" style={{ position: 'absolute', right: 24, top: 86, fontSize: 22 }}>
           🎁 {allGot ? '꾸미기 다 모음!' : <span style={{ letterSpacing: 2 }}>{'●'.repeat(filled)}{'○'.repeat(ITEM_EVERY - filled)}</span>}
           <span style={{ marginLeft: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }}><MatIcon size={28} /> {mathMatsLeft(m)}</span>
+          <span style={{ marginLeft: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }} data-snacks={mathSnackTotal(m)}><SnackIcon id="cookie" size={30} /> {mathSnackTotal(m)}</span>
         </div>
-        {matPop > 0 && <div key={matPop} class="m-pop" data-mat-pop={matPop}><MatIcon size={30} /> +1</div>}
+        {pop && <div key={pop.k} class="m-pop" data-mat-pop={pop.mat ? 1 : 0} data-snack-pop={pop.snack ?? ''}>{pop.mat && <><MatIcon size={30} /> +1</>}{pop.snack && <><SnackIcon id={pop.snack} size={36} /> +1</>}</div>}
         <button class="btn violet small" style={{ position: 'absolute', left: 20, top: 112 }} onClick={() => { sfx.tap(); onCloset(); }}>👗 {who} 옷장</button>
 
         {!done ? (
@@ -200,7 +201,7 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
             {done !== 'time' && <div style={{ fontSize: 30, color: '#4a2f63' }} data-left-today="1">⏳ 오늘 공부 시간 {leftText(t.leftMs)}{done === 'cat' ? ' · 다른 항목도 풀어 볼까?' : ''}</div>}
             <div style={{ fontSize: 22, color: '#7a5b8f', padding: '0 40px', lineHeight: 1.5, wordBreak: 'keep-all' }}>
               공부 시간이 끝나거나 한 항목을 {CAT_MAX}문제 다 풀면, 그날 {UP_MIN}문제 이상 푼 항목을 {Math.round(PASS_RATE * 100)}% 이상 맞혔을 때 그 항목은 다음 단계로 가요<br />
-              꾸미기는 정답 {ITEM_EVERY}개마다, 집 재료는 정답 {MAT_EVERY}개마다
+              꾸미기는 정답 {ITEM_EVERY}개마다, 집 재료와 간식은 정답 {MAT_EVERY}개마다
             </div>
             <div style={{ display: 'flex', gap: 30 }}>
               <button class="btn violet" onClick={() => { sfx.tap(); onCloset(); }}>👗 {who} 옷장</button>

@@ -2,9 +2,9 @@
 // @ts-ignore  (공용 JS)
 import { sumMap } from '../../shared/merge.js';
 import { load, save, flushSave, dev, today, type Wear, type PetView } from '../engine/store';
-import { randomItemFrom } from '../engine/gifts';
-import { PET, BUILDS, BUILD, type Slot, type Species } from '../data/pets';
-import { freshMath, ITEM_EVERY, MAT_EVERY, PASS_RATE, UP_MIN, CAT_MAX, CATS, type Cat, type MathState } from './mathData';
+import { randomItemFrom, randomSnack } from '../engine/gifts';
+import { PET, BUILDS, BUILD, SNACK, type Slot, type Species } from '../data/pets';
+import { freshMath, ITEM_EVERY, MAT_EVERY, SNACK_EVERY, PASS_RATE, UP_MIN, CAT_MAX, CATS, type Cat, type MathState } from './mathData';
 
 /** 읽기용 (아직 수학을 안 했으면 처음 상태) */
 export function mathState(): MathState { return load().math ?? freshMath(); }
@@ -62,8 +62,8 @@ function judge(m: MathState, cats: Cat[]): Cat[] {
   return ups;
 }
 
-export interface AnswerResult { item: string | null; mat: boolean; catDone: boolean; ups: Cat[] }
-/** 한 문제를 풀었을 때(시간이 다 되면 틀린 것으로): 기록 → 정답 10개마다 꾸미기·5개마다 재료 →
+export interface AnswerResult { item: string | null; mat: boolean; snack: string | null; catDone: boolean; ups: Cat[] }
+/** 한 문제를 풀었을 때(시간이 다 되면 틀린 것으로): 기록 → 정답 10개마다 꾸미기·5개마다 재료와 간식 →
  *  그 항목을 오늘 150문제째 풀었으면(그 항목은 오늘 끝) 그 항목 판정 */
 export function answerMath(ok: boolean, cat: Cat): AnswerResult {
   const m = edit();
@@ -79,10 +79,13 @@ export function answerMath(ok: boolean, cat: Cat): AnswerResult {
     if (item) { m.owned = [...m.owned, item].sort(); m.lastItem = item; m.lastItemT = Date.now(); }
   }
   const mat = ok && mathTotalCorrect(m) % MAT_EVERY === 0;
+  // 간식: 정답 5개마다 하나 (종류는 한글 선물과 같은 비율로 무작위, 수학 간식 칸에만)
+  let snack: string | null = null;
+  if (ok && mathTotalCorrect(m) % SNACK_EVERY === 0) { snack = randomSnack(); bump(m.snacks[snack] ||= {}); }
   const catDone = before < CAT_MAX && todayCat(cat, m).solved >= CAT_MAX;
   const ups = catDone ? judge(m, [cat]) : [];
   save();
-  return { item, mat, catDone, ups };
+  return { item, mat, snack, catDone, ups };
 }
 
 /** 문제 화면에서 공부한 시간 더하기(ms). 오늘 공부 시간을 넘는 그 순간 한 번 모든 항목 판정 → 오른 항목 */
@@ -142,6 +145,25 @@ export function mathPetView(sp: Species, m = mathState()): PetView {
   const id = sp === 'dog' ? (m.dog && PET[m.dog] ? m.dog : 'maltese') : (m.cat && PET[m.cat] ? m.cat : 'koshort');
   const d = PET[id];
   return { id, species: d.species, name: d.name, breed: d.breed, wear: m.wear[id] || {}, points: 63, level: 10, stage: 'adult' };
+}
+
+// ---------- 간식 (한글 간식과 따로) ----------
+/** 그 간식이 몇 개 남았나 */
+export const mathSnackCount = (id: string, m = mathState()) => Math.max(0, (sumMap(m.snacks[id]) as number) - (sumMap(m.eaten[id]) as number));
+/** 남은 간식 모두 */
+export const mathSnackTotal = (m = mathState()) => Object.keys(SNACK).reduce((a, k) => a + mathSnackCount(k, m), 0);
+/** 그 친구가 간식을 먹은 횟수 (하트) */
+export const mathFedCount = (petId: string, m = mathState()) => sumMap(m.fed[petId]) as number;
+/** 간식 먹이기 — 간식이 없거나 그 친구가 못 먹는 간식(강아지 간식을 고양이에게 등)이면 false */
+export function mathFeed(petId: string, snackId: string): boolean {
+  const sn = SNACK[snackId], p = PET[petId];
+  if (!sn || !p || mathSnackCount(snackId) <= 0) return false;
+  if (sn.for !== 'both' && sn.for !== p.species) return false;
+  const m = edit();
+  bump(m.eaten[snackId] ||= {});
+  bump(m.fed[petId] ||= {});
+  save();
+  return true;
 }
 
 // ---------- 집 짓기·집 안·마당·놀이터 (한글 집과 따로) ----------

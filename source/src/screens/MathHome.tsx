@@ -1,4 +1,4 @@
-// 수학 첫 화면: 항목 고르기(덧셈·뺄셈·곱셈·나눗셈·골고루) · 수학 옷장 · 수학 집(집 짓기·집 안·마당·놀이터 — 한글 집과 따로)
+// 수학 첫 화면: 항목 고르기(덧셈·뺄셈·곱셈·나눗셈·골고루) · 수학 옷장 · 수학 집(집 짓기·집 안·마당·놀이터 — 한글 집과 따로) · 간식 주기(10-24)
 // 하루 공부 시간(부모 설정 30분·1시간)이 다 되면 오늘은 못 고름, 한 항목은 하루 150문제까지 (10-24)
 // 화면에 보이는 이름은 부모 설정의 '수학 이름'(기기 저장값)만 — 저장소에는 아이 이름을 쓰지 않는다
 import { Backdrop } from '../art/Scene';
@@ -7,11 +7,11 @@ import { MatIcon } from '../art/Build';
 import { sfx } from '../engine/audio';
 import { ITEM_LIST } from '../data/pets';
 import { CATS, STAGES, CAT_MAX, catStage, type Mode } from '../math/mathData';
-import { mathState, todayMath, todayCat, mathTimeUp, openCats, mathPet, mathWear, mathWho, mathName, mathMatsLeft } from '../math/mathStore';
+import { mathState, todayMath, todayCat, mathTimeUp, openCats, mathPet, mathWear, mathWho, mathName, mathMatsLeft, mathSnackTotal } from '../math/mathStore';
 import { TodaySummary, leftText } from './MathScreen';
 import '../math/math.css';
 
-export function MathHome({ onBack, onPlay, onCloset, onHouse }: { onBack: () => void; onPlay: (mode: Mode) => void; onCloset: () => void; onHouse: () => void }) {
+export function MathHome({ onBack, onPlay, onCloset, onHouse, onFeed }: { onBack: () => void; onPlay: (mode: Mode) => void; onCloset: () => void; onHouse: () => void; onFeed?: () => void }) {
   const m = mathState();
   const t = todayMath(m);
   const done = mathTimeUp(m);
@@ -47,6 +47,7 @@ export function MathHome({ onBack, onPlay, onCloset, onHouse }: { onBack: () => 
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 40, display: 'flex', gap: 30, justifyContent: 'center' }}>
           <button class="btn violet" onClick={() => { sfx.tap(); onCloset(); }}>👗 {who} 옷장</button>
           <button class="btn mint" data-math-house="1" onClick={() => { sfx.tap(); onHouse(); }}>🏡 {who} 집 꾸미기</button>
+          {onFeed && <button class="btn yellow" data-math-feed-go="1" onClick={() => { sfx.tap(); onFeed(); }}>🍪 간식 주기{mathSnackTotal(m) ? ` (${mathSnackTotal(m)})` : ''}</button>}
         </div>
         <div style={{ position: 'absolute', left: 10, bottom: 10, pointerEvents: 'none' }}>
           <Pet pet={pet} wear={mathWear(pet, m)} size={190} motion="bob" autoTalk={false} />

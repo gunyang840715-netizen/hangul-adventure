@@ -11,10 +11,10 @@ g.window = g;
 g.window.setTimeout = setTimeout; g.window.clearTimeout = clearTimeout;
 g.localStorage = { getItem: (k: string) => memory[k] ?? null, setItem: (k: string, v: string) => { memory[k] = String(v); } };
 const md = await import('../src/math/mathData');
-const { STAGES, CATS, CAT, makeProblemFor, makeStageProblem, normalizeMath, freshMath, lvFromLevel, catOf, catStage, DAY_MIN, DAY_MIN_CHOICES, CAT_MAX, ITEM_EVERY, MAT_EVERY, UP_MIN, TIME_CHOICES } = md;
+const { STAGES, CATS, CAT, makeProblemFor, makeStageProblem, normalizeMath, freshMath, lvFromLevel, catOf, catStage, DAY_MIN, DAY_MIN_CHOICES, CAT_MAX, ITEM_EVERY, MAT_EVERY, SNACK_EVERY, UP_MIN, TIME_CHOICES } = md;
 const store = await import('../src/engine/store');
 const ms = await import('../src/math/mathStore');
-const { ITEM, PET, BUILDS } = await import('../src/data/pets');
+const { ITEM, PET, BUILDS, SNACK, SNACKS } = await import('../src/data/pets');
 const { FURN, FURN_BY } = await import('../src/data/home');
 
 // ---------- 1) 문제와 보기 ----------
@@ -122,12 +122,15 @@ const newDay = () => { const m = store.load().math!; m.solved = {}; m.correct = 
 const timeUpNow = () => { const r = ms.addMathMs(ms.todayMath().leftMs); assert.ok(r.timeUp, '하루 공부 시간이 되는 순간 끝'); return r.ups; };
 // 덧셈 25문제 모두 정답 + 곱셈 25문제 중 20개 정답(80%) — 50문제를 풀어도 시간이 남으면 계속, 시간이 끝날 때 덧셈만 다음 단계
 let items: string[] = [], mats = 0, ups: string[] = [];
+const snacksGot: string[] = [];
 for (let k = 1; k <= 50; k++) {
   const cat = k <= 25 ? 'add' : 'mul';
   const ok = cat === 'add' || k % 5 !== 0;
   const r = ms.answerMath(ok, cat);
   if (r.item) items.push(r.item);
   if (r.mat) mats++;
+  if (r.snack) snacksGot.push(r.snack);
+  assert.equal(!!r.snack, r.mat, '간식은 재료와 같이 정답 5개마다');
   assert.equal(r.catDone, false, '150문제 전에는 항목 끝 X');
   assert.deepEqual(r.ups, [], '시간이 끝나기 전에는 단계 그대로');
 }
@@ -153,6 +156,10 @@ assert.ok(items.every(id => ITEM[id]), '있는 꾸미기만');
 assert.deepEqual(m1.owned, [...items].sort(), '수학 옷장에만 들어감');
 assert.equal(mats, Math.floor(45 / MAT_EVERY), '정답 5개마다 재료');
 assert.equal(ms.mathMatsLeft(), 9);
+assert.equal(snacksGot.length, Math.floor(45 / SNACK_EVERY), '정답 5개마다 간식 하나');
+assert.ok(snacksGot.every(id => SNACK[id]), '있는 간식만');
+assert.equal(ms.mathSnackTotal(), snacksGot.length, '받은 간식은 수학 간식 칸에');
+assert.deepEqual(store.load().snacks, {}, '한글 간식은 그대로');
 assert.deepEqual(ups, ['add'], '90% 이상인 항목만 다음 단계');
 assert.deepEqual(m1.lv, { add: 1, sub: 0, mul: 0, div: 0 });
 assert.deepEqual(store.load().owned, [], '한글 옷장은 그대로');
@@ -258,6 +265,27 @@ assert.equal(ms.mathPetView('dog').id, 'poodle'); assert.equal(ms.mathPetView('c
 ms.toggleMathWear('persian', slot, key);
 assert.equal((ms.mathPetView('cat').wear as any)[slot], key, '수학 집 친구는 수학 옷장 꾸미기를 입음');
 assert.equal(store.load().dog, store.fresh().dog, '한글 강아지는 그대로'); assert.equal(store.load().cat, store.fresh().cat, '한글 고양이는 그대로');
+// 수학 간식 먹이기 (10-24): 강아지 간식은 강아지, 고양이 간식은 고양이, 같이 먹는 간식은 둘 다 — 한글 간식·성장과 따로
+{
+  const sid = Object.keys(SNACK).find(k => ms.mathSnackCount(k) > 0)!;
+  assert.ok(sid, '먹일 간식 있음');
+  const sp = SNACK[sid].for === 'cat' ? 'cat' : 'dog';
+  const eater = ms.mathPetView(sp).id, other = ms.mathPetView(sp === 'dog' ? 'cat' : 'dog').id;
+  const n0 = ms.mathSnackCount(sid), t0 = ms.mathSnackTotal();
+  if (SNACK[sid].for !== 'both') assert.equal(ms.mathFeed(other, sid), false, '강아지 간식은 고양이가(고양이 간식은 강아지가) 못 먹음');
+  assert.equal(ms.mathSnackCount(sid), n0, '못 먹이면 그대로');
+  assert.ok(ms.mathFeed(eater, sid));
+  assert.equal(ms.mathSnackCount(sid), n0 - 1); assert.equal(ms.mathSnackTotal(), t0 - 1);
+  assert.equal(ms.mathFedCount(eater), 1, '먹은 횟수(하트)');
+  while (ms.mathSnackCount(sid) > 0) assert.ok(ms.mathFeed(eater, sid));
+  assert.equal(ms.mathFeed(eater, sid), false, '간식이 없으면 못 먹임');
+  assert.equal(ms.mathFedCount(eater), n0);
+  assert.equal(ms.mathFeed(eater, 'nope'), false); assert.equal(ms.mathFeed('ghost', sid), false);
+  const both = SNACKS.find(x => x.for === 'both' && ms.mathSnackCount(x.id) > 0);
+  if (both) { assert.ok(ms.mathFeed(ms.mathPetView('cat').id, both.id), '같이 먹는 간식은 고양이도'); }
+  assert.deepEqual(store.load().snacks, {}, '한글 간식은 그대로'); assert.deepEqual(store.load().eaten, {}, '한글 먹인 기록은 그대로');
+  assert.deepEqual(store.load().growth, {}, '한글 친구 성장은 그대로');
+}
 // 집 짓기: 재료 하나로 한 부분, 재료가 없으면 못 지음
 const matsBefore = ms.mathMatsLeft();
 assert.ok(matsBefore > 3, '재료 있음 ' + matsBefore);
@@ -317,6 +345,7 @@ const bad = normalizeMath({
   wear: { nobody: { hat: 'crown' }, maltese: { hat: 'nope', glasses: 'sun' } },
   lv: { add: 9, sub: -2, mul: 'x', zzz: 1 }, lvT: { add: 3, zzz: 4 }, solvedC: { '20700:add': { e: 3 }, '20700:zzz': { e: 1 }, 'x:add': { e: 1 } },
   dog: 'koshort', cat: 'persian', built: { doghouse: { e: 2 }, nope: { e: 1 } }, bought: { [furn.id]: 5, 'nope:x': 3 },
+  snacks: { bone: { e: 2 }, nope: { e: 1 } }, eaten: { bone: { e: 1, f: -2 }, zz: { e: 1 } }, fed: { maltese: { e: 3 }, ghost: { e: 1 } },
   deco: { doghouse: { bed: furn.id, rug: 'nope:x' }, mars: { bed: furn.id } }, decoT: { doghouse: 1, mars: 2 },
 })!;
 assert.equal(bad.level, 0); assert.equal(bad.perDay, freshMath().perDay); assert.equal(bad.dayMin, DAY_MIN); assert.deepEqual(bad.ms, { '20700': { e: 7 } });
@@ -330,6 +359,7 @@ assert.equal(bad.dog, undefined, '강아지 자리에 고양이 X'); assert.equa
 assert.deepEqual(bad.built, { doghouse: { e: 2 } });
 assert.deepEqual(bad.bought, { [furn.id]: 5 });
 assert.deepEqual(bad.deco, { doghouse: { bed: furn.id } }); assert.deepEqual(bad.decoT, { doghouse: 1 });
+assert.deepEqual(bad.snacks, { bone: { e: 2 } }); assert.deepEqual(bad.eaten, { bone: { e: 1 } }); assert.deepEqual(bad.fed, { maltese: { e: 3 } });
 assert.ok(FURN_BY[furn.id] && PET.persian);
 // 예전(항목 나누기 전) 12단계 기록 → 항목마다 단계로 (앞 단계는 끝낸 것으로)
 assert.deepEqual(lvFromLevel(0), { add: 0, sub: 0, mul: 0, div: 0 });
@@ -349,5 +379,5 @@ store.flushSave();
 assert.equal(canon(normalizeMath(JSON.parse(JSON.stringify(store.load().math)))), keep, '저장 모양 그대로 다시 읽힘');
 const once = normalizeMath(store.load().math);
 assert.equal(JSON.stringify(normalizeMath(JSON.parse(JSON.stringify(once)))), JSON.stringify(once), '다시 읽어도 칸 순서까지 같음');
-console.log(`수학 모드: ${STAGES.length}단계 문제·보기 각 ${N}개, 항목 ${CATS.length}개(+골고루)·문제 시간, 하루 공부 시간(${DAY_MIN_CHOICES.join('·')}분)·항목당 하루 ${CAT_MAX}문제·정답 ${ITEM_EVERY}개마다 꾸미기·${MAT_EVERY}개마다 재료·항목마다 다음 단계,`
+console.log(`수학 모드: ${STAGES.length}단계 문제·보기 각 ${N}개, 항목 ${CATS.length}개(+골고루)·문제 시간, 하루 공부 시간(${DAY_MIN_CHOICES.join('·')}분)·항목당 하루 ${CAT_MAX}문제·정답 ${ITEM_EVERY}개마다 꾸미기·${MAT_EVERY}개마다 재료·${SNACK_EVERY}개마다 간식(먹이기)·항목마다 다음 단계,`
   + ` 수학 옷장·집(짓기·가구·마당)·이름이 한글과 따로, 초기화·예전 백업·망가진 칸·예전 기록 옮기기 통과`);

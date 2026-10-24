@@ -49,6 +49,12 @@ function randMath(dev) {
     if (rnd(3)) {
       m.dayMin = pick([30, 60]); m.dayMinT = rnd(3);
       m.ms = {}; for (const d of ['20700', '20701', '20500']) if (rnd(2)) m.ms[d] = { [dev]: rnd(4e6) };
+      // 4차(10-24): 수학 간식 — 없을 수도 있음(3차 판 기기)
+      if (rnd(3)) {
+        m.snacks = {}; m.eaten = {}; m.fed = {};
+        for (const sn of ['bone', 'fish', 'cookie']) { if (rnd(2)) m.snacks[sn] = { [dev]: rnd(9) }; if (rnd(2)) m.eaten[sn] = { [dev]: rnd(4) }; }
+        for (const p of ['maltese', 'koshort']) if (rnd(2)) m.fed[p] = { [dev]: rnd(7) };
+      }
     }
   }
   return m;
@@ -113,6 +119,15 @@ t2.math = { ...k2.math, dayMin: 30, dayMinT: 4, ms: { '20700': { dB: 900000 }, '
 const tt = mergeState(t1, t2).math, tr = mergeState(t2, t1).math;
 chk('math 3rd lww/sums ok:', tt.dayMin === 60 && tt.dayMinT === 9 && sumMap(tt.ms['20700']) === 1500000 && sumMap(tt.ms['20701']) === 1000
   && !('20601' in tt.ms) && canon(tt) === canon(tr) && JSON.stringify(tt) === JSON.stringify(tr));
+// 4차 칸: 수학 간식 받은·먹인 개수, 친구별 먹은 횟수는 기기별 합계 (한글 간식과 따로)
+const s1 = randState('dA'), s2 = randState('dB');
+s1.math = { ...t1.math, snacks: { bone: { dA: 3 }, cookie: { dA: 1 } }, eaten: { bone: { dA: 1 } }, fed: { maltese: { dA: 1 } } };
+s2.math = { ...t2.math, snacks: { bone: { dB: 2 }, fish: { dB: 4 } }, eaten: { fish: { dB: 2 } }, fed: { maltese: { dB: 2 }, koshort: { dB: 2 } } };
+const ss = mergeState(s1, s2).math, sr = mergeState(s2, s1).math;
+chk('math 4th snack sums ok:', sumMap(ss.snacks.bone) === 5 && sumMap(ss.snacks.fish) === 4 && sumMap(ss.snacks.cookie) === 1 && sumMap(ss.eaten.bone) === 1 && sumMap(ss.eaten.fish) === 2
+  && sumMap(ss.fed.maltese) === 3 && sumMap(ss.fed.koshort) === 2 && canon(ss) === canon(sr) && JSON.stringify(ss) === JSON.stringify(sr));
+const o5 = randState('dB'); o5.math = { ...t2.math };
+chk('math old device keeps 4th fields:', sumMap(mergeState(s1, o5).math.snacks.bone) === 3 && sumMap(mergeState(o5, s1).math.fed.maltese) === 1);
 // 2차 판 기기(3차 칸 없음)와 합쳐도 공부 시간·설정은 그대로
 const o4 = randState('dB'); o4.math = { ...k2.math };
 const oq = mergeState(t1, o4).math;

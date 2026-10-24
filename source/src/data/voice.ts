@@ -249,6 +249,7 @@ export function allLines(name: string): string[] {
   SNACKS.forEach(sn => L.add(sn.name));
   nameLines(name).forEach(l => L.add(l));
   L.add(MATH_NO_MAT);
+  L.add(MATH_NO_SNACK);
   L.delete('');
   return [...L];
 }
@@ -281,3 +282,5 @@ export function crispLines(): string[] {
 export const REPS_COUNT = ['하나!', '둘!', '셋!', '넷!', '다섯!', '여섯!', '일곱!', '여덟!', '아홉!', '열!', '열하나!', '열둘!', '열셋!', '열넷!', '열다섯!'];
 // 수학 모드(10-23): 수학 집에서 재료가 없을 때 — 수학 재료는 놀이가 아니라 정답으로 받음 (녹음 없음, 기기 음성으로 읽힘)
 export const MATH_NO_MAT = '재료가 없어! 수학 문제를 맞히면 받을 수 있어!';
+// 수학 모드(10-24): 수학 간식이 없을 때 — 수학 간식은 정답 5개마다 받음 (녹음 없음, 기기 음성으로 읽힘)
+export const MATH_NO_SNACK = '간식이 없어! 수학 문제를 맞히면 받을 수 있어!';

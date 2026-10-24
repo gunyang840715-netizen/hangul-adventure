@@ -2,7 +2,7 @@
 // 저장은 한글 진도(State)의 'math' 한 칸에만 (10-23 사용자 허락). 두 기기 합치기는 shared/merge.js mergeMath.
 // 아이 이름은 저장소에 쓰지 않는다 — 부모 설정에서 넣은 이름(math.name)을 실행할 때만 읽어 보여 준다.
 // 이 파일은 store.ts를 부르지 않는다 (store.ts가 이 파일의 normalizeMath를 쓰므로 서로 부르면 꼬임).
-import { ITEM, PET, BUILD, type Slot } from '../data/pets';
+import { ITEM, PET, BUILD, SNACK, type Slot } from '../data/pets';
 import { FURN_BY } from '../data/home';
 
 type DevMap = Record<string, number>;
@@ -31,6 +31,10 @@ export interface MathState {
   // ---- 10-24 3차: 문제 수 대신 하루 공부 시간 ----
   dayMin: number; dayMinT: number;        // 하루 공부 시간(분, 부모 설정 30분·1시간)
   ms: DayMap;                             // 날짜 → 기기 → 문제 화면에서 공부한 시간(ms)
+  // ---- 10-24 4차: 수학 간식 (한글 간식과 따로) ----
+  snacks: DayMap;                         // 간식 id → 기기 → 받은 개수 (정답 5개마다 하나)
+  eaten: DayMap;                          // 간식 id → 기기 → 먹인 개수
+  fed: DayMap;                            // 친구 id → 기기 → 간식을 먹은 횟수 (하트)
 }
 
 export const PER_DAY = 50;                // (예전) 하루 문제 수 기본값 — perDay 칸 읽기용으로만 남김
@@ -40,6 +44,7 @@ export const CAT_MAX = 150;               // 한 항목(덧셈·뺄셈·곱셈·
 export const IDLE_MS = 180000;            // 3분 넘게 안 만지면 공부 시간을 안 셈 (한글 사용 시간과 같은 기준)
 export const ITEM_EVERY = 10;             // 정답 10개마다 꾸미기 하나
 export const MAT_EVERY = 5;               // 정답 5개마다 집 짓기·꾸미기 재료 하나
+export const SNACK_EVERY = 5;             // 정답 5개마다 간식 하나 (10-24 사용자 요청 — 수학 강아지·고양이에게 먹이기)
 export const PASS_RATE = 0.9;             // 그날 그 항목 문제의 90% 이상 맞히면 그 항목 다음 단계
 export const UP_MIN = 20;                 // 그 항목을 그날 이만큼은 풀어야 다음 단계 판정
 export const TIME_CHOICES: [number, string][] = [[1.5, '넉넉하게'], [1, '보통'], [0.75, '짧게'], [0, '끄기']];
@@ -67,7 +72,7 @@ export function freshMath(): MathState {
   return {
     level: 0, levelT: 0, perDay: PER_DAY, perDayT: 0, solved: {}, correct: {}, total: {}, owned: [], wear: {}, wearT: {},
     lv: lvFromLevel(0), lvT: {}, solvedC: {}, correctC: {}, timeMul: 1, timeMulT: 0, name: '', nameT: 0,
-    built: {}, bought: {}, deco: {}, decoT: {}, dayMin: DAY_MIN, dayMinT: 0, ms: {},
+    built: {}, bought: {}, deco: {}, decoT: {}, dayMin: DAY_MIN, dayMinT: 0, ms: {}, snacks: {}, eaten: {}, fed: {},
   };
 }
 
@@ -141,6 +146,10 @@ export function normalizeMath(o: any): MathState | undefined {
   m.dayMin = DAY_MIN_CHOICES.includes(o.dayMin) ? o.dayMin : DAY_MIN;
   m.dayMinT = isNum(o.dayMinT) ? o.dayMinT : 0;
   m.ms = dayMap(o.ms);
+  // 4차(10-24): 수학 간식 — 모르는 간식·친구는 버림
+  m.snacks = dayMap(o.snacks, k => !!SNACK[k]);
+  m.eaten = dayMap(o.eaten, k => !!SNACK[k]);
+  m.fed = dayMap(o.fed, k => !!PET[k]);
   return m;
 }
 

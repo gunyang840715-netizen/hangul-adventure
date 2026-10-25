@@ -1,16 +1,18 @@
 // 수학 간식 주기 (10-24 사용자 요청): 수학 문제 정답 5개마다 받은 간식을 수학 집의 강아지·고양이에게 먹이기
-// - 한글 '우리 집' 간식과 따로 (State.math의 snacks·eaten·fed — 한글 간식·성장은 건드리지 않음)
-// - 수학 친구는 다 자란 모습이라 크지는 않고, 먹을 때마다 하트(먹은 횟수)가 늘어남
+// - 한글 '우리 집' 간식과 따로 (State.math의 snacks·eaten·fed·fedPlus — 한글 간식·성장은 건드리지 않음)
+// - 10-25 사용자 요청: 수학 친구도 한글처럼 다 큰 모습이 아니라 아기부터 — 간식 점수만큼 자라고(한글과 같은 점수표: Lv.1~10 · 아기·어린이·어른),
+//   레벨이 오르면 한글 우리 집과 같은 '쑥쑥 컸어!' 창. 먹을 때마다 하트(먹은 횟수)도 그대로 늘어남
 // - 강아지 간식은 강아지, 고양이 간식은 고양이, 같이 먹는 간식은 고른 친구에게 (한글 우리 집과 같은 규칙)
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Backdrop, burst, toSafe } from '../art/Scene';
 import { Pet, SnackIcon } from '../art/Pet';
-import { say, sfx } from '../engine/audio';
+import { say, sayAll, sfx } from '../engine/audio';
 import { syncSoon } from '../engine/sync';
-import { SNACKS, SNACK, CLASSIC_SNACKS, PET, type Species } from '../data/pets';
-import { STUDY_NO_SNACK } from '../data/voice';
+import type { PetView } from '../engine/store';
+import { SNACKS, SNACK, CLASSIC_SNACKS, PET, STAGE_NAME, MAX_LEVEL, levelProgress, stageOf, type Species } from '../data/pets';
+import { STUDY_NO_SNACK, growLine, stageLine } from '../data/voice';
 import { SNACK_EVERY } from '../math/mathData';
-import { mathState, mathPet, mathPetView, mathSnackCount, mathSnackTotal, mathFedCount, mathFeed } from '../math/mathStore';
+import { mathState, mathPet, mathPetView, mathPetInfo, mathSnackCount, mathSnackTotal, mathFedCount, mathFeed } from '../math/mathStore';
 import '../math/math.css';
 
 /** 간식 바구니: 가진 간식 먼저(20가지라 다 보이면 너무 많음), 6칸이 안 되면 처음부터 있던 간식을 빈 칸으로 */
@@ -18,6 +20,18 @@ function trayList() {
   const have = SNACKS.filter(sn => mathSnackCount(sn.id) > 0);
   const pad = CLASSIC_SNACKS.map(id => SNACK[id]).filter(sn => !have.includes(sn));
   return have.length >= 6 ? have : [...have, ...pad.slice(0, 6 - have.length)];
+}
+
+/** 성장 막대 (한글 우리 집과 같은 모양) + 먹은 횟수 하트 */
+function Growth({ v, fed }: { v: PetView; fed: number }) {
+  const pr = levelProgress(v.points);
+  return (
+    <div class="grow-card" data-fed={fed} data-grow-lv={v.level} data-grow-stage={v.stage}>
+      <div class="grow-name">{v.breed} <b>{v.name}</b></div>
+      <div class="grow-lv">Lv.{v.level} · {STAGE_NAME[v.stage]} · 💗 {fed}</div>
+      <div class="grow-bar"><i style={{ width: `${v.level >= MAX_LEVEL ? 100 : Math.round(pr * 100)}%` }} /></div>
+    </div>
+  );
 }
 
 const POS: Record<Species, { left: number; top: number; size: number }> = { dog: { left: 170, top: 250, size: 300 }, cat: { left: 630, top: 270, size: 280 } };
@@ -28,6 +42,7 @@ export function MathFeed({ onBack }: { onBack: () => void }) {
   const [fly, setFly] = useState<{ id: string; from: [number, number]; to: [number, number]; go: boolean; k: number } | null>(null);
   const [eating, setEating] = useState<Species | null>(null);
   const [bub, setBub] = useState<{ who: Species; text: string } | null>(null);
+  const [grow, setGrow] = useState<{ v: PetView; stageUp: boolean } | null>(null);
   const busy = useRef(false);
   useEffect(() => () => { syncSoon(500); }, []);
   const m = mathState();
@@ -58,14 +73,27 @@ export function MathFeed({ onBack }: { onBack: () => void }) {
     requestAnimationFrame(() => requestAnimationFrame(() => setFly(f => f && { ...f, go: true })));
     await new Promise(res => setTimeout(res, 560));
     setFly(null);
-    const ok = mathFeed(view[who].id, id);
+    const petId = view[who].id;
+    const before = mathPetInfo(petId).level;   // 먹이기 바로 전 레벨 (그사이 다른 기기 기록이 들어와도 맞게)
+    const ok = mathFeed(petId, id);
     busy.current = false;
     if (!ok) return;
     sfx.pop(); burst(...to);
     setEating(who); setTimeout(() => setEating(null), 1300);
     who === 'dog' ? sfx.bark(1) : sfx.meow();
     talk(who, sn.points > 1 ? '제일 좋아! 냠냠!' : '냠냠!');
-    say('냠냠! 맛있다!');
+    const nv = mathPetInfo(petId);
+    if (nv.level > before) {
+      // 레벨이 오르면 한글 우리 집과 같은 축하 — 단계가 바뀌면(아기→어린이→어른) '어린이가/어른이 됐어!'까지
+      const stageUp = stageOf(nv.level) !== stageOf(before);
+      setTimeout(() => {
+        setGrow({ v: nv, stageUp });
+        sfx.fanfare(); burst(640, 300, 'confetti');
+        sayAll(stageUp ? [growLine(nv.name), stageLine(nv.name, nv.stage === 'adult' ? 'adult' : 'kid')] : [growLine(nv.name)]);
+      }, 700);
+    } else {
+      say('냠냠! 맛있다!');
+    }
     syncSoon(3000);
     force(x => x + 1);
   };
@@ -84,8 +112,8 @@ export function MathFeed({ onBack }: { onBack: () => void }) {
           const P = POS[sp];
           return (
             <>
-              <div style={{ position: 'absolute', left: P.left, top: P.top - 96, width: P.size, display: 'flex', justifyContent: 'center' }}>
-                <div class="pill" style={{ fontSize: 28 }} data-fed={mathFedCount(v.id, m)}>{v.name} 💗 {mathFedCount(v.id, m)}</div>
+              <div style={{ position: 'absolute', left: P.left, top: P.top - 130, width: P.size, display: 'flex', justifyContent: 'center' }}>
+                <Growth v={v} fed={mathFedCount(v.id, m)} />
               </div>
               <div class={`house-pet ${sel === sp ? 'sel' : ''}`} data-feed-pet={sp} style={{ left: P.left, top: P.top, width: P.size, height: P.size }} onClick={() => tapPet(sp)}>
                 <Pet pet={v.id} stage={v.stage} level={v.level} wear={v.wear} size={P.size} mood={eating === sp ? 'love' : 'happy'} motion={eating === sp ? 'jump' : 'bob'} autoTalk={false} />
@@ -95,7 +123,7 @@ export function MathFeed({ onBack }: { onBack: () => void }) {
           );
         })}
         <div style={{ position: 'absolute', left: 990, top: 290, padding: '14px 20px', borderRadius: 24, background: 'rgba(255,255,255,.9)', boxShadow: 'var(--shadow)', fontSize: 22, lineHeight: 1.55, color: '#6d3f8c' }}>
-          간식을 누르면<br />먹여 줄 수 있어요<br />🐶 강아지 간식<br />🐱 고양이 간식<br />🐶🐱 같이 먹는 간식
+          간식을 누르면<br />먹여 줄 수 있어요<br />🐶 강아지 간식<br />🐱 고양이 간식<br />🐶🐱 같이 먹는 간식<br />먹으면 쑥쑥 자라요
         </div>
         {/* 간식 바구니 */}
         <div class="snack-tray">
@@ -116,6 +144,21 @@ export function MathFeed({ onBack }: { onBack: () => void }) {
           </div>
         )}
       </div>
+      {grow && (
+        <div class="overlay fade-in" style={{ background: 'rgba(60,30,90,.45)', zIndex: 40 }} onClick={() => { sfx.tap(); setGrow(null); }}>
+          <div class="layer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div class="card slide-up" style={{ padding: '30px 50px', gap: 40 }} data-grow="1">
+              <Pet pet={grow.v.id} stage={grow.v.stage} level={grow.v.level} wear={grow.v.wear} size={330} motion="cheer" mood="love" />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+                <div style={{ fontSize: 60, color: '#e0488a' }}>쑥쑥 컸어!</div>
+                <div class="pill" style={{ fontSize: 40 }}>Lv.{grow.v.level}</div>
+                {grow.stageUp && <div style={{ fontSize: 40, color: '#7048e8' }}>{grow.v.stage === 'adult' ? '어른이' : '어린이가'} 됐어요!</div>}
+                <button class="btn big">좋아! ▶</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -55,7 +55,11 @@ function randMath(dev) {
         for (const sn of ['bone', 'fish', 'cookie']) { if (rnd(2)) m.snacks[sn] = { [dev]: rnd(9) }; if (rnd(2)) m.eaten[sn] = { [dev]: rnd(4) }; }
         for (const p of ['maltese', 'koshort']) if (rnd(2)) m.fed[p] = { [dev]: rnd(7) };
         // 5차(10-25): 맞춤법 문제별 기록(분×10+상태) — 없을 수도 있음(4차 판 기기)
-        if (rnd(3)) { m.sp = {}; for (const k of ['k1.1', 'k1.2', 'g1.2', 'l7.1']) if (rnd(2)) m.sp[k] = (29500000 + rnd(4)) * 10 + rnd(4); }
+        if (rnd(3)) {
+          m.sp = {}; for (const k of ['k1.1', 'k1.2', 'g1.2', 'l7.1']) if (rnd(2)) m.sp[k] = (29500000 + rnd(4)) * 10 + rnd(4);
+          // 6차(10-25): 수학 친구 성장 — 친구별 2·3점 간식 덤 점수, 없을 수도 있음(5차 판 기기)
+          if (rnd(3)) { m.fedPlus = {}; for (const p of ['maltese', 'koshort']) if (rnd(2)) m.fedPlus[p] = { [dev]: rnd(6) }; }
+        }
       }
     }
   }
@@ -139,6 +143,15 @@ chk('math 5th spell later wins:', pp.sp['k1.1'] === 295000052 && pp.sp['g1.2'] =
   && Object.keys(pp.sp).join() === 'g1.2,k1.1,l7.1' && canon(pp) === canon(pr) && JSON.stringify(pp) === JSON.stringify(pr));
 const o6 = randState('dB'); o6.math = { ...s2.math };
 chk('math old device keeps 5th fields:', mergeState(p1, o6).math.sp['k1.1'] === 295000001 && mergeState(o6, p1).math.sp['g1.2'] === 295000100);
+// 6차 칸(10-25): 수학 친구 성장 — 친구별 덤 점수는 기기별 합계(성장 점수 = fed + fedPlus), 5차 판 기기와 합쳐도 그대로
+const f1 = randState('dA'), f2 = randState('dB');
+f1.math = { ...p1.math, fedPlus: { maltese: { dA: 2 } } };
+f2.math = { ...p2.math, fedPlus: { maltese: { dB: 1 }, koshort: { dB: 4 } } };
+const ff = mergeState(f1, f2).math, fr = mergeState(f2, f1).math;
+chk('math 6th grow bonus sums ok:', sumMap(ff.fedPlus.maltese) === 3 && sumMap(ff.fedPlus.koshort) === 4 && sumMap(ff.fed.maltese) + sumMap(ff.fedPlus.maltese) === 6
+  && canon(ff) === canon(fr) && JSON.stringify(ff) === JSON.stringify(fr));
+const o7 = randState('dB'); o7.math = { ...p2.math };
+chk('math old device keeps 6th fields:', sumMap(mergeState(f1, o7).math.fedPlus.maltese) === 2 && sumMap(mergeState(o7, f1).math.fedPlus.maltese) === 2);
 // 2차 판 기기(3차 칸 없음)와 합쳐도 공부 시간·설정은 그대로
 const o4 = randState('dB'); o4.math = { ...k2.math };
 const oq = mergeState(t1, o4).math;

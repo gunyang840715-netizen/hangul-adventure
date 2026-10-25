@@ -3,7 +3,7 @@
 import { sumMap } from '../../shared/merge.js';
 import { load, save, flushSave, dev, today, type Wear, type PetView } from '../engine/store';
 import { randomItemFrom, randomSnack } from '../engine/gifts';
-import { PET, BUILDS, BUILD, SNACK, type Slot, type Species } from '../data/pets';
+import { PET, BUILDS, BUILD, SNACK, levelOf, stageOf, type Slot, type Species } from '../data/pets';
 import { freshMath, ITEM_EVERY, MAT_EVERY, SNACK_EVERY, PASS_RATE, UP_MIN, CAT_MAX, CATS, SP_CAT, type Cat, type AnyCat, type MathState } from './mathData';
 import { spNext, spCode, spOf, spWrongKeys, SP_KEYS, SP_WRONG } from './spellData';
 
@@ -167,11 +167,21 @@ export function toggleMathWear(pet: string, slot: Slot, key: string) {
   m.wearT = { ...m.wearT, [pet]: Date.now() };
   save();
 }
-/** 수학 집의 강아지·고양이 (다 자란 모습, 수학 옷장에서 입힌 것) */
+// ---------- 친구 성장 (10-25 사용자 요청: 한글처럼 다 큰 모습으로 시작하지 않고, 아기부터 간식을 먹으면 자람) ----------
+/** 성장 점수 = 먹은 간식 점수 합계 (한글 growth와 같은 셈, 따로 저장):
+ *  먹은 횟수(fed, 한 번에 1점) + 2·3점 간식의 덤(fedPlus). 덤 칸이 생기기 전(10-24~25)에 먹은 간식은 1점씩으로 친다 */
+export const mathGrowPts = (petId: string, m = mathState()) => (sumMap(m.fed[petId]) as number) + (sumMap(m.fedPlus?.[petId]) as number);
+/** 수학 친구 하나: 레벨·단계는 한글과 같은 levelOf·stageOf (처음엔 Lv.1 아기 → 어린이 → 어른), 꾸미기는 수학 옷장 것 */
+export function mathPetInfo(id: string, m = mathState()): PetView {
+  const d = PET[id] ?? PET.maltese;
+  const points = mathGrowPts(d.id, m);
+  const level = levelOf(points);
+  return { id: d.id, species: d.species, name: d.name, breed: d.breed, wear: m.wear[d.id] || {}, points, level, stage: stageOf(level) };
+}
+/** 수학 집의 강아지·고양이 (수학 옷장에서 고른 친구 · 입힌 것 · 간식 먹은 만큼 자란 모습) */
 export function mathPetView(sp: Species, m = mathState()): PetView {
   const id = sp === 'dog' ? (m.dog && PET[m.dog] ? m.dog : 'maltese') : (m.cat && PET[m.cat] ? m.cat : 'koshort');
-  const d = PET[id];
-  return { id, species: d.species, name: d.name, breed: d.breed, wear: m.wear[id] || {}, points: 63, level: 10, stage: 'adult' };
+  return mathPetInfo(id, m);
 }
 
 // ---------- 간식 (한글 간식과 따로) ----------
@@ -181,7 +191,8 @@ export const mathSnackCount = (id: string, m = mathState()) => Math.max(0, (sumM
 export const mathSnackTotal = (m = mathState()) => Object.keys(SNACK).reduce((a, k) => a + mathSnackCount(k, m), 0);
 /** 그 친구가 간식을 먹은 횟수 (하트) */
 export const mathFedCount = (petId: string, m = mathState()) => sumMap(m.fed[petId]) as number;
-/** 간식 먹이기 — 간식이 없거나 그 친구가 못 먹는 간식(강아지 간식을 고양이에게 등)이면 false */
+/** 간식 먹이기 — 간식이 없거나 그 친구가 못 먹는 간식(강아지 간식을 고양이에게 등)이면 false.
+ *  먹으면 하트(먹은 횟수)가 하나 늘고, 간식 점수만큼 자란다(2·3점 간식은 덤 점수도 — 한글 feed와 같은 점수) */
 export function mathFeed(petId: string, snackId: string): boolean {
   const sn = SNACK[snackId], p = PET[petId];
   if (!sn || !p || mathSnackCount(snackId) <= 0) return false;
@@ -189,6 +200,7 @@ export function mathFeed(petId: string, snackId: string): boolean {
   const m = edit();
   bump(m.eaten[snackId] ||= {});
   bump(m.fed[petId] ||= {});
+  if (sn.points > 1) bump((m.fedPlus ||= {})[petId] ||= {}, sn.points - 1);
   save();
   return true;
 }

@@ -286,6 +286,49 @@ assert.equal(store.load().dog, store.fresh().dog, '한글 강아지는 그대로
   assert.deepEqual(store.load().snacks, {}, '한글 간식은 그대로'); assert.deepEqual(store.load().eaten, {}, '한글 먹인 기록은 그대로');
   assert.deepEqual(store.load().growth, {}, '한글 친구 성장은 그대로');
 }
+// 수학 친구 성장 (10-25 사용자 요청): 다 큰 모습으로 시작하지 않고 한글처럼 아기부터 — 먹은 간식 점수만큼 자람
+// (성장 점수 = 먹은 횟수 fed(1점씩) + 2·3점 간식의 덤 fedPlus, 레벨·단계는 한글과 같은 levelOf·stageOf, 한글 성장과 따로)
+{
+  const { levelOf, stageOf, LEVELS, MAX_LEVEL } = await import('../src/data/pets');
+  const d = store.dev();
+  const give = (id: string, n: number) => { const s = store.load().math!; const cur = s.snacks[id] || {}; s.snacks[id] = { ...cur, [d]: (cur[d] || 0) + n }; };
+  // 안 먹은 친구는 Lv.1 아기 (예전처럼 Lv.10 어른 X)
+  const v0 = ms.mathPetInfo('shiba');
+  assert.equal(v0.points, 0); assert.equal(v0.level, 1); assert.equal(v0.stage, 'baby', '처음엔 아기');
+  assert.equal(ms.mathPetView('dog', { ...ms.mathState(), dog: 'shiba' }).stage, 'baby', '수학 집 강아지도 처음엔 아기');
+  // 3점 간식 넷: 9점까지는 아기, 12점에 어린이 — 하트는 먹은 횟수 그대로
+  give('dogcake', 4);
+  for (let i = 1; i <= 4; i++) {
+    assert.ok(ms.mathFeed('shiba', 'dogcake'));
+    const v = ms.mathPetInfo('shiba');
+    assert.equal(v.points, i * 3, '간식 점수만큼 (3점 간식)');
+    assert.equal(v.level, levelOf(i * 3)); assert.equal(v.stage, stageOf(levelOf(i * 3)));
+  }
+  assert.equal(ms.mathPetInfo('shiba').stage, 'kid', `${LEVELS[3]}점에 어린이`); assert.equal(ms.mathFedCount('shiba'), 4, '하트는 먹은 횟수');
+  assert.deepEqual(ms.mathState().fedPlus.shiba, { [d]: 8 }, '덤 점수 = 간식 점수 − 1');
+  // 1점 간식은 덤 없이 1점씩, 고양이는 강아지 간식을 못 먹음(성장도 그대로)
+  give('bone', 60);
+  assert.equal(ms.mathFeed('russian', 'bone'), false); assert.equal(ms.mathPetInfo('russian').points, 0);
+  while (ms.mathPetInfo('shiba').points < LEVELS[6]) assert.ok(ms.mathFeed('shiba', 'bone'));
+  assert.equal(ms.mathPetInfo('shiba').stage, 'adult', `${LEVELS[6]}점에 어른`); assert.deepEqual(ms.mathState().fedPlus.shiba, { [d]: 8 });
+  // 끝 레벨에서 멈춤
+  while (ms.mathSnackCount('bone') > 0) assert.ok(ms.mathFeed('shiba', 'bone'));
+  assert.ok(ms.mathPetInfo('shiba').points > LEVELS[MAX_LEVEL - 1]); assert.equal(ms.mathPetInfo('shiba').level, MAX_LEVEL, '끝 레벨에서 멈춤');
+  // 여러 간식을 섞어도 성장 점수 = 먹은 간식 점수 합계 (한글 feed와 같은 셈)
+  let sum = 0;
+  for (const sn of SNACKS.filter(x => x.for !== 'dog')) { give(sn.id, 1); assert.ok(ms.mathFeed('russian', sn.id)); sum += sn.points; }
+  assert.equal(ms.mathPetInfo('russian').points, sum); assert.equal(ms.mathPetInfo('russian').level, levelOf(sum));
+  // 예전 기록(덤 칸이 생기기 전): 그때 먹은 간식은 1점씩, 두 기기 합계
+  const old = normalizeMath({ fed: { maltese: { a: 4, b: 3 } } })!;
+  assert.deepEqual(old.fedPlus, {}, '예전 기록에는 빈 칸');
+  assert.equal(ms.mathGrowPts('maltese', old), 7); assert.equal(ms.mathPetInfo('maltese', old).level, levelOf(7));
+  assert.equal(ms.mathGrowPts('maltese', { ...old, fedPlus: undefined } as any), 7, '덤 칸이 아예 없어도 읽힘');
+  assert.equal(ms.mathGrowPts('maltese', normalizeMath({ fed: { maltese: { a: 4 } }, fedPlus: { maltese: { a: 2, b: 1 } } })!), 7, '덤 점수도 기기별 합계');
+  assert.deepEqual(normalizeMath({ fedPlus: { maltese: { e: 2, f: -1 }, ghost: { e: 1 } } })!.fedPlus, { maltese: { e: 2 } }, '모르는 친구·이상한 값은 버림');
+  // 한글 친구 성장·먹인 기록은 그대로
+  assert.deepEqual(store.load().growth, {}, '한글 친구 성장은 그대로'); assert.deepEqual(store.load().eaten, {}, '한글 먹인 기록은 그대로');
+  console.log(`수학 친구 성장: 처음엔 Lv.1 아기 → 간식 점수만큼(덤 칸) ${LEVELS[3]}점 어린이·${LEVELS[6]}점 어른·Lv.${MAX_LEVEL}에서 멈춤, 예전 기록은 1점씩·두 기기 합계, 한글 성장과 따로 — 통과`);
+}
 // 집 짓기: 재료 하나로 한 부분, 재료가 없으면 못 지음
 const matsBefore = ms.mathMatsLeft();
 assert.ok(matsBefore > 3, '재료 있음 ' + matsBefore);

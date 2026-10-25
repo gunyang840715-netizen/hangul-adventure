@@ -14,7 +14,7 @@ import { sfx } from '../engine/audio';
 import { syncSoon } from '../engine/sync';
 import { ITEM, ITEM_LIST } from '../data/pets';
 import { makeProblemFor, stageName, catStage, CATS, CAT, ITEM_EVERY, MAT_EVERY, PASS_RATE, UP_MIN, CAT_MAX, IDLE_MS, SP_INFO, type Problem, type Mode, type Cat, type AnyCat } from '../math/mathData';
-import { mathState, todayMath, todayCat, answerMath, addMathMs, mathTimeUp, catFull, openCats, toNextItem, mathPet, mathWear, mathWho, mathMatsLeft, mathSnackTotal } from '../math/mathStore';
+import { mathState, todayMath, todayCat, answerMath, addMathMs, mathTimeUp, catFull, openCats, toNextItem, mathPet, mathPetInfo, mathWear, mathWho, mathMatsLeft, mathSnackTotal } from '../math/mathStore';
 import '../math/math.css';
 
 /** 남은 시간(ms): key(문제)가 바뀌면 처음부터, active가 아니면(답을 보여 주는 중·선물 창) 그 자리에서 멈춤, 앱이 가려진 동안도 멈춤
@@ -117,6 +117,7 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
   const tc = mode === 'mix' ? null : todayCat(mode, m);
   const who = mathWho(m);
   const pet = mathPet(m);
+  const pv = mathPetInfo(pet, m);   // 간식 먹은 만큼 자란 모습 (10-25 — 처음엔 아기)
   const allGot = m.owned.length >= ITEM_LIST.length;
   const filled = ITEM_EVERY - toNextItem(m);
   const limit = m.timeMul > 0 ? Math.round(p.sec * m.timeMul) * 1000 : 0;
@@ -212,7 +213,7 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
         )}
 
         <div style={{ position: 'absolute', left: 14, bottom: 26, pointerEvents: 'none' }}>
-          <Pet pet={pet} wear={mathWear(pet, m)} size={200} autoTalk={false}
+          <Pet pet={pet} stage={pv.stage} level={pv.level} wear={mathWear(pet, m)} size={200} autoTalk={false}
             motion={pick ? (pick === p.ans ? 'jump' : 'none') : 'bob'} mood={pick && pick !== p.ans ? 'think' : 'happy'} />
         </div>
       </div>

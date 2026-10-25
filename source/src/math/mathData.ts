@@ -1,5 +1,6 @@
 // 수학 모드 (초등 2학년 아이용 — 한글 모드와 따로): 저장 모양·항목·단계·문제 만들기
 // 10-25: 같은 모드에 맞춤법 문제를 더함(문제는 spellData.ts, 기록은 이 모양의 sp 칸) — 화면 이름은 부모 설정 이름(없으면 '수학·맞춤법')
+// 10-25: 수학 친구도 한글처럼 아기부터 간식을 먹으면 자람 — 성장 점수 = fed(먹은 횟수, 한 번에 1점) + fedPlus(2·3점 간식의 덤)
 // 저장은 한글 진도(State)의 'math' 한 칸에만 (10-23 사용자 허락). 두 기기 합치기는 shared/merge.js mergeMath.
 // 아이 이름은 저장소에 쓰지 않는다 — 부모 설정에서 넣은 이름(math.name)을 실행할 때만 읽어 보여 준다.
 // 이 파일은 store.ts를 부르지 않는다 (store.ts가 이 파일의 normalizeMath를 쓰므로 서로 부르면 꼬임).
@@ -39,6 +40,9 @@ export interface MathState {
   fed: DayMap;                            // 친구 id → 기기 → 간식을 먹은 횟수 (하트)
   // ---- 10-25 5차: 맞춤법 (같은 모드 안에서 수학과 나란히 — 하루 공부 시간·정답 보상은 같이 씀) ----
   sp: Record<string, number>;             // 맞춤법 문제 열쇠 → 마지막으로 푼 때(분)×10 + 상태 (0 맞힘 · 1 틀림 · 2 고침 · 3 다시 확인까지 맞힘 — spellData.ts)
+  // ---- 10-25 6차: 수학 친구도 아기부터 간식을 먹으면 자람 (한글과 같은 레벨·단계, 한글 성장과 따로) ----
+  fedPlus: DayMap;                        // 친구 id → 기기 → 2·3점 간식의 덤 점수(간식 점수 − 1). 성장 점수 = fed + fedPlus
+                                          // (이 칸이 생기기 전에 먹은 간식은 fed에만 있어 1점씩으로 친다)
 }
 /** 맞춤법 항목 (하루 기록 열쇠 '날짜:sp' — 단계 판정은 없음) */
 export const SP_CAT = 'sp';
@@ -80,7 +84,7 @@ export function freshMath(): MathState {
   return {
     level: 0, levelT: 0, perDay: PER_DAY, perDayT: 0, solved: {}, correct: {}, total: {}, owned: [], wear: {}, wearT: {},
     lv: lvFromLevel(0), lvT: {}, solvedC: {}, correctC: {}, timeMul: 1, timeMulT: 0, name: '', nameT: 0,
-    built: {}, bought: {}, deco: {}, decoT: {}, dayMin: DAY_MIN, dayMinT: 0, ms: {}, snacks: {}, eaten: {}, fed: {}, sp: {},
+    built: {}, bought: {}, deco: {}, decoT: {}, dayMin: DAY_MIN, dayMinT: 0, ms: {}, snacks: {}, eaten: {}, fed: {}, sp: {}, fedPlus: {},
   };
 }
 
@@ -166,6 +170,8 @@ export function normalizeMath(o: any): MathState | undefined {
   m.fed = dayMap(o.fed, k => !!PET[k]);
   // 5차(10-25): 맞춤법 — 모르는 문제 열쇠·이상한 값은 버림
   m.sp = spMap(o.sp);
+  // 6차(10-25): 2·3점 간식의 덤 점수 — 모르는 친구는 버림 (예전 기록에는 빈 칸 → 그때 먹은 간식은 1점씩)
+  m.fedPlus = dayMap(o.fedPlus, k => !!PET[k]);
   return m;
 }
 

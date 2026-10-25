@@ -14,7 +14,7 @@ import { syncSoon } from '../engine/sync';
 import { ITEM, ITEM_LIST } from '../data/pets';
 import { ITEM_EVERY, CAT_MAX, IDLE_MS, SP_CAT } from '../math/mathData';
 import { makeSpellQ, pickSpell, type SpQ } from '../math/spellData';
-import { mathState, todayMath, todayCat, answerSpell, addMathMs, mathTimeUp, catFull, toNextItem, mathPet, mathWear, mathWho, mathMatsLeft, mathSnackTotal, spellWrong } from '../math/mathStore';
+import { mathState, todayMath, todayCat, answerSpell, addMathMs, mathTimeUp, catFull, toNextItem, mathPet, mathPetInfo, mathWear, mathWho, mathMatsLeft, mathSnackTotal, spellWrong } from '../math/mathStore';
 import { TodaySummary, leftText, useCountdown } from './MathScreen';
 import '../math/math.css';
 
@@ -86,6 +86,7 @@ export function SpellScreen({ review, onBack, onCloset, onMore }: { review: bool
   const tc = todayCat(SP_CAT, m);
   const who = mathWho(m);
   const pet = mathPet(m);
+  const pv = mathPetInfo(pet, m);   // 간식 먹은 만큼 자란 모습 (10-25 — 처음엔 아기)
   const wrongLeft = spellWrong(m).length;
   const allGot = m.owned.length >= ITEM_LIST.length;
   const filled = ITEM_EVERY - toNextItem(m);
@@ -191,7 +192,7 @@ export function SpellScreen({ review, onBack, onCloset, onMore }: { review: bool
         )}
 
         <div style={{ position: 'absolute', left: 14, bottom: 26, pointerEvents: 'none' }}>
-          <Pet pet={pet} wear={mathWear(pet, m)} size={200} autoTalk={false}
+          <Pet pet={pet} stage={pv.stage} level={pv.level} wear={mathWear(pet, m)} size={200} autoTalk={false}
             motion={pick ? (!wrong ? 'jump' : 'none') : 'bob'} mood={wrong ? 'think' : 'happy'} />
         </div>
       </div>

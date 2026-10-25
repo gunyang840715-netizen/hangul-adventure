@@ -7,7 +7,7 @@ import { MatIcon } from '../art/Build';
 import { sfx } from '../engine/audio';
 import { ITEM_LIST } from '../data/pets';
 import { CATS, STAGES, CAT_MAX, SP_CAT, catStage, type Mode } from '../math/mathData';
-import { mathState, todayMath, todayCat, mathTimeUp, openCats, mathPet, mathWear, mathWho, modeTitle, mathMatsLeft, mathSnackTotal, spellWrong, spellStats } from '../math/mathStore';
+import { mathState, todayMath, todayCat, mathTimeUp, openCats, mathPet, mathPetInfo, mathWear, mathWho, modeTitle, mathMatsLeft, mathSnackTotal, spellWrong, spellStats } from '../math/mathStore';
 import { TodaySummary, leftText } from './MathScreen';
 import '../math/math.css';
 
@@ -20,6 +20,7 @@ export function MathHome({ onBack, onPlay, onSpell, onCloset, onHouse, onFeed }:
   const open = openCats(m);
   const who = mathWho(m);
   const pet = mathPet(m);
+  const pv = mathPetInfo(pet, m);   // 간식 먹은 만큼 자란 모습 (10-25 — 처음엔 아기)
   const sp = todayCat(SP_CAT, m).solved;
   const spFull = sp >= CAT_MAX;
   const wrongN = spellWrong(m).length;
@@ -79,7 +80,7 @@ export function MathHome({ onBack, onPlay, onSpell, onCloset, onHouse, onFeed }:
           {onFeed && <button class="btn yellow" data-math-feed-go="1" onClick={() => { sfx.tap(); onFeed(); }}>🍪 간식 주기{mathSnackTotal(m) ? ` (${mathSnackTotal(m)})` : ''}</button>}
         </div>
         <div style={{ position: 'absolute', left: 10, bottom: 10, pointerEvents: 'none' }}>
-          <Pet pet={pet} wear={mathWear(pet, m)} size={190} motion="bob" autoTalk={false} />
+          <Pet pet={pet} stage={pv.stage} level={pv.level} wear={mathWear(pet, m)} size={190} motion="bob" autoTalk={false} />
         </div>
       </div>
     </div>

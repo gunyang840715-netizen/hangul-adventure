@@ -6,7 +6,7 @@ import { Pet, ItemIcon } from '../art/Pet';
 import { sfx } from '../engine/audio';
 import { syncSoon } from '../engine/sync';
 import { PETS, PET, ITEM, ITEM_LIST, SLOT_NAME, SLOT_ICON, itemFits, type Slot } from '../data/pets';
-import { mathState, mathPet, mathWear, setMathPet, toggleMathWear, mathWho } from '../math/mathStore';
+import { mathState, mathPet, mathPetInfo, mathWear, setMathPet, toggleMathWear, mathWho } from '../math/mathStore';
 import { ITEM_EVERY } from '../math/mathData';
 import '../math/math.css';
 
@@ -20,6 +20,7 @@ export function MathCloset({ onBack }: { onBack: () => void }) {
   const pet = mathPet(m);
   const sp = PET[pet].species;
   const wear = mathWear(pet, m);
+  const pv = mathPetInfo(pet, m);   // 간식 먹은 만큼 자란 모습 (10-25 — 친구마다 따로, 처음엔 아기)
   const mine = m.owned.map(id => ITEM[id]).filter(it => it && itemFits(it, sp));
   const list = mine.filter(it => it.slot === slot);
   return (
@@ -39,7 +40,7 @@ export function MathCloset({ onBack }: { onBack: () => void }) {
           </div>
           {/* 친구 그림(모자 자리까지 위로 넉넉한 그림)이 친구 고르기 버튼을 가리지 않게 누르기는 막음 */}
           <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', pointerEvents: 'none' }}>
-            <Pet pet={pet} wear={wear} size={340} motion="bob" autoTalk={false} poke={poke} />
+            <Pet pet={pet} stage={pv.stage} level={pv.level} wear={wear} size={340} motion="bob" autoTalk={false} poke={poke} />
           </div>
         </div>
         <div style={{ position: 'absolute', left: 500, top: 100, width: 760, bottom: 20, background: 'rgba(255,255,255,.92)', borderRadius: 30, padding: 18, boxSizing: 'border-box', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column' }}>

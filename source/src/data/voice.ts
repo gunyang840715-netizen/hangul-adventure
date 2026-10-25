@@ -250,6 +250,8 @@ export function allLines(name: string): string[] {
   nameLines(name).forEach(l => L.add(l));
   L.add(MATH_NO_MAT);
   L.add(MATH_NO_SNACK);
+  L.add(STUDY_NO_MAT);
+  L.add(STUDY_NO_SNACK);
   L.delete('');
   return [...L];
 }
@@ -284,3 +286,6 @@ export const REPS_COUNT = ['하나!', '둘!', '셋!', '넷!', '다섯!', '여섯
 export const MATH_NO_MAT = '재료가 없어! 수학 문제를 맞히면 받을 수 있어!';
 // 수학 모드(10-24): 수학 간식이 없을 때 — 수학 간식은 정답 5개마다 받음 (녹음 없음, 기기 음성으로 읽힘)
 export const MATH_NO_SNACK = '간식이 없어! 수학 문제를 맞히면 받을 수 있어!';
+// 수학·맞춤법 모드(10-25): 맞춤법 정답으로도 재료·간식을 받으므로 '수학' 없이 (녹음 없음, 기기 음성으로 읽힘 — 위 두 문장은 그대로 남김)
+export const STUDY_NO_MAT = '재료가 없어! 문제를 맞히면 받을 수 있어!';
+export const STUDY_NO_SNACK = '간식이 없어! 문제를 맞히면 받을 수 있어!';

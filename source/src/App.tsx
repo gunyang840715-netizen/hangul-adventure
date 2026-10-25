@@ -8,6 +8,7 @@ import { MathScreen } from './screens/MathScreen';
 import { MathCloset } from './screens/MathCloset';
 import { MathHome } from './screens/MathHome';
 import { MathFeed } from './screens/MathFeed';
+import { SpellScreen } from './screens/SpellScreen';
 import { HomeCtx, MATH_HOME } from './screens/homeApi';
 import type { Mode } from './math/mathData';
 import { House, Dress, Adopt } from './screens/House';
@@ -90,8 +91,8 @@ function Icon() {
 }
 
 type Screen = 'title' | 'map' | 'session' | 'book' | 'house' | 'dress' | 'adopt' | 'build' | 'room' | 'park' | 'yard' | 'parent' | 'sleep'
-  // 수학 모드(초등 2학년 아이): 첫 화면·문제·옷장·집 짓기·집 안·놀이터·마당·간식 주기 — 한글 사용 시간에 안 셈(COUNTED·IDLE에 넣지 않음)
-  | 'math' | 'mathPlay' | 'mathCloset' | 'mathBuild' | 'mathRoom' | 'mathPark' | 'mathYard' | 'mathFeed';
+  // 수학·맞춤법 모드(초등 2학년 아이): 첫 화면·문제·맞춤법(10-25)·옷장·집 짓기·집 안·놀이터·마당·간식 주기 — 한글 사용 시간에 안 셈(COUNTED·IDLE에 넣지 않음)
+  | 'math' | 'mathPlay' | 'mathSpell' | 'mathCloset' | 'mathBuild' | 'mathRoom' | 'mathPark' | 'mathYard' | 'mathFeed';
 const GALLERY = /[?&]gallery=/.test(location.search);
 const ICON = /[?&]icon=/.test(location.search);
 /** 사용 시간을 세는 화면 */
@@ -110,6 +111,7 @@ export function App() {
   const [room, setRoom] = useState<'doghouse' | 'cathouse'>('doghouse');
   const [yardBack, setYardBack] = useState<'build' | 'house'>('build');
   const [mathMode, setMathMode] = useState<Mode>('add');
+  const [spellReview, setSpellReview] = useState(false);   // 맞춤법: 틀린 문제만 다시 풀기
   const [demo, setDemo] = useState(() => /[?&]demo=1/.test(location.search));
   const [ver, tick] = useState(0);
   const s = load();
@@ -136,7 +138,7 @@ export function App() {
     const sc = q.get('screen');
     if (!sc) return;
     if (sc === 'room' || sc === 'yard') setRoom(q.get('place') === 'cathouse' ? 'cathouse' : 'doghouse');
-    if (['room', 'park', 'yard', 'build', 'house', 'map', 'sleep', 'book', 'math', 'mathCloset', 'mathBuild', 'mathFeed'].includes(sc)) setScreen(sc as Screen);
+    if (['room', 'park', 'yard', 'build', 'house', 'map', 'sleep', 'book', 'math', 'mathSpell', 'mathCloset', 'mathBuild', 'mathFeed'].includes(sc)) setScreen(sc as Screen);
   }, []);
 
   // 시험용: ?play=feed&lesson=6 → 그 놀이를 바로 열기
@@ -277,7 +279,8 @@ export function App() {
   switch (screen) {
     case 'title': view = <Title onStart={start} onMath={startMath} />; break;
     // 수학 모드 — 집 짓기·집 안·놀이터·마당은 한글과 같은 화면을 수학 기록(MATH_HOME)으로
-    case 'math': view = <MathHome onBack={() => { syncSoon(300); go('title'); }} onPlay={(md) => { setMathMode(md); go('mathPlay'); }} onCloset={() => go('mathCloset')} onHouse={() => go('mathBuild')} onFeed={() => go('mathFeed')} />; break;
+    case 'math': view = <MathHome onBack={() => { syncSoon(300); go('title'); }} onPlay={(md) => { setMathMode(md); go('mathPlay'); }} onSpell={(rv) => { setSpellReview(rv); go('mathSpell'); }} onCloset={() => go('mathCloset')} onHouse={() => go('mathBuild')} onFeed={() => go('mathFeed')} />; break;
+    case 'mathSpell': view = <SpellScreen key={spellReview ? 'sp-review' : 'sp-all'} review={spellReview} onBack={() => { syncSoon(300); go('math'); }} onCloset={() => go('mathCloset')} onMore={() => setSpellReview(false)} />; break;
     case 'mathPlay': view = <MathScreen key={mathMode} mode={mathMode} onBack={() => { syncSoon(300); go('math'); }} onCloset={() => go('mathCloset')} />; break;
     case 'mathCloset': view = <MathCloset onBack={() => { syncSoon(300); go('math'); }} />; break;
     case 'mathFeed': view = <MathFeed onBack={() => { syncSoon(300); go('math'); }} />; break;

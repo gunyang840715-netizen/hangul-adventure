@@ -8,7 +8,7 @@ import { Pet, SnackIcon } from '../art/Pet';
 import { say, sfx } from '../engine/audio';
 import { syncSoon } from '../engine/sync';
 import { SNACKS, SNACK, CLASSIC_SNACKS, PET, type Species } from '../data/pets';
-import { MATH_NO_SNACK } from '../data/voice';
+import { STUDY_NO_SNACK } from '../data/voice';
 import { SNACK_EVERY } from '../math/mathData';
 import { mathState, mathPet, mathPetView, mathSnackCount, mathSnackTotal, mathFedCount, mathFeed } from '../math/mathStore';
 import '../math/math.css';
@@ -44,7 +44,7 @@ export function MathFeed({ onBack }: { onBack: () => void }) {
 
   const give = async (id: string, e: any) => {
     if (busy.current) return;
-    if (mathSnackCount(id) <= 0) { sfx.boing(); say(MATH_NO_SNACK); return; }
+    if (mathSnackCount(id) <= 0) { sfx.boing(); say(STUDY_NO_SNACK); return; }
     const sn = SNACK[id];
     const who: Species = sn.for === 'both' ? sel : sn.for;
     if (sn.for !== 'both' && sn.for !== sel) talk(sel, sn.for === 'dog' ? '강아지 간식이네!' : '고양이 간식이네!');
@@ -74,10 +74,10 @@ export function MathFeed({ onBack }: { onBack: () => void }) {
     <div class="screen" data-math-feed="1">
       <Backdrop theme="meadow" />
       <div class="layer">
-        <button class="iconbtn" style={{ position: 'absolute', left: 20, top: 18 }} onClick={() => { sfx.tap(); onBack(); }} aria-label="수학으로">◀</button>
+        <button class="iconbtn" style={{ position: 'absolute', left: 20, top: 18 }} onClick={() => { sfx.tap(); onBack(); }} aria-label="고르는 화면으로">◀</button>
         <div class="pill" style={{ position: 'absolute', left: 112, top: 24, fontSize: 30 }}>🍪 간식 주기</div>
         <div class="pill" style={{ position: 'absolute', right: 24, top: 24, fontSize: 24 }} data-snack-total={total}>
-          간식 {total}개 · 수학 문제 정답 {SNACK_EVERY}개마다 하나
+          간식 {total}개 · 수학·맞춤법 정답 {SNACK_EVERY}개마다 하나
         </div>
         {(['dog', 'cat'] as const).map(sp => {
           const v = view[sp];

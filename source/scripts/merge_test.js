@@ -54,6 +54,8 @@ function randMath(dev) {
         m.snacks = {}; m.eaten = {}; m.fed = {};
         for (const sn of ['bone', 'fish', 'cookie']) { if (rnd(2)) m.snacks[sn] = { [dev]: rnd(9) }; if (rnd(2)) m.eaten[sn] = { [dev]: rnd(4) }; }
         for (const p of ['maltese', 'koshort']) if (rnd(2)) m.fed[p] = { [dev]: rnd(7) };
+        // 5차(10-25): 맞춤법 문제별 기록(분×10+상태) — 없을 수도 있음(4차 판 기기)
+        if (rnd(3)) { m.sp = {}; for (const k of ['k1.1', 'k1.2', 'g1.2', 'l7.1']) if (rnd(2)) m.sp[k] = (29500000 + rnd(4)) * 10 + rnd(4); }
       }
     }
   }
@@ -128,6 +130,15 @@ chk('math 4th snack sums ok:', sumMap(ss.snacks.bone) === 5 && sumMap(ss.snacks.
   && sumMap(ss.fed.maltese) === 3 && sumMap(ss.fed.koshort) === 2 && canon(ss) === canon(sr) && JSON.stringify(ss) === JSON.stringify(sr));
 const o5 = randState('dB'); o5.math = { ...t2.math };
 chk('math old device keeps 4th fields:', sumMap(mergeState(s1, o5).math.snacks.bone) === 3 && sumMap(mergeState(o5, s1).math.fed.maltese) === 1);
+// 5차 칸(10-25): 맞춤법 문제별 기록은 나중에 푼 쪽(큰 값) — 틀렸다가(1) 다른 기기에서 고침(2)이 이김, 4차 판 기기와 합쳐도 그대로
+const p1 = randState('dA'), p2 = randState('dB');
+p1.math = { ...s1.math, sp: { 'k1.1': 295000001, 'g1.2': 295000100 } };
+p2.math = { ...s2.math, sp: { 'k1.1': 295000052, 'l7.1': 295000013 } };
+const pp = mergeState(p1, p2).math, pr = mergeState(p2, p1).math;
+chk('math 5th spell later wins:', pp.sp['k1.1'] === 295000052 && pp.sp['g1.2'] === 295000100 && pp.sp['l7.1'] === 295000013
+  && Object.keys(pp.sp).join() === 'g1.2,k1.1,l7.1' && canon(pp) === canon(pr) && JSON.stringify(pp) === JSON.stringify(pr));
+const o6 = randState('dB'); o6.math = { ...s2.math };
+chk('math old device keeps 5th fields:', mergeState(p1, o6).math.sp['k1.1'] === 295000001 && mergeState(o6, p1).math.sp['g1.2'] === 295000100);
 // 2차 판 기기(3차 칸 없음)와 합쳐도 공부 시간·설정은 그대로
 const o4 = randState('dB'); o4.math = { ...k2.math };
 const oq = mergeState(t1, o4).math;

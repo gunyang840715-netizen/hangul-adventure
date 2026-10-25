@@ -4,7 +4,8 @@ import { sumMap } from '../../shared/merge.js';
 import { load, save, flushSave, dev, today, type Wear, type PetView } from '../engine/store';
 import { randomItemFrom, randomSnack } from '../engine/gifts';
 import { PET, BUILDS, BUILD, SNACK, type Slot, type Species } from '../data/pets';
-import { freshMath, ITEM_EVERY, MAT_EVERY, SNACK_EVERY, PASS_RATE, UP_MIN, CAT_MAX, CATS, type Cat, type MathState } from './mathData';
+import { freshMath, ITEM_EVERY, MAT_EVERY, SNACK_EVERY, PASS_RATE, UP_MIN, CAT_MAX, CATS, SP_CAT, type Cat, type AnyCat, type MathState } from './mathData';
+import { spNext, spCode, spOf, spWrongKeys, SP_KEYS, SP_WRONG } from './spellData';
 
 /** 읽기용 (아직 수학을 안 했으면 처음 상태) */
 export function mathState(): MathState { return load().math ?? freshMath(); }
@@ -21,6 +22,8 @@ const bump = (m: Record<string, number>, n = 1) => { const d = dev(); m[d] = (m[
 export const mathName = (m = mathState()) => m.name;
 /** '○○ 옷장'처럼 쓸 앞말: 이름이 있으면 이름, 없으면 '내' */
 export const mathWho = (m = mathState()) => m.name || '내';
+/** 첫 화면 버튼·이 모드 첫 화면 제목 (10-25 사용자 요청: '수학' 대신 아이 이름 — 이름은 부모 설정에만, 없으면 '수학·맞춤법') */
+export const modeTitle = (m = mathState()) => m.name || '수학·맞춤법';
 
 /** 오늘 기록: 푼 수·맞힌 수(모든 항목 합계), 공부한 시간·하루 공부 시간·남은 시간(ms) — 두 기기 합계 */
 export function todayMath(m = mathState()) {
@@ -28,15 +31,15 @@ export function todayMath(m = mathState()) {
   const ms = sumMap(m.ms[d]) as number, limitMs = m.dayMin * 60000;
   return { solved: sumMap(m.solved[d]) as number, correct: sumMap(m.correct[d]) as number, ms, limitMs, leftMs: Math.max(0, limitMs - ms) };
 }
-/** 오늘 그 항목 기록 */
-export function todayCat(cat: Cat, m = mathState()) {
+/** 오늘 그 항목 기록 (맞춤법은 'sp') */
+export function todayCat(cat: AnyCat, m = mathState()) {
   const k = dayKey() + ':' + cat;
   return { solved: sumMap(m.solvedC[k]) as number, correct: sumMap(m.correctC[k]) as number };
 }
 /** 오늘 공부 시간을 다 썼나 */
 export const mathTimeUp = (m = mathState()) => { const t = todayMath(m); return t.ms >= t.limitMs; };
-/** 오늘 그 항목을 150문제 다 풀었나 */
-export const catFull = (cat: Cat, m = mathState()) => todayCat(cat, m).solved >= CAT_MAX;
+/** 오늘 그 항목을 150문제 다 풀었나 (맞춤법도 하루 150문제까지) */
+export const catFull = (cat: AnyCat, m = mathState()) => todayCat(cat, m).solved >= CAT_MAX;
 /** 오늘 더 풀 수 있는 항목 (골고루는 이 항목들만 섞어 냄) */
 export const openCats = (m = mathState()): Cat[] => CATS.map(c => c.id).filter(c => !catFull(c, m));
 export const mathTotalCorrect = (m = mathState()) => sumMap(m.total) as number;
@@ -66,7 +69,21 @@ export interface AnswerResult { item: string | null; mat: boolean; snack: string
 /** 한 문제를 풀었을 때(시간이 다 되면 틀린 것으로): 기록 → 정답 10개마다 꾸미기·5개마다 재료와 간식 →
  *  그 항목을 오늘 150문제째 풀었으면(그 항목은 오늘 끝) 그 항목 판정 */
 export function answerMath(ok: boolean, cat: Cat): AnswerResult {
+  return record(edit(), ok, cat);
+}
+
+/** 맞춤법 한 문제를 풀었을 때 (10-25): 그 문제 상태(틀림 → 다음에 다시, 고침 → 이틀 뒤 한 번 더) + 수학과 같은 기록·보상
+ *  (맞춤법은 단계 판정 없음 — 하루 150문제·하루 공부 시간·정답 보상은 수학과 같이 씀) */
+export function answerSpell(ok: boolean, key: string): AnswerResult {
   const m = edit();
+  const sp = { ...m.sp, [key]: spCode(Date.now() / 60000, spNext(m.sp[key], ok)) };
+  // 열쇠는 정렬해 둔다 (저장했다 다시 읽은 모양·두 기기 합친 모양과 같게 — 연동 때 괜히 바뀐 것으로 보지 않게)
+  m.sp = Object.fromEntries(Object.keys(sp).sort().map(k => [k, sp[k]]));
+  return record(m, ok, SP_CAT);
+}
+
+/** 푼 문제 기록·보상 (수학 항목·맞춤법 같이) */
+function record(m: MathState, ok: boolean, cat: AnyCat): AnswerResult {
   const d = dayKey(), dc = d + ':' + cat;
   const before = todayCat(cat, m).solved;
   bump(m.solved[d] ||= {});
@@ -83,9 +100,19 @@ export function answerMath(ok: boolean, cat: Cat): AnswerResult {
   let snack: string | null = null;
   if (ok && mathTotalCorrect(m) % SNACK_EVERY === 0) { snack = randomSnack(); bump(m.snacks[snack] ||= {}); }
   const catDone = before < CAT_MAX && todayCat(cat, m).solved >= CAT_MAX;
-  const ups = catDone ? judge(m, [cat]) : [];
+  const ups = catDone && cat !== SP_CAT ? judge(m, [cat]) : [];
   save();
   return { item, mat, snack, catDone, ups };
+}
+
+// ---------- 맞춤법 기록 ----------
+/** 지금 틀린 문제(다음에 다시 풀 문제) — 오래전에 틀린 것부터 */
+export const spellWrong = (m = mathState()) => spWrongKeys(m.sp);
+/** 맞춤법 기록 요약: 전체 문제 · 풀어 본 문제 · 지금 틀린 문제 */
+export function spellStats(m = mathState()) {
+  let seen = 0, wrong = 0;
+  for (const k of SP_KEYS) { const p = spOf(m.sp[k]); if (p) { seen++; if (p.st === SP_WRONG) wrong++; } }
+  return { total: SP_KEYS.length, seen, wrong };
 }
 
 /** 문제 화면에서 공부한 시간 더하기(ms). 오늘 공부 시간을 넘는 그 순간 한 번 모든 항목 판정 → 오른 항목 */

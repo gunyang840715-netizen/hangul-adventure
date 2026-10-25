@@ -379,5 +379,131 @@ store.flushSave();
 assert.equal(canon(normalizeMath(JSON.parse(JSON.stringify(store.load().math)))), keep, '저장 모양 그대로 다시 읽힘');
 const once = normalizeMath(store.load().math);
 assert.equal(JSON.stringify(normalizeMath(JSON.parse(JSON.stringify(once)))), JSON.stringify(once), '다시 읽어도 칸 순서까지 같음');
+// ---------- 5) 맞춤법 (10-25 사용자 요청): 문장 은행 · 문제 고르기 · 틀린 문제 다시 · 기록·보상 · 저장·합치기 ----------
+{
+  const sp = await import('../src/math/spellData');
+  const { SENTS, TIPS, parseSent, tipText, SP_KEYS, SP_KEY_SET, makeSpellQ, pickSpell, spNext, spCode, spOf, spWrongKeys, SP_RIGHT, SP_WRONG, SP_FIX1, SP_DONE, SP_RECHECK_MIN, sidOf } = sp;
+  const { FONT_SYLLABLES } = await import('../src/data/fontchars');
+  const { readFileSync } = await import('node:fs');
+  const hangulOf = (x: string) => [...x].filter(c => c >= '가' && c <= '힣');
+  // 은행: id·괄호·도움말·글꼴·정답이 문장 다른 곳에 그대로 보이지 않기
+  const ids = new Set<string>();
+  for (const st of SENTS) {
+    assert.match(st.id, /^[a-z]\d{1,4}$/, '문장 id 모양 ' + st.id);
+    assert.ok(!ids.has(st.id), '문장 id 중복 ' + st.id); ids.add(st.id);
+    assert.ok([1, 2, 3].includes(st.lv), '난이도 ' + st.id);
+    const bs = parseSent(st.t).filter(x => typeof x !== 'string') as { a: string; w: string; tip: string }[];
+    assert.ok(bs.length >= 1, '괄호 하나 이상 ' + st.id);
+    assert.ok(!st.t.replace(/\[[^\]]*\]/g, '').match(/[\[\]|]/), '괄호 모양 ' + st.id);
+    for (const b of bs) {
+      assert.ok(b.a && b.w && b.a !== b.w && !/\s/.test(b.a + b.w), '보기 둘 ' + st.id);
+      assert.ok(b.tip.startsWith('=') ? b.tip.length > 1 : !!TIPS[b.tip], '도움말 ' + st.id + ' ' + b.tip);
+      for (const c of hangulOf(b.a + b.w + tipText(b))) assert.ok(FONT_SYLLABLES.has(c), `앱 글꼴에 없는 글자 '${c}' (${st.id}) — 다른 글자로 바꾸기`);
+    }
+    for (const c of hangulOf(st.t + st.src + (st.who || ''))) assert.ok(FONT_SYLLABLES.has(c), `앱 글꼴에 없는 글자 '${c}' (${st.id})`);
+  }
+  for (const [k, v] of Object.entries(TIPS)) for (const c of hangulOf(v)) assert.ok(FONT_SYLLABLES.has(c), `도움말 글꼴 '${c}' (${k})`);
+  assert.equal(SP_KEYS.length, new Set(SP_KEYS).size, '문제 열쇠 중복 없음');
+  assert.ok(SP_KEYS.length >= 400, '문제 수 ' + SP_KEYS.length);
+  for (const k of SP_KEYS) {
+    const q = makeSpellQ(k)!;
+    assert.equal(q.before + q.ans + q.after, q.full);
+    assert.ok(q.opts.includes(q.ans) && q.opts.includes(q.wrong) && q.opts.length === 2, '보기 둘 ' + k);
+    assert.ok(q.sec >= 18 && q.sec <= 40, '문제 시간 ' + k);
+    const rest = q.before + ' ' + q.after;
+    const seen = q.ans.length >= 2 ? rest.includes(q.ans) : new RegExp(`(^|[\\s,.!?])${q.ans}([\\s,.!?]|$)`).test(rest);
+    assert.ok(!seen, `정답이 문장 다른 곳에 보임 ${k}: ${q.full}`);
+  }
+  assert.equal(makeSpellQ('k1.9'), null); assert.equal(makeSpellQ('zz.1'), null);
+  // 같은 문장 다른 괄호: 낫 (놓고, 노코) 기역 자도 모른다 / 낫 놓고 (기역, 기억) 자도 모른다
+  { const a = makeSpellQ('k1.1')!, b = makeSpellQ('k1.2')!;
+    assert.deepEqual([a.before, a.ans, a.wrong, a.after], ['낫 ', '놓고', '노코', ' 기역 자도 모른다.']);
+    assert.deepEqual([b.before, b.ans, b.wrong, b.after], ['낫 놓고 ', '기역', '기억', ' 자도 모른다.']); }
+  // 문제 열쇠는 뒤에 추가만: 예전 열쇠는 그대로 있고 정답도 같아야 함 (기록이 다른 문제를 가리키지 않게)
+  const base = JSON.parse(readFileSync(new URL('./spell_keys_baseline.json', import.meta.url), 'utf8')) as Record<string, string>;
+  for (const [k, a] of Object.entries(base)) { assert.ok(SP_KEY_SET.has(k), '예전 문제 열쇠가 사라짐: ' + k); assert.equal(makeSpellQ(k)!.ans, a, '예전 문제의 정답이 바뀜: ' + k); }
+
+  // 상태 바뀜: 틀림 → 고침(이틀 뒤 한 번 더) → 다시 확인까지 맞힘, 다시 틀리면 틀림
+  assert.equal(spNext(undefined, true), SP_RIGHT); assert.equal(spNext(undefined, false), SP_WRONG);
+  assert.equal(spNext(spCode(100, SP_WRONG), true), SP_FIX1); assert.equal(spNext(spCode(100, SP_FIX1), true), SP_DONE);
+  assert.equal(spNext(spCode(100, SP_DONE), true), SP_DONE); assert.equal(spNext(spCode(100, SP_RIGHT), true), SP_RIGHT);
+  assert.equal(spNext(spCode(100, SP_DONE), false), SP_WRONG);
+  assert.deepEqual(spOf(spCode(29500000.7, 2)), { min: 29500000, st: 2 });
+
+  // 문제 고르기: 처음에는 안 본 문제, 같은 문장은 최근 6문제 안에 다시 안 나옴, 쉬운 문제가 먼저 나오기 쉬움
+  {
+    const rec: Record<string, number> = {}; const recent: string[] = []; let now = 29500000;
+    const lvOf = (k: string) => SENTS.find(x => x.id === sidOf(k))!.lv;
+    const first: number[] = [];
+    for (let i = 0; i < SP_KEYS.length; i++) {
+      const k = pickSpell(rec, now, recent, false)!;
+      assert.ok(SP_KEY_SET.has(k));
+      assert.ok(!recent.slice(-6).map(sidOf).includes(sidOf(k)), '같은 문장이 바로 다시 나옴 ' + k);
+      assert.ok(!rec[k], '다 보기 전에는 안 본 문제만 ' + k);
+      if (i < 100) first.push(lvOf(k));
+      rec[k] = spCode(now, SP_RIGHT); recent.push(k); now += 1;
+    }
+    assert.equal(Object.keys(rec).length, SP_KEYS.length, '모든 문제가 한 번씩 나옴 (같은 문장 다른 괄호 포함)');
+    assert.ok(first.filter(x => x === 1).length > first.filter(x => x === 3).length * 3, '처음에는 쉬운 문제가 더 많이');
+    // 다 본 뒤에는 오래전에 푼 것부터
+    const k2 = pickSpell(rec, now + 10, recent, false)!;
+    assert.ok(rec[k2] <= spCode(29500000 + 40, SP_RIGHT), '다 본 뒤에는 오래된 것부터 ' + k2);
+  }
+  // 틀린 문제: 열 문제 안에는 다시 안 나오고, 그 뒤에는 열 번에 세 번쯤 먼저 나옴 · 다시 풀기는 틀린 문제만
+  {
+    const now = 29600000;
+    const rec: Record<string, number> = { 'k1.1': spCode(now - 60, SP_WRONG), 'g1.2': spCode(now - 30, SP_WRONG), 'l7.1': spCode(now - 50, SP_RIGHT) };
+    assert.equal(pickSpell(rec, now, [], false, () => 0.1), 'k1.1', '틀린 문제(오래된 것부터)');
+    assert.equal(pickSpell(rec, now, ['k1.1'], false, () => 0.1), 'g1.2', '방금 나온 문제는 피함');
+    assert.ok(!['k1.1', 'g1.2'].includes(pickSpell(rec, now, [], false, () => 0.5)!), '나머지는 새 문제');
+    assert.deepEqual(spWrongKeys(rec), ['k1.1', 'g1.2']);
+    assert.equal(pickSpell(rec, now, [], true), 'k1.1', '다시 풀기: 오래전에 틀린 것부터');
+    assert.equal(pickSpell(rec, now, ['k1.1'], true), 'g1.2');
+    assert.equal(pickSpell({ 'k1.1': spCode(now, SP_WRONG) }, now, ['k1.1'], true), 'k1.1', '하나 남으면 그것');
+    assert.equal(pickSpell({ 'l7.1': spCode(now, SP_RIGHT) }, now, [], true), null, '틀린 문제가 없으면 다시 풀기 끝');
+    // 고친 문제는 이틀 뒤 한 번 더
+    const fix = { 'k2.1': spCode(now - SP_RECHECK_MIN - 5, SP_FIX1), 'k3.1': spCode(now - 60, SP_FIX1) };
+    assert.equal(pickSpell(fix, now, [], false, () => 0.35), 'k2.1', '이틀 지난 고친 문제');
+    assert.ok(pickSpell(fix, now, [], false, () => 0.35) !== 'k3.1');
+  }
+  // 기록·보상 (수학과 같이 셈) · 한글 칸은 그대로 · 하루 150문제
+  store.replaceAll(store.fresh());
+  const hangul0 = hangul();
+  const lv0 = JSON.stringify(ms.mathState().lv);
+  const k = SP_KEYS[0];
+  let r = ms.answerSpell(false, k);
+  assert.equal(spOf(ms.mathState().sp[k])!.st, SP_WRONG);
+  assert.deepEqual(ms.spellWrong(), [k]); assert.equal(ms.spellStats().wrong, 1); assert.equal(ms.spellStats().seen, 1);
+  assert.deepEqual(ms.todayCat('sp'), { solved: 1, correct: 0 });
+  r = ms.answerSpell(true, k);
+  assert.equal(spOf(ms.mathState().sp[k])!.st, SP_FIX1, '틀린 문제를 맞히면 고침');
+  assert.deepEqual(ms.spellWrong(), [], '고치면 틀린 문제에서 빠짐');
+  let items2 = 0, mats2 = 0, snacks2 = 0;
+  for (let i = 1; i <= 48; i++) { const x = ms.answerSpell(true, SP_KEYS[i]); if (x.item) items2++; if (x.mat) mats2++; if (x.snack) snacks2++; assert.deepEqual(x.ups, []); }
+  assert.equal(ms.mathTotalCorrect(), 49);
+  assert.equal(items2, 4, '맞춤법 정답 10개마다 꾸미기 (수학과 같이)'); assert.equal(mats2, 9); assert.equal(snacks2, 9);
+  assert.deepEqual(ms.todayCat('sp'), { solved: 50, correct: 49 });
+  assert.equal(ms.todayMath().solved, 50, '하루 기록에도 같이');
+  assert.equal(JSON.stringify(ms.mathState().lv), lv0, '맞춤법은 수학 단계를 바꾸지 않음');
+  for (let i = 50; i < CAT_MAX - 1; i++) assert.equal(ms.answerSpell(true, SP_KEYS[i % SP_KEYS.length]).catDone, false);
+  assert.ok(!ms.catFull('sp'));
+  assert.equal(ms.answerSpell(true, SP_KEYS[200]).catDone, true, '맞춤법도 하루 150문제째에 오늘 끝');
+  assert.ok(ms.catFull('sp')); assert.deepEqual(ms.openCats(), ['add', 'sub', 'mul', 'div'], '수학 항목은 그대로 풀 수 있음');
+  assert.equal(hangul(), hangul0, '맞춤법을 풀어도 한글 칸은 하나도 안 바뀜');
+  assert.equal(ms.modeTitle(), '수학·맞춤법', '이름이 없으면 첫 화면 버튼은 수학·맞춤법');
+  ms.setMathName('가나'); assert.equal(ms.modeTitle(), '가나', '이름이 있으면 이름만 (수학 X)'); ms.setMathName('');
+  // 저장 모양: 모르는 열쇠·이상한 값은 버리고, 열쇠는 정렬 · 한글 초기화·예전 백업에도 남음
+  const good = spCode(29500000, SP_WRONG);
+  assert.deepEqual(normalizeMath({ sp: { 'k2.1': good, 'zz.1': good, 'k1.9': good, 'k1.1': -5, 'k1.2': 'x', 'g1.1': 295000009, 'g1.2': 1e12 } })!.sp, { 'k2.1': good });
+  assert.deepEqual(Object.keys(normalizeMath({ sp: { 'l7.1': good, 'g1.1': good, 'k1.1': good } })!.sp), ['g1.1', 'k1.1', 'l7.1']);
+  assert.deepEqual(normalizeMath({})!.sp, {}, '예전 기록에는 빈 칸');
+  const keepSp = JSON.stringify(ms.mathState().sp);
+  store.reset();
+  assert.equal(JSON.stringify(ms.mathState().sp), keepSp, '전체 초기화에도 맞춤법 기록 유지');
+  const oldB = store.fresh(); delete (oldB as any).math;
+  assert.ok(store.importCode(btoa(unescape(encodeURIComponent(JSON.stringify(oldB))))));
+  assert.equal(JSON.stringify(ms.mathState().sp), keepSp, '예전 백업을 불러와도 맞춤법 기록 유지');
+  console.log(`맞춤법: 문장 ${SENTS.length}개·문제 ${SP_KEYS.length}개(글꼴·도움말·정답 숨김·열쇠 유지), 같은 문장 다른 괄호·쉬운 것 먼저·틀린 문제 다시(열 문제 뒤·다시 풀기·이틀 뒤 확인), 보상·하루 150문제·수학 단계 그대로·한글 칸 그대로·저장·초기화 통과`);
+}
 console.log(`수학 모드: ${STAGES.length}단계 문제·보기 각 ${N}개, 항목 ${CATS.length}개(+골고루)·문제 시간, 하루 공부 시간(${DAY_MIN_CHOICES.join('·')}분)·항목당 하루 ${CAT_MAX}문제·정답 ${ITEM_EVERY}개마다 꾸미기·${MAT_EVERY}개마다 재료·${SNACK_EVERY}개마다 간식(먹이기)·항목마다 다음 단계,`
   + ` 수학 옷장·집(짓기·가구·마당)·이름이 한글과 따로, 초기화·예전 백업·망가진 칸·예전 기록 옮기기 통과`);

@@ -1,9 +1,11 @@
 // 수학 모드 (초등 2학년 아이용 — 한글 모드와 따로): 저장 모양·항목·단계·문제 만들기
+// 10-25: 같은 모드에 맞춤법 문제를 더함(문제는 spellData.ts, 기록은 이 모양의 sp 칸) — 화면 이름은 부모 설정 이름(없으면 '수학·맞춤법')
 // 저장은 한글 진도(State)의 'math' 한 칸에만 (10-23 사용자 허락). 두 기기 합치기는 shared/merge.js mergeMath.
 // 아이 이름은 저장소에 쓰지 않는다 — 부모 설정에서 넣은 이름(math.name)을 실행할 때만 읽어 보여 준다.
 // 이 파일은 store.ts를 부르지 않는다 (store.ts가 이 파일의 normalizeMath를 쓰므로 서로 부르면 꼬임).
 import { ITEM, PET, BUILD, SNACK, type Slot } from '../data/pets';
 import { FURN_BY } from '../data/home';
+import { SP_KEY_SET } from './spellData';
 
 type DevMap = Record<string, number>;
 type DayMap = Record<string, DevMap>;
@@ -35,7 +37,13 @@ export interface MathState {
   snacks: DayMap;                         // 간식 id → 기기 → 받은 개수 (정답 5개마다 하나)
   eaten: DayMap;                          // 간식 id → 기기 → 먹인 개수
   fed: DayMap;                            // 친구 id → 기기 → 간식을 먹은 횟수 (하트)
+  // ---- 10-25 5차: 맞춤법 (같은 모드 안에서 수학과 나란히 — 하루 공부 시간·정답 보상은 같이 씀) ----
+  sp: Record<string, number>;             // 맞춤법 문제 열쇠 → 마지막으로 푼 때(분)×10 + 상태 (0 맞힘 · 1 틀림 · 2 고침 · 3 다시 확인까지 맞힘 — spellData.ts)
 }
+/** 맞춤법 항목 (하루 기록 열쇠 '날짜:sp' — 단계 판정은 없음) */
+export const SP_CAT = 'sp';
+export type AnyCat = Cat | typeof SP_CAT;
+export const SP_INFO = { id: SP_CAT as AnyCat, icon: '✍️', name: '맞춤법' };
 
 export const PER_DAY = 50;                // (예전) 하루 문제 수 기본값 — perDay 칸 읽기용으로만 남김
 export const DAY_MIN = 30;                // 하루 공부 시간 기본 30분 (10-24 사용자 요청)
@@ -72,7 +80,7 @@ export function freshMath(): MathState {
   return {
     level: 0, levelT: 0, perDay: PER_DAY, perDayT: 0, solved: {}, correct: {}, total: {}, owned: [], wear: {}, wearT: {},
     lv: lvFromLevel(0), lvT: {}, solvedC: {}, correctC: {}, timeMul: 1, timeMulT: 0, name: '', nameT: 0,
-    built: {}, bought: {}, deco: {}, decoT: {}, dayMin: DAY_MIN, dayMinT: 0, ms: {}, snacks: {}, eaten: {}, fed: {},
+    built: {}, bought: {}, deco: {}, decoT: {}, dayMin: DAY_MIN, dayMinT: 0, ms: {}, snacks: {}, eaten: {}, fed: {}, sp: {},
   };
 }
 
@@ -93,7 +101,13 @@ const timeMap = (m: any, ok: (k: string) => boolean): Record<string, number> => 
   if (obj(m)) for (const k of Object.keys(m)) if (ok(k) && isNum(m[k]) && m[k] >= 0) o[k] = m[k];
   return o;
 };
-const dayCatKey = (k: string) => /^\d+:(add|sub|mul|div)$/.test(k);
+const dayCatKey = (k: string) => /^\d+:(add|sub|mul|div|sp)$/.test(k);
+/** 맞춤법 기록: 있는 문제 열쇠만, 값은 분×10+상태(0~3) — 열쇠 순서는 정렬 (합친 결과와 같은 모양) */
+const spMap = (m: any): Record<string, number> => {
+  const o: Record<string, number> = {};
+  if (obj(m)) for (const k of Object.keys(m).sort()) if (SP_KEY_SET.has(k) && isNum(m[k]) && m[k] > 0 && m[k] < 1e11 && Math.floor(m[k]) % 10 <= 3) o[k] = Math.floor(m[k]);
+  return o;
+};
 
 /** 저장·연동으로 받은 값을 안전하게 (틀린 칸은 버리고 기본값). 수학 칸이 망가져도 한글 진도는 그대로 읽힌다 */
 export function normalizeMath(o: any): MathState | undefined {
@@ -150,6 +164,8 @@ export function normalizeMath(o: any): MathState | undefined {
   m.snacks = dayMap(o.snacks, k => !!SNACK[k]);
   m.eaten = dayMap(o.eaten, k => !!SNACK[k]);
   m.fed = dayMap(o.fed, k => !!PET[k]);
+  // 5차(10-25): 맞춤법 — 모르는 문제 열쇠·이상한 값은 버림
+  m.sp = spMap(o.sp);
   return m;
 }
 

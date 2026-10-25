@@ -5,7 +5,7 @@ import { useContext } from 'preact/hooks';
 import { petView, matsLeft, builtCount, buildPart, nextBuild, decoOf, setDeco, buyFurn, isBought, type PetView } from '../engine/store';
 import { mathPetView, mathMatsLeft, mathBuiltCount, mathBuildPart, mathNextBuild, mathDecoOf, mathSetDeco, mathBuyFurn, mathIsBought } from '../math/mathStore';
 import type { BuildDef, Species } from '../data/pets';
-import { MATH_NO_MAT } from '../data/voice';
+import { STUDY_NO_MAT } from '../data/voice';
 
 export interface HomeApi {
   kind: 'hangul' | 'math';
@@ -18,7 +18,7 @@ export interface HomeApi {
   setDeco: (place: string, slot: string, id: string | null) => void;
   buyFurn: (id: string) => boolean;
   isBought: (id: string) => boolean;
-  noMat: string;   // 재료가 없을 때 하는 말 (한글: 놀이로 받음 / 수학: 정답으로 받음)
+  noMat: string;   // 재료가 없을 때 하는 말 (한글: 놀이로 받음 / 수학·맞춤법: 정답으로 받음)
 }
 
 export const HANGUL_HOME: HomeApi = {
@@ -31,7 +31,7 @@ export const MATH_HOME: HomeApi = {
   kind: 'math',
   petView: sp => mathPetView(sp), matsLeft: () => mathMatsLeft(), builtCount: id => mathBuiltCount(id), buildPart: id => mathBuildPart(id),
   nextBuild: () => mathNextBuild(), decoOf: p => mathDecoOf(p), setDeco: (p, sl, id) => mathSetDeco(p, sl, id), buyFurn: id => mathBuyFurn(id), isBought: id => mathIsBought(id),
-  noMat: MATH_NO_MAT,
+  noMat: STUDY_NO_MAT,
 };
 
 export const HomeCtx = createContext<HomeApi>(HANGUL_HOME);

@@ -13,12 +13,13 @@ import { MatIcon } from '../art/Build';
 import { sfx } from '../engine/audio';
 import { syncSoon } from '../engine/sync';
 import { ITEM, ITEM_LIST } from '../data/pets';
-import { makeProblemFor, stageName, catStage, CATS, CAT, ITEM_EVERY, MAT_EVERY, PASS_RATE, UP_MIN, CAT_MAX, IDLE_MS, type Problem, type Mode, type Cat } from '../math/mathData';
+import { makeProblemFor, stageName, catStage, CATS, CAT, ITEM_EVERY, MAT_EVERY, PASS_RATE, UP_MIN, CAT_MAX, IDLE_MS, SP_INFO, type Problem, type Mode, type Cat, type AnyCat } from '../math/mathData';
 import { mathState, todayMath, todayCat, answerMath, addMathMs, mathTimeUp, catFull, openCats, toNextItem, mathPet, mathWear, mathWho, mathMatsLeft, mathSnackTotal } from '../math/mathStore';
 import '../math/math.css';
 
-/** 남은 시간(ms): key(문제)가 바뀌면 처음부터, active가 아니면(답을 보여 주는 중·선물 창) 그 자리에서 멈춤, 앱이 가려진 동안도 멈춤 */
-function useCountdown(key: number, ms: number, active: boolean, onEnd: () => void) {
+/** 남은 시간(ms): key(문제)가 바뀌면 처음부터, active가 아니면(답을 보여 주는 중·선물 창) 그 자리에서 멈춤, 앱이 가려진 동안도 멈춤
+ *  (맞춤법 화면 SpellScreen도 같이 씀) */
+export function useCountdown(key: number, ms: number, active: boolean, onEnd: () => void) {
   const [left, setLeft] = useState(ms);
   const rem = useRef(ms);
   const end = useRef(onEnd);
@@ -39,16 +40,16 @@ function useCountdown(key: number, ms: number, active: boolean, onEnd: () => voi
   return left;
 }
 
-/** 오늘 항목별 결과 (오늘 끝 화면·수학 첫 화면에서 같이 씀) */
+/** 오늘 항목별 결과 (오늘 끝 화면·첫 화면에서 같이 씀 — 10-25부터 맞춤법 줄도) */
 export function TodaySummary({ ups = [] }: { ups?: Cat[] }) {
   const m = mathState();
-  const rows = CATS.map(c => ({ c, ...todayCat(c.id, m) })).filter(r => r.solved > 0);
+  const rows = [...CATS.map(c => ({ id: c.id as AnyCat, icon: c.icon, name: c.name })), SP_INFO].map(c => ({ c, ...todayCat(c.id, m) })).filter(r => r.solved > 0);
   if (!rows.length) return null;
   return (
     <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
       {rows.map(r => (
         <div class="pill" style={{ fontSize: 24 }} data-sum={r.c.id}>
-          {r.c.icon} {r.c.name} {r.correct}/{r.solved} ({Math.round(r.correct / r.solved * 100)}%){ups.includes(r.c.id) ? ' → 다음 단계!' : ''}
+          {r.c.icon} {r.c.name} {r.correct}/{r.solved} ({Math.round(r.correct / r.solved * 100)}%){(ups as AnyCat[]).includes(r.c.id) ? ' → 다음 단계!' : ''}
         </div>
       ))}
     </div>
@@ -162,7 +163,7 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
     <div class="screen" data-math="1" data-mode={mode}>
       <Backdrop theme="library" />
       <div class="layer">
-        <button class="iconbtn" style={{ position: 'absolute', left: 20, top: 18 }} onClick={() => { sfx.tap(); onBack(); }} aria-label="수학 처음으로">◀</button>
+        <button class="iconbtn" style={{ position: 'absolute', left: 20, top: 18 }} onClick={() => { sfx.tap(); onBack(); }} aria-label="고르는 화면으로">◀</button>
         <div class="pill" style={{ position: 'absolute', left: 112, top: 24, fontSize: 25 }} data-stage={mode}>{title}</div>
         <div class="pill" style={{ position: 'absolute', right: 24, top: 24, fontSize: 25 }} data-count="1">
           <span data-left={Math.ceil(t.leftMs / 1000)} style={{ color: lastOne || t.leftMs <= 0 ? '#c92a2a' : undefined }}>⏳ {lastOne ? '시간 끝' : leftText(t.leftMs)}</span> · {count}
@@ -205,7 +206,7 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
             </div>
             <div style={{ display: 'flex', gap: 30 }}>
               <button class="btn violet" onClick={() => { sfx.tap(); onCloset(); }}>👗 {who} 옷장</button>
-              <button class="btn" onClick={() => { sfx.tap(); onBack(); }}>{done === 'cat' ? '다른 항목 고르기' : '수학 처음으로'}</button>
+              <button class="btn" onClick={() => { sfx.tap(); onBack(); }}>{done === 'cat' ? '다른 항목 고르기' : '처음 화면으로'}</button>
             </div>
           </div>
         )}

@@ -18,8 +18,9 @@ import { server, onServer, connectVoice } from '../engine/boot';
 import { stat } from '../engine/srs';
 import { josa } from '../lib/hangul';
 import { ITEM_LIST, STAGE_NAME } from '../data/pets';
-import { STAGES, CATS, DAY_MIN_CHOICES, CAT_MAX, TIME_CHOICES, PASS_RATE, ITEM_EVERY, MAT_EVERY, UP_MIN, catSecRange } from '../math/mathData';
-import { mathState, todayMath, mathTotalCorrect, mathMatsLeft, mathSnackTotal, setMathLv, setMathDayMin, setMathTime, setMathName } from '../math/mathStore';
+import { STAGES, CATS, DAY_MIN_CHOICES, CAT_MAX, TIME_CHOICES, PASS_RATE, ITEM_EVERY, MAT_EVERY, UP_MIN, SP_CAT, catSecRange } from '../math/mathData';
+import { mathState, todayMath, todayCat, mathTotalCorrect, mathMatsLeft, mathSnackTotal, setMathLv, setMathDayMin, setMathTime, setMathName, modeTitle, spellStats, spellWrong } from '../math/mathStore';
+import { SENTS, SP_SEC_RANGE, makeSpellQ } from '../math/spellData';
 import '../math/math.css';
 
 // ---------- 제목 ----------
@@ -55,8 +56,8 @@ export function Title({ onStart, onMath }: { onStart: () => void; onMath?: () =>
         <button class={`btn big ${ready ? 'pulse' : ''}`} style={{ position: 'absolute', left: '50%', bottom: 44, transform: 'translateX(-50%)', opacity: ready ? 1 : 0.75 }}>
           {ready ? '시작하기 ▶' : `목소리 준비 중… ${Math.round(packLoad.progress * 100)}%`}
         </button>
-        {/* 수학 모드 (초등 2학년 아이 — 한글과 따로). 이름은 부모 설정의 '수학 이름'(기기 저장값) */}
-        {onMath && <button class="btn sky m-math-btn" data-math-start="1" onClick={(e) => { e.stopPropagation(); onMath(); }}>✏️ {mathState().name ? `${mathState().name} 수학` : '수학'}</button>}
+        {/* 수학·맞춤법 모드 (초등 2학년 아이 — 한글과 따로). 버튼 이름은 부모 설정의 '화면 이름'(기기 저장값, 10-25 사용자 요청으로 '○○ 수학' 대신 이름만), 없으면 '수학·맞춤법' */}
+        {onMath && <button class="btn sky m-math-btn" data-math-start="1" onClick={(e) => { e.stopPropagation(); onMath(); }}>✏️ {modeTitle()}</button>}
       </div>
     </div>
   );
@@ -355,19 +356,26 @@ function fmtDay(d: number) {
   return `${dt.getUTCMonth() + 1}/${dt.getUTCDate()}`;
 }
 
-// ---------- 부모 설정: 수학 (초등 2학년 아이 — 한글 진도와 따로) ----------
+// ---------- 부모 설정: 수학·맞춤법 (초등 2학년 아이 — 한글 진도와 따로) ----------
 function MathParent({ onSaved }: { onSaved: (m: string) => void }) {
   const m = mathState();
   const t = todayMath(m);
   const [nameIn, setNameIn] = useState(m.name);
+  const [showWrong, setShowWrong] = useState(false);
+  const sp = spellStats(m), spToday = todayCat(SP_CAT, m);
   const Opt = ({ on, children, onClick }: any) => <button class={`opt ${on ? 'on' : ''}`} onClick={onClick}>{children}</button>;
   return (
     <>
-      <h3>수학{m.name ? ` (${m.name})` : ''}</h3>
-      <div class="row" data-math-parent="1">오늘 공부 {Math.floor(t.ms / 60000)}분/{m.dayMin}분 · {t.solved}문제 · 맞힘 {t.correct}개 · 지금까지 맞힌 문제 {mathTotalCorrect(m)}개 · 수학 옷장 꾸미기 {m.owned.length}/{ITEM_LIST.length} · 재료 {mathMatsLeft(m)}개 · 간식 {mathSnackTotal(m)}개</div>
-      <div class="row">수학 이름 <input type="text" value={nameIn} onInput={(e: any) => setNameIn(e.target.value)} style={{ width: 160 }} data-math-name="1" />
-        <button class="opt" onClick={() => { setMathName(nameIn); setNameIn(mathState().name); onSaved(nameIn.trim() ? `수학 화면에 '${nameIn.trim().slice(0, 10)}'(으)로 보입니다.` : '수학 이름을 비웠습니다.'); }}>저장</button>
-        <span style={{ fontSize: 16, color: '#868e96' }}>'○○ 옷장', '○○ 집 꾸미기'처럼 보임 (이 기기와 연동된 기기에만 저장)</span></div>
+      <h3>수학·맞춤법{m.name ? ` (${m.name})` : ''}</h3>
+      <div class="row" data-math-parent="1">오늘 공부 {Math.floor(t.ms / 60000)}분/{m.dayMin}분 · {t.solved}문제 · 맞힘 {t.correct}개 · 지금까지 맞힌 문제 {mathTotalCorrect(m)}개 · 옷장 꾸미기 {m.owned.length}/{ITEM_LIST.length} · 재료 {mathMatsLeft(m)}개 · 간식 {mathSnackTotal(m)}개</div>
+      <div class="row">화면 이름 <input type="text" value={nameIn} onInput={(e: any) => setNameIn(e.target.value)} style={{ width: 160 }} data-math-name="1" />
+        <button class="opt" onClick={() => { setMathName(nameIn); setNameIn(mathState().name); onSaved(nameIn.trim() ? `첫 화면 버튼과 제목이 '${nameIn.trim().slice(0, 10)}'(으)로 보입니다.` : `이름을 비웠습니다. 첫 화면 버튼은 '${modeTitle()}'(으)로 보입니다.`); }}>저장</button>
+        <span style={{ fontSize: 16, color: '#868e96' }}>첫 화면 버튼·제목(이름만, 없으면 '수학·맞춤법')과 '○○ 옷장', '○○ 집 꾸미기'에 보임 (이 기기와 연동된 기기에만 저장)</span></div>
+      <div class="row" data-spell-parent="1">✍️ 맞춤법: 문제 {sp.total}개(문장 {SENTS.length}개) · 풀어 본 문제 {sp.seen}개 · 지금 틀린 문제 {sp.wrong}개 · 오늘 {spToday.solved}문제 중 {spToday.correct}개 맞힘
+        {sp.wrong > 0 && <button class="opt" onClick={() => setShowWrong(x => !x)}>{showWrong ? '틀린 문제 닫기' : '틀린 문제 보기'}</button>}</div>
+      {showWrong && <div class="row" style={{ fontSize: 17, color: '#495057', display: 'block', lineHeight: 1.6 }} data-spell-wrong-list="1">
+        {spellWrong(m).map(k => { const q = makeSpellQ(k, () => 0); return q ? <div>• {q.before}<b style={{ color: '#2b8a3e' }}>{q.ans}</b>{q.after} <span style={{ color: '#c92a2a' }}>(틀린 말: {q.wrong})</span></div> : null; })}
+      </div>}
       {CATS.map(c => (
         <div class="row" style={{ gap: 6 }} data-math-cat={c.id}>{c.icon} {c.name}
           {c.stages.map((st, i) => <Opt on={m.lv[c.id] === i} onClick={() => { setMathLv(c.id, i); onSaved(`${c.name}을 ${i + 1}단계(${STAGES[st].name} ${STAGES[st].sub})로 바꿨습니다.`); }}>{i + 1}. {STAGES[st].name} · {STAGES[st].sub}</Opt>)}
@@ -376,10 +384,11 @@ function MathParent({ onSaved }: { onSaved: (m: string) => void }) {
       <div class="row" data-math-daymin="1">하루 공부 시간 {DAY_MIN_CHOICES.map(n => <Opt on={m.dayMin === n} onClick={() => { setMathDayMin(n); onSaved(`하루 ${n >= 60 ? `${n / 60}시간` : `${n}분`}으로 바꿨습니다. 오늘 공부한 시간은 그대로 셉니다.`); }}>{n >= 60 ? `${n / 60}시간` : `${n}분`}</Opt>)}
         <span style={{ fontSize: 16, color: '#868e96' }}>문제 화면에서만 셈(3분 넘게 안 만지면 멈춤) · 시간이 다 되면 풀던 문제까지 풀고 끝 · 한 항목은 하루 {CAT_MAX}문제까지</span></div>
       <div class="row">문제마다 시간 {TIME_CHOICES.map(([v, l]) => <Opt on={m.timeMul === v} onClick={() => { setMathTime(v); onSaved('다음 문제부터 적용됩니다.'); }}>{l}</Opt>)}
-        <span style={{ fontSize: 16, color: '#868e96' }}>보통: {CATS.map(c => { const [a, b] = catSecRange(c.id); return `${c.name} ${a === b ? a : `${a}~${b}`}초`; }).join(' · ')} (단계마다 다름, 넉넉하게 ×1.5 · 짧게 ×0.75) — 시간이 다 되면 틀린 것으로 하고 정답을 보여 줌</span></div>
+        <span style={{ fontSize: 16, color: '#868e96' }}>보통: {CATS.map(c => { const [a, b] = catSecRange(c.id); return `${c.name} ${a === b ? a : `${a}~${b}`}초`; }).join(' · ')} · 맞춤법 {SP_SEC_RANGE[0]}~{SP_SEC_RANGE[1]}초(문장이 길수록 넉넉히) (넉넉하게 ×1.5 · 짧게 ×0.75) — 시간이 다 되면 틀린 것으로 하고 정답을 보여 줌</span></div>
       <div class="row" style={{ fontSize: 16, color: '#868e96' }}>
         항목마다 단계가 따로 · 하루 공부 시간이 끝날 때(또는 그 항목을 {CAT_MAX}문제 다 풀 때), 그날 그 항목을 {UP_MIN}문제 이상 풀고 {Math.round(PASS_RATE * 100)}% 이상 맞혔으면 그 항목만 다음 단계(하루 한 단계까지 — 그날 단계를 직접 바꾼 항목은 다음 날 판정) · 정답 {ITEM_EVERY}개마다 꾸미기, {MAT_EVERY}개마다 집 재료와 간식(틀려도 안 가져감, 간식은 수학 '간식 주기'에서 먹임) ·
-        한글 진도·하루 사용 시간·한글 옷장·한글 집과 따로 · '골고루'만 풀면 항목마다 문제 수가 적어 단계가 거의 안 오름(복습용) · 두 기기 연동됨
+        한글 진도·하루 사용 시간·한글 옷장·한글 집과 따로 · '골고루'만 풀면 항목마다 문제 수가 적어 단계가 거의 안 오름(복습용) · 두 기기 연동됨<br />
+        맞춤법: 속담·명언·좋은 말 문장 속 괄호에서 바른 말 둘 중 하나 고르기(단계 없음, 쉬운 문제가 먼저 나오기 쉬움) · 같은 문장도 괄호 자리를 바꿔 다시 나옴 · 틀린 문제는 다음에 다시 나오고(열 문제쯤 뒤·다음 날), 맞히면 이틀 뒤 한 번 더 확인 · '틀린 문제 다시 풀기'로 따로 풀 수 있음 · 하루 공부 시간·하루 {CAT_MAX}문제·정답 보상은 수학과 같이 셈
       </div>
     </>
   );

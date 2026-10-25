@@ -26,7 +26,7 @@ export function MathCloset({ onBack }: { onBack: () => void }) {
     <div class="screen" data-closet="1">
       <Backdrop theme="meadow" />
       <div class="layer">
-        <button class="iconbtn" style={{ position: 'absolute', left: 20, top: 18 }} onClick={() => { sfx.tap(); syncSoon(300); onBack(); }} aria-label="수학으로">◀</button>
+        <button class="iconbtn" style={{ position: 'absolute', left: 20, top: 18 }} onClick={() => { sfx.tap(); syncSoon(300); onBack(); }} aria-label="고르는 화면으로">◀</button>
         <div class="pill" style={{ position: 'absolute', left: 112, top: 24, fontSize: 28 }}>👗 {mathWho(m)} 옷장 · 꾸미기 {m.owned.length}/{ITEM_LIST.length}</div>
         {/* 왼쪽: 친구 고르기 + 그 아래 친구 (버튼 높이가 기기마다 달라도 겹치지 않게 세로로 쌓음) */}
         <div style={{ position: 'absolute', left: 20, top: 100, width: 470, bottom: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -59,7 +59,7 @@ export function MathCloset({ onBack }: { onBack: () => void }) {
             ))}
             {!list.length && (
               <div style={{ gridColumn: '1 / -1', fontSize: 28, color: '#7a5b8f', padding: 30 }}>
-                {m.owned.length ? `${PET[pet].name}에게 맞는 ${SLOT_NAME[slot]} 꾸미기는 아직 없어요.` : `수학 문제를 맞히면 정답 ${ITEM_EVERY}개마다 꾸미기가 하나씩 생겨요!`}
+                {m.owned.length ? `${PET[pet].name}에게 맞는 ${SLOT_NAME[slot]} 꾸미기는 아직 없어요.` : `수학·맞춤법 문제를 맞히면 정답 ${ITEM_EVERY}개마다 꾸미기가 하나씩 생겨요!`}
               </div>
             )}
           </div>

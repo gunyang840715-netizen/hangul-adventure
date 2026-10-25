@@ -431,23 +431,28 @@ assert.equal(JSON.stringify(normalizeMath(JSON.parse(JSON.stringify(once)))), JS
   assert.deepEqual(spOf(spCode(29500000.7, 2)), { min: 29500000, st: 2 });
 
   // 문제 고르기: 처음에는 안 본 문제, 같은 문장은 최근 6문제 안에 다시 안 나옴, 쉬운 문제가 먼저 나오기 쉬움
-  {
+  // (무작위는 씨앗을 정해 여러 판 돌림 — 검사 결과가 그때그때 달라지지 않게)
+  const seeded = (s: number) => () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  for (const seed of [1, 7, 42, 2025, 31337, 99991, 123457, 777]) {
+    const rnd = seeded(seed);
     const rec: Record<string, number> = {}; const recent: string[] = []; let now = 29500000;
     const lvOf = (k: string) => SENTS.find(x => x.id === sidOf(k))!.lv;
     const first: number[] = [];
-    for (let i = 0; i < SP_KEYS.length; i++) {
-      const k = pickSpell(rec, now, recent, false)!;
+    for (let n = 0; Object.keys(rec).length < SP_KEYS.length; n++) {
+      assert.ok(n < SP_KEYS.length + 60, '모든 문제가 한 번씩 나옴 (같은 문장 다른 괄호 포함)');
+      const k = pickSpell(rec, now, recent, false, rnd)!;
       assert.ok(SP_KEY_SET.has(k));
-      assert.ok(!recent.slice(-6).map(sidOf).includes(sidOf(k)), '같은 문장이 바로 다시 나옴 ' + k);
-      assert.ok(!rec[k], '다 보기 전에는 안 본 문제만 ' + k);
-      if (i < 100) first.push(lvOf(k));
+      const recentSent = recent.slice(-6).map(sidOf);
+      assert.ok(!recentSent.includes(sidOf(k)), '같은 문장이 바로 다시 나옴 ' + k);
+      // 안 본 문제가 먼저 — 남은 안 본 문제가 모두 방금 나온 문장일 때만 오래전에 푼 문제를 낸다
+      if (rec[k]) assert.ok(SP_KEYS.every(x => rec[x] || recentSent.includes(sidOf(x))), '다 보기 전에는 안 본 문제만 ' + k);
+      if (n < 100) first.push(lvOf(k));
       rec[k] = spCode(now, SP_RIGHT); recent.push(k); now += 1;
     }
-    assert.equal(Object.keys(rec).length, SP_KEYS.length, '모든 문제가 한 번씩 나옴 (같은 문장 다른 괄호 포함)');
     assert.ok(first.filter(x => x === 1).length > first.filter(x => x === 3).length * 3, '처음에는 쉬운 문제가 더 많이');
     // 다 본 뒤에는 오래전에 푼 것부터
-    const k2 = pickSpell(rec, now + 10, recent, false)!;
-    assert.ok(rec[k2] <= spCode(29500000 + 40, SP_RIGHT), '다 본 뒤에는 오래된 것부터 ' + k2);
+    const k2 = pickSpell(rec, now + 10, recent, false, rnd)!;
+    assert.ok(spOf(rec[k2])!.min <= 29500000 + 60, '다 본 뒤에는 오래된 것부터 ' + k2);
   }
   // 틀린 문제: 열 문제 안에는 다시 안 나오고, 그 뒤에는 열 번에 세 번쯤 먼저 나옴 · 다시 풀기는 틀린 문제만
   {

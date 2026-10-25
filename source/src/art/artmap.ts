@@ -1,5 +1,8 @@
 // 기존 그림 원본의 내용 해시 경로. 없는 그림은 기존 SVG로 그린다.
 export const ART_MAP: Record<string, string> = {
+  "wardrobe.hoodie-lowered-collar-b": "art/wardrobe/hoodie-lowered-collar-b.06d7bd24.webp",
+  "wardrobe.hoodie-lowered-sleeve-b": "art/wardrobe/hoodie-lowered-sleeve-b.9f3ec57a.webp",
+  "wardrobe.hoodie-lowered-body-b": "art/wardrobe/hoodie-lowered-body-b.391f8922.webp",
   "pet.persian.paint-wear-clothes-sweater-front-b": "art/pets/persian.paint-wear-clothes-sweater-front-b.59887371.webp",
   "pet.fold.paint-wear-clothes-sweater-front-b": "art/pets/fold.paint-wear-clothes-sweater-front-b.ec443930.webp",
   "pet.siamese.paint-wear-clothes-sweater-front-b": "art/pets/siamese.paint-wear-clothes-sweater-front-b.5a9b310d.webp",

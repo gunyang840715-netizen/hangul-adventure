@@ -1,0 +1,115 @@
+{
+  "method": "B",
+  "entries": [
+    {
+      "pet": "koshort",
+      "item": "sweater",
+      "art": "pet.koshort.paint-wear-clothes-sweater-front-b",
+      "url": "./art/pets/koshort.paint-wear-clothes-sweater-front-b.e2fe5e87.webp",
+      "x": 204,
+      "y": 337,
+      "width": 213,
+      "height": 254,
+      "sha256": "e2fe5e87885ebb42a08eec8f246521573ddc06c28da67755347ae3680a954bd6",
+      "bytes": 23510,
+      "baseSHA256": "618810e647b62c798d6cc782ea8536a39a4b63f7a1befb75ad97fc687be4a41b",
+      "stages": [
+        "baby",
+        "kid",
+        "adult"
+      ],
+      "pose": "front",
+      "method": "B",
+      "productNumericPassed": 3,
+      "productVisualPassed": 3
+    },
+    {
+      "pet": "russian",
+      "item": "sweater",
+      "art": "pet.russian.paint-wear-clothes-sweater-front-b",
+      "url": "./art/pets/russian.paint-wear-clothes-sweater-front-b.36e6e25d.webp",
+      "x": 199,
+      "y": 327,
+      "width": 225,
+      "height": 264,
+      "sha256": "36e6e25d2f9ae11341ab2a514a00ef81ef1b0a81379a7e584a37ee1828856165",
+      "bytes": 23574,
+      "baseSHA256": "3afb5521b0719cb7f8b5bf02ba1cc6f5cc9159ec5c2e48d10ef46d01b70d69bf",
+      "stages": [
+        "baby",
+        "kid",
+        "adult"
+      ],
+      "pose": "front",
+      "method": "B",
+      "productNumericPassed": 3,
+      "productVisualPassed": 3
+    },
+    {
+      "pet": "siamese",
+      "item": "sweater",
+      "art": "pet.siamese.paint-wear-clothes-sweater-front-b",
+      "url": "./art/pets/siamese.paint-wear-clothes-sweater-front-b.5a9b310d.webp",
+      "x": 236,
+      "y": 319,
+      "width": 198,
+      "height": 272,
+      "sha256": "5a9b310d1a503c7a3d003179cf125ab671a9763cb4da4ddb5f1793bf28e17b3c",
+      "bytes": 22054,
+      "baseSHA256": "a28fb3226159716f63f45dbcff9afcb727066aefcb856d264d5eadfa7f4229e7",
+      "stages": [
+        "baby",
+        "kid",
+        "adult"
+      ],
+      "pose": "front",
+      "method": "B",
+      "productNumericPassed": 3,
+      "productVisualPassed": 3
+    },
+    {
+      "pet": "fold",
+      "item": "sweater",
+      "art": "pet.fold.paint-wear-clothes-sweater-front-b",
+      "url": "./art/pets/fold.paint-wear-clothes-sweater-front-b.ec443930.webp",
+      "x": 174,
+      "y": 331,
+      "width": 279,
+      "height": 260,
+      "sha256": "ec44393087df7d3c8de468474960bce5572e83d11cdf45540db2e41f06cf1392",
+      "bytes": 29280,
+      "baseSHA256": "245d51115689fe105ca1303158b770d926d06c52dc504be3ff8e25c9e3fe96cf",
+      "stages": [
+        "baby",
+        "kid",
+        "adult"
+      ],
+      "pose": "front",
+      "method": "B",
+      "productNumericPassed": 3,
+      "productVisualPassed": 3
+    },
+    {
+      "pet": "persian",
+      "item": "sweater",
+      "art": "pet.persian.paint-wear-clothes-sweater-front-b",
+      "url": "./art/pets/persian.paint-wear-clothes-sweater-front-b.59887371.webp",
+      "x": 197,
+      "y": 374,
+      "width": 243,
+      "height": 217,
+      "sha256": "59887371cc708eb06801b3833e615635e0c7d6687dcb6d5e663813c7b15da903",
+      "bytes": 22802,
+      "baseSHA256": "7831618f836ae35b6b30483229a621af926a25f6ec00274897a27f82eab1b80f",
+      "stages": [
+        "baby",
+        "kid",
+        "adult"
+      ],
+      "pose": "front",
+      "method": "B",
+      "productNumericPassed": 3,
+      "productVisualPassed": 3
+    }
+  ]
+}

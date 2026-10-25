@@ -11,7 +11,7 @@ import { PAINT_RIG } from './petpaint.gen';
 import { PetAnim, type AnimIn, type Pose, type Mat } from './petanim';
 import { sideFrame, sideArt, sideRig, placeM, mul, SIDE_SLOTS, type SideFrame, type SideSlot } from './petside';
 import {wornKeys,wornSelection,drawWorn,type SelectedWear} from './wearable';
-import {frontWearReady} from './frontwear';
+import {frontWearReady,frontWearCloth,frontWearLoaded} from './frontwear';
 
 export type { Act } from './petanim';
 type Pt = [number, number];
@@ -97,6 +97,7 @@ const MESH: Record<number, { pos: WebGLBuffer; idx: WebGLBuffer; n: number }> = 
 const U: Record<string, WebGLUniformLocation | null> = {};
 let A = { pos: 0, w: 0, w2: 0 };
 const GLP: Record<string, GLPet | null> = {};
+const CLOTH_TEXTURES=new Map<HTMLImageElement,{gl:GL;texture:WebGLTexture}>();
 
 const VS = `
 attribute vec2 aPos; attribute vec4 aW; attribute float aW2;
@@ -116,8 +117,8 @@ void main() {
 const FS = `
 precision mediump float;
 varying vec2 vT;
-uniform sampler2D uF, uE, uM;
-uniform vec4 uEB, uMB; uniform float uEK, uMK, uDim, uUV;
+uniform sampler2D uF, uE, uM, uCloth;
+uniform vec4 uEB, uMB, uClothBox; uniform float uEK, uMK, uDim, uUV, uHasCloth;
 void main() {
   vec4 c = texture2D(uF, vT * uUV);
   if (uEK > 0.002) {
@@ -127,6 +128,12 @@ void main() {
   if (uMK > 0.002) {
     vec2 m = (vT - uMB.xy) / uMB.zw;
     if (m.x > 0.0 && m.y > 0.0 && m.x < 1.0 && m.y < 1.0) { vec4 o = texture2D(uM, m) * uMK; c = o + c * (1.0 - o.a); }
+  }
+  if (uHasCloth > 0.5) {
+    vec2 p = (vT - uClothBox.xy) / uClothBox.zw;
+    if (p.x >= 0.0 && p.y >= 0.0 && p.x <= 1.0 && p.y <= 1.0) {
+      vec4 cloth = texture2D(uCloth, p); c = cloth + c * (1.0 - cloth.a);
+    }
   }
   gl_FragColor = vec4(c.rgb * uDim, c.a);
 }`;
@@ -152,9 +159,9 @@ function getGL(): GL | null {
     g.linkProgram(prog);
     if (!g.getProgramParameter(prog, g.LINK_STATUS)) throw new Error('link');
     g.useProgram(prog);
-    for (const n of ['uB', 'uView', 'uF', 'uE', 'uM', 'uEB', 'uMB', 'uEK', 'uMK', 'uDim', 'uUV']) U[n] = g.getUniformLocation(prog, n);
+    for (const n of ['uB', 'uView', 'uF', 'uE', 'uM', 'uEB', 'uMB', 'uEK', 'uMK', 'uDim', 'uUV','uCloth','uClothBox','uHasCloth']) U[n] = g.getUniformLocation(prog, n);
     A = { pos: g.getAttribLocation(prog, 'aPos'), w: g.getAttribLocation(prog, 'aW'), w2: g.getAttribLocation(prog, 'aW2') };
-    g.uniform1i(U.uF, 0); g.uniform1i(U.uE, 1); g.uniform1i(U.uM, 2);
+    g.uniform1i(U.uF, 0); g.uniform1i(U.uE, 1); g.uniform1i(U.uM, 2);g.uniform1i(U.uCloth,3);
     g.enable(g.BLEND); g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA);
     g.clearColor(0, 0, 0, 0);
     glc.addEventListener('webglcontextlost', (e) => { e.preventDefault(); gl = null; });
@@ -228,7 +235,7 @@ function glPet(id: string): GLPet | null {
 }
 
 const UB = new Float32Array(36);
-function glDraw(id: string, pose: Pose, w: number, h: number): boolean {
+function glDraw(id: string, pose: Pose, w: number, h: number,clothing:ReturnType<typeof frontWearCloth>=null): boolean {
   const g = getGL();
   if (!g || g.isContextLost()) return false;
   const P = glPet(id);
@@ -248,6 +255,14 @@ function glDraw(id: string, pose: Pose, w: number, h: number): boolean {
   g.activeTexture(g.TEXTURE0); g.bindTexture(g.TEXTURE_2D, P.tf);
   g.activeTexture(g.TEXTURE1); g.bindTexture(g.TEXTURE_2D, P.te);
   g.activeTexture(g.TEXTURE2); g.bindTexture(g.TEXTURE_2D, P.tm ?? P.te);
+  g.activeTexture(g.TEXTURE3);
+  if(clothing){
+    let record=CLOTH_TEXTURES.get(clothing.image);
+    if(!record||record.gl!==g){record={gl:g,texture:texFrom(g,clothing.image,false)};CLOTH_TEXTURES.set(clothing.image,record);}
+    if(CLOTH_TEXTURES.size>12){const first=CLOTH_TEXTURES.keys().next().value!;const old=CLOTH_TEXTURES.get(first)!;old.gl.deleteTexture(old.texture);CLOTH_TEXTURES.delete(first);}
+    g.bindTexture(g.TEXTURE_2D,record.texture);
+    const b=clothing.layer;g.uniform4f(U.uClothBox,b.x,b.y,b.width,b.height);g.uniform1f(U.uHasCloth,1);
+  }else{g.bindTexture(g.TEXTURE_2D,P.te);g.uniform1f(U.uHasCloth,0);}
   const M = mesh(g, P.N);
   g.bindBuffer(g.ARRAY_BUFFER, M.pos);
   g.enableVertexAttribArray(A.pos); g.vertexAttribPointer(A.pos, 2, g.FLOAT, false, 0, 0);
@@ -400,9 +415,11 @@ export class PaintPet {
       }
       // 연속 동작 그림이 아직 없으면 정면 그림으로
     }
-    if (glDraw(this.o.id, pose, this.cw, this.ch)) {
+    const clothing=frontWearCloth(this.o.id,this.selectedWear.clothes);
+    if (glDraw(this.o.id, pose, this.cw, this.ch,clothing)) {
       c.setTransform(1, 0, 0, 1, 0, 0);
       c.drawImage(glc, 0, glc.height - this.ch, this.cw, this.ch, 0, 0, this.cw, this.ch);
+      this.clothDrawn(clothing);
       this.frontWear();
       return false;
     }
@@ -418,9 +435,16 @@ export class PaintPet {
       c.globalAlpha = a; c.drawImage(im, box[0], box[1], box[2], box[3]); c.globalAlpha = 1;
     };
     over('eyes', r.eyesBox, pose.eyes); over('mouth', r.mouthBox, pose.mouth);
+    if(clothing){const b=clothing.layer;c.drawImage(clothing.image,b.x,b.y,b.width,b.height);}
+    this.clothDrawn(clothing);
     c.filter = 'none';
     this.frontWear();
     return false;
+  }
+  private clothDrawn(clothing:ReturnType<typeof frontWearCloth>){
+    const item=this.selectedWear.clothes,dataset=this.o.canvas.dataset;
+    if(clothing&&item){frontWearLoaded(this.o.id,'clothes',item,clothing.layer.url);if(dataset)dataset.frontClothes=item;}
+    else if(dataset)delete dataset.frontClothes;
   }
   private frontWear() {
     // 정면은 Pet의 몸/머리 SVG 순서에 부품을 넣어, 기존 아이템과 섞어도 가림 순서가 유지된다.

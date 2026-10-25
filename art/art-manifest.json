@@ -3783,11 +3783,30 @@
   {
    "u": "art/items/shoes-ruby-four-feet.de68b50a.webp",
    "b": 35562
-  }
-,
+  },
   {
    "u": "art/items/neck-scarf-front-shared.d0e5e0b8.webp",
    "b": 39886
+  },
+  {
+   "u": "art/pets/fold.paint-wear-clothes-sweater-front-b.ec443930.webp",
+   "b": 29280
+  },
+  {
+   "u": "art/pets/koshort.paint-wear-clothes-sweater-front-b.e2fe5e87.webp",
+   "b": 23510
+  },
+  {
+   "u": "art/pets/persian.paint-wear-clothes-sweater-front-b.59887371.webp",
+   "b": 22802
+  },
+  {
+   "u": "art/pets/russian.paint-wear-clothes-sweater-front-b.36e6e25d.webp",
+   "b": 23574
+  },
+  {
+   "u": "art/pets/siamese.paint-wear-clothes-sweater-front-b.5a9b310d.webp",
+   "b": 22054
   }
  ]
 }

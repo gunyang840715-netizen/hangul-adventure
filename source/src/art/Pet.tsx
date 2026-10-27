@@ -2,7 +2,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { JSX } from 'preact';
 import { onSpeaking } from '../engine/audio';
-import { PET, MAX_LEVEL, type Stage, type Slot } from '../data/pets';
+import { PET, type Stage, type Slot } from '../data/pets';
 import { PET_PHOTO, PHOTO_BOX } from './petphotos';
 import { paintable, baseState, loadBase, loadMotions, retryPaintImages, rigOf, PaintPet as Painter, startPet, stopPet, VIEW, type Act } from './petpaint';
 import type { Mat } from './petanim';
@@ -70,10 +70,11 @@ interface Props {
   poke?: number;            // (새 그림) 바뀔 때마다 한 번 깡충
 }
 
-/** 자람 정도 0(아주 아기)~1(다 큰 어른): 레벨마다 조금씩 */
-export function growthOf(level?: number, stage: Stage = 'adult') {
-  const lv = level ?? (stage === 'baby' ? 1 : stage === 'kid' ? 5 : MAX_LEVEL);
-  return Math.max(0, Math.min(1, (lv - 1) / (MAX_LEVEL - 1)));
+/** 자람 정도 0(아기)~1(어른).
+ *  10-27 사용자 요청: 성장 단계를 빼고 아기 모습만 — 레벨·간식 점수와 상관없이 언제나 0(아기 크기: 몸 0.6배·머리 1.24배).
+ *  간식 점수·레벨 기록은 저장에 그대로 남는다(되살리려면 이 함수만 예전 식으로). */
+export function growthOf(_level?: number, _stage: Stage = 'baby') {
+  return 0;
 }
 
 /** 새 그림(손그림 수채)을 쓸 수 있으면 true — 받는 중이거나 못 받으면 예전 그림 */
@@ -105,16 +106,16 @@ export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}
   const L = LOOK[def.id];
   const cat = def.species === 'cat';
   const photo = PET_PHOTO[def.id] !== failedPhoto ? PET_PHOTO[def.id] : undefined;
-  // 레벨이 오를 때마다 조금씩: 몸이 커지고, 머리·눈 비율은 아기처럼 크다가 점점 어른처럼
+  // 10-27 사용자 요청: 성장 단계 없음 — 언제나 아기 모습(growthOf = 0), 화면 표시도 아기
   const g = growthOf(level, stage);
-  if (painted) return <PaintedPet pid={def.id} size={size} mood={mood} motion={motion} wear={wear} g={g} stage={stage} talking={talking} cls={cls} style={style} flip={flip} act={act} poke={poke} />;
+  if (painted) return <PaintedPet pid={def.id} size={size} mood={mood} motion={motion} wear={wear} g={g} stage="baby" talking={talking} cls={cls} style={style} flip={flip} act={act} poke={poke} />;
   const S = 0.6 + 0.4 * g;                 // 몸 크기
   const H = 1.24 - 0.24 * g;               // 몸에 비해 머리 크기 (아기일수록 큼)
   const E = 1.22 - 0.22 * g;               // 눈 크기 (아기일수록 동글동글 큼)
   const T = 0.55 + 0.45 * g;               // 꼬리 길이
   const Y = 0.82 + 0.18 * g;               // 귀 크기
   return (
-    <div class={`mascot m-${motion} ${cls}`} style={{ width: size, height: size, ...style }} data-pet={def.id} data-stage={stage} data-grow={g.toFixed(2)}>
+    <div class={`mascot m-${motion} ${cls}`} style={{ width: size, height: size, ...style }} data-pet={def.id} data-stage="baby" data-grow={g.toFixed(2)}>
       <svg viewBox="0 0 200 200" width={size} height={size} style={{ overflow: 'visible', transform: flip ? 'scaleX(-1)' : undefined }}>
         <defs>
           <radialGradient id={`${id}-sh`} cx="45%" cy="35%" r="70%"><stop offset="0" stop-color="#fff" stop-opacity=".85" /><stop offset="1" stop-color="#fff" stop-opacity="0" /></radialGradient>

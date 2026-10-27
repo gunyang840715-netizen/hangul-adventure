@@ -13,7 +13,7 @@ if (!fs.existsSync(p)) {
   const m = JSON.parse(fs.readFileSync(p, 'utf8')) as { files: { u: string; b: number }[] };
   assert.ok(Array.isArray(m.files));
   const files = new Map<string, number>();
-  let total = 0;
+  let total = 0, wear = 0;
   const pets = new Map<string, number>();
   for (const f of m.files) {
     assert.match(f.u, /^art\/[a-zA-Z0-9_/-]+\.[a-zA-Z0-9_.-]*[a-f0-9]{8}\.webp$/);
@@ -36,12 +36,16 @@ if (!fs.existsSync(p)) {
     assert.ok(data.length <= limit, '그림 용량 초과: ' + f.u);
     if (group === 'pets') {
       const id = f.u.split('/')[2].split('.')[0];
-      pets.set(id, (pets.get(id) || 0) + data.length);
+      // 10-27 사용자 요청(꾸미기 전부를 친구·자세마다 실제 착용 그림으로): 착용 그림(.paint-wear-)은 입었을 때만 받으므로
+      // 친구 합계 2.5MB·전체 60MB에서 빼고 따로 센다(한 장 400KB는 같음). 용량 때문에 그림을 공유·재사용하지 않게.
+      if (f.u.includes('.paint-wear-')) wear += data.length;
+      else pets.set(id, (pets.get(id) || 0) + data.length);
     }
     total += data.length; files.set(f.u, f.b);
   }
-  assert.ok(total <= 60000000, '전체 그림 60MB 초과');
+  assert.ok(total - wear <= 60000000, '전체 그림(착용 그림 빼고) 60MB 초과');
+  assert.ok(wear <= 400000000, '착용 그림(.paint-wear-) 합계 400MB 초과');
   for (const [id, b] of pets) assert.ok(b <= 2500000, '친구 하나의 그림 합계 2.5MB 초과: ' + id);
   for (const [id, u] of Object.entries(ART_MAP)) assert.ok(files.has(u), '그림 경로 표에만 있음: ' + id);
-  console.log('그림 경로·내용 해시·용량 검사:', files.size, '개,', total, '바이트');
+  console.log('그림 경로·내용 해시·용량 검사:', files.size, '개,', total, '바이트 (착용 그림', wear, '바이트)');
 }

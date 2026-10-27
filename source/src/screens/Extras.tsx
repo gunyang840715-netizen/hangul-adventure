@@ -17,7 +17,7 @@ import { status as syncStatus, onStatus, syncNow, syncSoon, syncCode, syncUrl, s
 import { server, onServer, connectVoice } from '../engine/boot';
 import { stat } from '../engine/srs';
 import { josa } from '../lib/hangul';
-import { ITEM_LIST, STAGE_NAME } from '../data/pets';
+import { ITEM_LIST } from '../data/pets';
 import { STAGES, CATS, DAY_MIN_CHOICES, CAT_MAX, TIME_CHOICES, PASS_RATE, ITEM_EVERY, MAT_EVERY, UP_MIN, SP_CAT, catSecRange } from '../math/mathData';
 import { mathState, todayMath, todayCat, mathTotalCorrect, mathMatsLeft, mathSnackTotal, mathPetView, setMathLv, setMathDayMin, setMathTime, setMathName, modeTitle, spellStats, spellWrong } from '../math/mathStore';
 import { SENTS, SP_SEC_RANGE, makeSpellQ } from '../math/spellData';
@@ -346,7 +346,7 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
       <textarea value={code} onInput={(e: any) => setCode(e.target.value)} placeholder="백업 코드 (예전 '몽글이' 앱의 백업 코드도 불러올 수 있습니다)" />
 
       {msg && <p style={{ color: '#5f3dc4', position: 'sticky', bottom: 0, background: '#f3efff', padding: 12, borderRadius: 10 }}>{msg}</p>}
-      <p style={{ fontSize: 15, color: '#999' }}>꾸미기 아이템 {s.owned.length}/{ITEM_LIST.length} · 간식 {snackTotal()}개 · {petView('dog').name} Lv.{petView('dog').level}({STAGE_NAME[petView('dog').stage]}) · {petView('cat').name} Lv.{petView('cat').level}({STAGE_NAME[petView('cat').stage]}) · 별 {starsTotal()} · 누적 모험 {adventuresTotal()}회 · 오늘 {fmtDay(today())} · 기기 {dev()}</p>
+      <p style={{ fontSize: 15, color: '#999' }}>꾸미기 아이템 {s.owned.length}/{ITEM_LIST.length} · 간식 {snackTotal()}개 · {petView('dog').name} · {petView('cat').name} · 별 {starsTotal()} · 누적 모험 {adventuresTotal()}회 · 오늘 {fmtDay(today())} · 기기 {dev()}</p>
     </div>
   );
 }
@@ -368,7 +368,7 @@ function MathParent({ onSaved }: { onSaved: (m: string) => void }) {
     <>
       <h3>수학·맞춤법{m.name ? ` (${m.name})` : ''}</h3>
       <div class="row" data-math-parent="1">오늘 공부 {Math.floor(t.ms / 60000)}분/{m.dayMin}분 · {t.solved}문제 · 맞힘 {t.correct}개 · 지금까지 맞힌 문제 {mathTotalCorrect(m)}개 · 옷장 꾸미기 {m.owned.length}/{ITEM_LIST.length} · 재료 {mathMatsLeft(m)}개 · 간식 {mathSnackTotal(m)}개
-        {(['dog', 'cat'] as const).map(k => { const v = mathPetView(k, m); return ` · ${v.name} Lv.${v.level}(${STAGE_NAME[v.stage]})`; })}</div>
+        {(['dog', 'cat'] as const).map(k => { const v = mathPetView(k, m); return ` · ${v.name}`; })}</div>
       <div class="row">화면 이름 <input type="text" value={nameIn} onInput={(e: any) => setNameIn(e.target.value)} style={{ width: 160 }} data-math-name="1" />
         <button class="opt" onClick={() => { setMathName(nameIn); setNameIn(mathState().name); onSaved(nameIn.trim() ? `첫 화면 버튼과 제목이 '${nameIn.trim().slice(0, 10)}'(으)로 보입니다.` : `이름을 비웠습니다. 첫 화면 버튼은 '${modeTitle()}'(으)로 보입니다.`); }}>저장</button>
         <span style={{ fontSize: 16, color: '#868e96' }}>첫 화면 버튼·제목(이름만, 없으면 '수학·맞춤법')과 '○○ 옷장', '○○ 집 꾸미기'에 보임 (이 기기와 연동된 기기에만 저장)</span></div>

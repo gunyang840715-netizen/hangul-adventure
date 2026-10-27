@@ -9,8 +9,8 @@ import {
 } from '../engine/store';
 import { BUILD } from '../data/pets';
 import { HOME_LOCKED, HOME_DECO } from '../data/voice';
-import { PETS, SNACKS, SNACK, CLASSIC_SNACKS, SLOTS, SLOT_NAME, SLOT_ICON, ITEM_LIST, ITEM, STAGE_NAME, levelProgress, stageOf, itemFits, MAX_LEVEL, type Species, type Slot } from '../data/pets';
-import { helloLine, breedLine, dressLine, growLine, stageLine } from '../data/voice';
+import { PETS, SNACKS, SNACK, CLASSIC_SNACKS, SLOTS, SLOT_NAME, SLOT_ICON, ITEM_LIST, ITEM, itemFits, type Species, type Slot } from '../data/pets';
+import { helloLine, breedLine, dressLine } from '../data/voice';
 import { nameLine } from '../games/common';
 
 function Room() {
@@ -34,14 +34,11 @@ function useRefresh() {
   useEffect(() => onChange(() => force(x => x + 1)), []);
 }
 
-/** 성장 막대 */
+/** 이름표 — 10-27 사용자 요청: 레벨업·성장 단계 없앰(Lv·성장 막대 안 보임, 언제나 아기 모습) */
 function Growth({ v }: { v: PetView }) {
-  const pr = levelProgress(v.points);
   return (
     <div class="grow-card">
       <div class="grow-name">{v.breed} <b>{v.name}</b></div>
-      <div class="grow-lv">Lv.{v.level} · {STAGE_NAME[v.stage]}</div>
-      <div class="grow-bar"><i style={{ width: `${v.level >= MAX_LEVEL ? 100 : Math.round(pr * 100)}%` }} /></div>
     </div>
   );
 }
@@ -57,7 +54,6 @@ export function House({ onBack, onDress, onAdopt, onBuild, onYard }: { onBack: (
   const [fly, setFly] = useState<{ id: string; from: [number, number]; to: [number, number]; go: boolean; k: number } | null>(null);
   const [eating, setEating] = useState<Species | null>(null);
   const [bub, setBub] = useState<{ who: Species; text: string } | null>(null);
-  const [grow, setGrow] = useState<{ v: PetView; stageUp: boolean } | null>(null);
   const busy = useRef(false);
   const POS: Record<Species, { left: number; top: number; size: number }> = { dog: { left: 150, top: 250, size: 300 }, cat: { left: 610, top: 270, size: 280 } };
 
@@ -100,17 +96,8 @@ export function House({ onBack, onDress, onAdopt, onBuild, onYard }: { onBack: (
     who === 'dog' ? sfx.bark(1) : sfx.meow();
     talk(who, sn.points > 1 ? '제일 좋아! 냠냠!' : '냠냠!');
     buddy({ t: 'eat', who });
-    if (res.after > res.before) {
-      const nv = petInfo(v.id);
-      const stageUp = stageOf(res.after) !== stageOf(res.before);
-      setTimeout(() => {
-        setGrow({ v: nv, stageUp });
-        sfx.fanfare(); burst(640, 300, 'confetti');
-        sayAll(stageUp ? [growLine(nv.name), stageLine(nv.name, nv.stage === 'adult' ? 'adult' : 'kid')] : [growLine(nv.name)]);
-      }, 700);
-    } else {
-      say('냠냠! 맛있다!');
-    }
+    // 10-27 사용자 요청: 레벨업 없음 — 먹어도 크지 않고 '쑥쑥 컸어!' 창도 없음
+    say('냠냠! 맛있다!');
   };
 
   const Card = ({ v, sp }: { v: PetView; sp: Species }) => {
@@ -180,21 +167,6 @@ export function House({ onBack, onDress, onAdopt, onBuild, onYard }: { onBack: (
           </div>
         )}
       </div>
-      {grow && (
-        <div class="overlay fade-in" style={{ background: 'rgba(60,30,90,.45)', zIndex: 40 }} onClick={() => { sfx.tap(); setGrow(null); }}>
-          <div class="layer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div class="card slide-up" style={{ padding: '30px 50px', gap: 40 }} data-grow="1">
-              <Pet pet={grow.v.id} stage={grow.v.stage} level={grow.v.level} wear={grow.v.wear} size={330} motion="cheer" mood="love" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
-                <div style={{ fontSize: 60, color: '#e0488a' }}>쑥쑥 컸어!</div>
-                <div class="pill" style={{ fontSize: 40 }}>Lv.{grow.v.level}</div>
-                {grow.stageUp && <div style={{ fontSize: 40, color: '#7048e8' }}>{grow.v.stage === 'adult' ? '어른이' : '어린이가'} 됐어요!</div>}
-                <button class="btn big">좋아! ▶</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -299,7 +271,7 @@ export function Adopt({ onBack }: { onBack: () => void }) {
                   {chosen && <div class="adopt-tag">❤ 함께해요</div>}
                   <Pet pet={p.id} stage={info.stage} level={info.level} wear={info.wear} size={196} motion={jump === p.id ? 'jump' : 'none'} autoTalk={false} />
                   <div style={{ fontSize: 30, color: '#5a3d73' }}>{p.name}</div>
-                  <div style={{ fontSize: 18, color: '#8a6aa0' }}>{p.breed} · Lv.{info.level}</div>
+                  <div style={{ fontSize: 18, color: '#8a6aa0' }}>{p.breed}</div>
                 </button>
               );
             })}

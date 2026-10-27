@@ -252,6 +252,7 @@
   기존 id 뒤에 추가만. 아이템은 리그 기준점에 붙어 부품과 같이 움직인다(모자·안경=머리, 목걸이·옷=몸통, 신발=앞발). 마리별 보정값.
   미리보기: 마리마다 슬롯별로 하나씩 입힌 모습 한 장.
   - 10-27 사용자 요청: 꾸미기는 모두 실제 착용 그림 — 친구·자세마다 그 원화에 직접 입혀 그린 것만, 겹치기(아이템 그림·다른 친구 부품·공유 원화를 붙이기) 금지, 아기 모습 하나만. 지시: 프롬프트/GPT_착용_재작업.txt
+  - 10-27 사용자 요청: 착용 그림 검수는 사용자 대신 Claude가 한다 — GPT 검수요청(_qa/wear-redo-20261027/검수요청/) → Claude 자동 검사·눈 검수(매시간 예약) → 합격 파일만 _collab/착용-검수통과.json → guard가 목록 밖 착용 그림 push를 막음. GPT는 스스로 합격시키지 않는다.
 - C. 간식 (data/pets.ts SNACKS, Pet.tsx SnackIcon, engine/gifts.ts SNACK_WEIGHT): 6 → 약 20(강아지용·고양이용·같이 골고루), points 1~3, 새 간식은 SNACK_WEIGHT에도.
 - D. 집 안 (data/home.ts ROOM_SLOTS·FURN, art/Home.tsx FurnArt, screens/Home.tsx): 자리 10 → 16(바닥재·선반·시계·천장 모빌·쿠션·벽 장식), 자리마다 6~7개.
 - E. 마당 (새 기능): 장소 'doghouse-out'·'cathouse-out'.

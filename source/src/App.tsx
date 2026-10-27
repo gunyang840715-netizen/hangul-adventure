@@ -36,6 +36,12 @@ function Gallery() {
     const only = q.get('pets')?.split(',');
     return <div style={box}>{PETS.filter(p => !only || only.includes(p.id)).map(p => <div><Pet pet={p.id} wear={wear} size={+(q.get('size') || 230)} motion="none" act={act} autoTalk={false} />{lab(p.breed)}</div>)}</div>;
   }
+  if (g === '9') {   // 정면(앉은 앞모습) 착용 확인용 — 옷장 잠금과 상관없음: ?gallery=9&wear=clothes:dots,hat:crown&pets=koshort,russian&size=300
+    const q = new URLSearchParams(location.search);
+    const wear = Object.fromEntries((q.get('wear') || '').split(',').filter(Boolean).map(x => x.split(':')));
+    const only = q.get('pets')?.split(',');
+    return <div style={box}>{PETS.filter(p => !only || only.includes(p.id)).map(p => <div><Pet pet={p.id} wear={wear} size={+(q.get('size') || 230)} motion="none" autoTalk={false} />{lab(p.breed)}</div>)}</div>;
+  }
   if (g === '2') return (
     <div style={box}>{PETS.map(p => (['baby', 'kid', 'adult'] as const).map(st => <div><Pet pet={p.id} stage={st} size={118} motion="none" autoTalk={false} />{lab(`${p.breed} ${st}`)}</div>))}</div>
   );

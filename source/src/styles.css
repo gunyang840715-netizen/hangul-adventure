@@ -525,3 +525,25 @@ button:focus-visible, [role=button]:focus-visible { outline: 4px solid #7048e8; 
 .build-btn.yard:active { box-shadow: 0 2px 0 #2b8a3e; }
 /* 낱말 그림 (art/WordPic.tsx · 묶음 9) */
 .word-pic { display: inline-block; object-fit: contain; vertical-align: middle; filter: drop-shadow(0 6px 8px rgba(60, 30, 90, .14)); -webkit-user-drag: none; }
+/* 레벨업 되살림 (10-27 사용자 요청): 크기는 그대로, 레벨이 올라야 꾸미기 착용·집 짓기·놀이터 짓기가 열림 (data/unlock.ts) */
+.grow-next { margin-left: 10px; font-size: 20px; color: #7a5b8f; background: #f3efff; border-radius: 12px; padding: 1px 8px; vertical-align: middle; }
+.lv-chip { display: inline-block; font-size: 18px; line-height: 1.3; background: rgba(255, 255, 255, .88); color: #e0488a; border-radius: 12px; padding: 1px 8px; text-shadow: none; }
+.pet-lv { position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%); font-size: 22px; box-shadow: var(--shadow); pointer-events: none; }
+.tab-lv { position: absolute; right: -8px; top: -14px; font-size: 15px; line-height: 1.3; background: #ff6fa8; color: #fff; border-radius: 10px; padding: 1px 7px; text-shadow: none; }
+.btn.slot-locked { filter: saturate(.55); }
+.wardrobe-grid.locked, .m-items.locked { opacity: .45; }
+.wear-lock { position: absolute; z-index: 5; width: 560px; padding: 22px 26px; flex-direction: column; gap: 8px; align-items: center; text-align: center; background: rgba(255, 255, 255, .97); border: 4px dashed #c5b5d6; }
+.wear-lock-big { font-size: 54px; color: #7048e8; }
+.wear-lock-text { font-size: 26px; color: #5a3d73; }
+.wear-lock-sub { font-size: 20px; color: #8a6aa0; }
+.build-btn.locked { gap: 8px; }
+.lvup-card { padding: 30px 46px; gap: 34px; }
+.lvup-side { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.lvup-title { font-size: 60px; color: #e0488a; }
+.lvup-opens { display: flex; flex-direction: column; gap: 6px; align-items: stretch; background: #fff8e1; border-radius: 20px; padding: 10px 20px; }
+.lvup-new { font-size: 22px; color: #e67700; text-align: center; }
+.lvup-open { display: flex; align-items: center; gap: 10px; font-size: 28px; color: #5a3d73; }
+.lvup-ic { font-size: 38px; }
+.m-lv { font-size: 15px; opacity: .85; }
+.m-wear-lock { margin-top: 12px; padding: 12px 16px; border-radius: 18px; background: #fff3bf; color: #5f3dc4; font-size: 24px; }
+.m-wear-lock span { display: block; font-size: 18px; color: #7a5b8f; margin-top: 4px; }

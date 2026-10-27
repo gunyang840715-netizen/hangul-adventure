@@ -10,8 +10,10 @@ import {
 import { BUILD } from '../data/pets';
 import { HOME_LOCKED, HOME_DECO } from '../data/voice';
 import { PETS, SNACKS, SNACK, CLASSIC_SNACKS, SLOTS, SLOT_NAME, SLOT_ICON, ITEM_LIST, ITEM, itemFits, type Species, type Slot } from '../data/pets';
-import { helloLine, breedLine, dressLine } from '../data/voice';
+import { helloLine, breedLine, dressLine, wearLockLine, LEVEL_MORE } from '../data/voice';
 import { nameLine } from '../games/common';
+import { WEAR_LV, canWear, opensFor, nextOpens } from '../data/unlock';
+import { LevelTag, LevelUpCard, levelUpSay, type LevelUpInfo } from './LevelUp';
 
 function Room() {
   return (
@@ -34,13 +36,9 @@ function useRefresh() {
   useEffect(() => onChange(() => force(x => x + 1)), []);
 }
 
-/** 이름표 — 10-27 사용자 요청: 레벨업·성장 단계 없앰(Lv·성장 막대 안 보임, 언제나 아기 모습) */
-function Growth({ v }: { v: PetView }) {
-  return (
-    <div class="grow-card">
-      <div class="grow-name">{v.breed} <b>{v.name}</b></div>
-    </div>
-  );
+/** 이름표: Lv·다음 레벨까지 막대·다음에 열릴 것 (10-27 사용자 요청: 레벨업 되살림 — 크기는 그대로, 레벨이 올라야 꾸미기·집 짓기·놀이터 짓기가 열림) */
+function Growth({ v, other }: { v: PetView; other: PetView }) {
+  return <LevelTag v={v} next={nextOpens(v.level, v.species, other.level, builtCount)} />;
 }
 
 // =====================================================================
@@ -54,6 +52,7 @@ export function House({ onBack, onDress, onAdopt, onBuild, onYard }: { onBack: (
   const [fly, setFly] = useState<{ id: string; from: [number, number]; to: [number, number]; go: boolean; k: number } | null>(null);
   const [eating, setEating] = useState<Species | null>(null);
   const [bub, setBub] = useState<{ who: Species; text: string } | null>(null);
+  const [lvUp, setLvUp] = useState<LevelUpInfo | null>(null);
   const busy = useRef(false);
   const POS: Record<Species, { left: number; top: number; size: number }> = { dog: { left: 150, top: 250, size: 300 }, cat: { left: 610, top: 270, size: 280 } };
 
@@ -96,8 +95,19 @@ export function House({ onBack, onDress, onAdopt, onBuild, onYard }: { onBack: (
     who === 'dog' ? sfx.bark(1) : sfx.meow();
     talk(who, sn.points > 1 ? '제일 좋아! 냠냠!' : '냠냠!');
     buddy({ t: 'eat', who });
-    // 10-27 사용자 요청: 레벨업 없음 — 먹어도 크지 않고 '쑥쑥 컸어!' 창도 없음
-    say('냠냠! 맛있다!');
+    // 10-27 사용자 요청: 레벨업 되살림 — 크기는 그대로(아기), 레벨이 오르면 새로 열린 것(꾸미기 착용·집 짓기·놀이터 짓기)을 알려 줌
+    if (res.after > res.before) {
+      const nv = petInfo(v.id);
+      const other = who === 'dog' ? cat : dog;
+      const info: LevelUpInfo = { v: nv, lv: res.after, opens: opensFor(res.before, res.after, who, other.level, builtCount) };
+      setTimeout(() => {
+        setLvUp(info);
+        sfx.fanfare(); burst(640, 300, 'confetti');
+        sayAll(levelUpSay(info));
+      }, 700);
+    } else {
+      say('냠냠! 맛있다!');
+    }
   };
 
   const Card = ({ v, sp }: { v: PetView; sp: Species }) => {
@@ -105,7 +115,7 @@ export function House({ onBack, onDress, onAdopt, onBuild, onYard }: { onBack: (
     return (
       <div style={{ position: 'absolute', left: P.left, top: P.top - 130, width: P.size, display: 'flex', justifyContent: 'center' }}>
         <div style={{ position: 'relative' }}>
-          <Growth v={v} />
+          <Growth v={v} other={sp === 'dog' ? cat : dog} />
           {s.lead === sp && <div class="lead-badge">👑 주인공</div>}
         </div>
       </div>
@@ -167,6 +177,7 @@ export function House({ onBack, onDress, onAdopt, onBuild, onYard }: { onBack: (
           </div>
         )}
       </div>
+      {lvUp && <LevelUpCard info={lvUp} onClose={() => setLvUp(null)} />}
     </div>
   );
 }
@@ -180,12 +191,17 @@ export function Dress({ onBack }: { onBack: () => void }) {
   const [sp, setSp] = useState<Species>(s.lead);
   const [slot, setSlot] = useState<Slot>('hat');
   const v = petView(sp);
-  useEffect(() => { newScene(); say(dressLine(v.name)); }, []);
+  // 10-27 사용자 요청: 레벨이 올라야 꾸미기를 입힐 수 있음 — 종류마다 열리는 레벨(data/unlock.ts WEAR_LV, 친구마다 따로).
+  // 이미 입힌 것은 그대로 보이고, 잠긴 종류는 새로 입히기·벗기기만 못 함
+  const locked = !canWear(slot, v.level);
+  const sayLock = (k: Slot) => { sfx.boing(); sayAll([wearLockLine(v.name, k, WEAR_LV[k]), LEVEL_MORE]); };
+  useEffect(() => { newScene(); if (canWear(slot, v.level)) say(dressLine(v.name)); else sayAll([dressLine(v.name), wearLockLine(v.name, slot, WEAR_LV[slot]), LEVEL_MORE]); }, []);
   // 고른 친구에게 맞는 것만 (강아지용 · 고양이용 · 둘 다)
   const items = ITEM_LIST.filter(i => i.slot === slot && itemFits(i, sp));
   const mine = ITEM_LIST.filter(i => itemFits(i, sp));
   const owned = (id: string) => s.owned.includes(id);
   const choose = (id: string, e: any) => {
+    if (locked) { sayLock(slot); return; }
     if (!owned(id)) { sfx.boing(); say('모험을 하면 선물로 받을 수 있어!'); return; }
     const it = ITEM[id];
     sfx.pop(); const [x, y] = centerOf(e.currentTarget); burst(x, y);
@@ -196,7 +212,12 @@ export function Dress({ onBack }: { onBack: () => void }) {
   const pickPet = (x: Species) => {
     if (x === sp) return;
     sfx.tap(); setSp(x); setLead(x);
-    say(dressLine(petView(x).name));
+    const nv = petView(x);
+    if (canWear(slot, nv.level)) say(dressLine(nv.name)); else sayAll([dressLine(nv.name), wearLockLine(nv.name, slot, WEAR_LV[slot]), LEVEL_MORE]);
+  };
+  const pickSlot = (k: Slot) => {
+    sfx.tap(); setSlot(k);
+    if (!canWear(k, v.level)) sayLock(k);
   };
   return (
     <div class="screen">
@@ -205,20 +226,31 @@ export function Dress({ onBack }: { onBack: () => void }) {
       <div class="layer">
         <div style={{ position: 'absolute', left: 60, top: 110, display: 'flex', gap: 14 }}>
           {(['dog', 'cat'] as const).map(x => (
-            <button class={`btn small ${sp === x ? 'violet' : 'yellow'}`} data-dress-pet={x} onClick={() => pickPet(x)}>{x === 'dog' ? '🐶' : '🐱'} {petView(x).name}</button>
+            <button class={`btn small ${sp === x ? 'violet' : 'yellow'}`} data-dress-pet={x} onClick={() => pickPet(x)}>{x === 'dog' ? '🐶' : '🐱'} {petView(x).name} <span class="lv-chip">Lv.{petView(x).level}</span></button>
           ))}
         </div>
         <div key={v.id} class="slide-up" style={{ position: 'absolute', left: 50, top: 220 }}>
           <Pet pet={v.id} stage={v.stage} level={v.level} wear={v.wear} size={440} motion="none" />
         </div>
         <div style={{ position: 'absolute', left: 530, top: 110, right: 20, display: 'flex', gap: 8 }}>
-          {SLOTS.map(k => (
-            <button class={`btn small ${slot === k ? 'violet' : 'yellow'}`} style={{ padding: '10px 12px', fontSize: 23, gap: 4 }} data-slot={k} onClick={() => { sfx.tap(); setSlot(k); }}>
-              {SLOT_ICON[k]} {SLOT_NAME[k]}
-            </button>
-          ))}
+          {SLOTS.map(k => {
+            const lk = !canWear(k, v.level);
+            return (
+              <button class={`btn small ${slot === k ? 'violet' : 'yellow'} ${lk ? 'slot-locked' : ''}`} style={{ padding: '10px 12px', fontSize: 23, gap: 4, position: 'relative' }} data-slot={k} data-locked={lk ? WEAR_LV[k] : undefined} onClick={() => pickSlot(k)}>
+                {lk ? '🔒' : SLOT_ICON[k]} {SLOT_NAME[k]}
+                {lk && <span class="tab-lv">Lv.{WEAR_LV[k]}</span>}
+              </button>
+            );
+          })}
         </div>
-        <div class="wardrobe-grid" style={{ position: 'absolute', left: 540, top: 200, display: 'grid', gridTemplateColumns: 'repeat(4, 160px)', gap: 16, maxHeight: 520, overflowY: 'auto', padding: '4px 8px 8px 4px' }}>
+        {locked && (
+          <div class="wear-lock card" data-wear-lock={WEAR_LV[slot]} style={{ left: 600, top: 290 }} onClick={() => sayLock(slot)}>
+            <div class="wear-lock-big">🔒 Lv.{WEAR_LV[slot]}</div>
+            <div class="wear-lock-text">{wearLockLine(v.name, slot, WEAR_LV[slot])}</div>
+            <div class="wear-lock-sub">지금 Lv.{v.level} · 🍪 간식을 먹이면 레벨이 올라요</div>
+          </div>
+        )}
+        <div class={`wardrobe-grid ${locked ? 'locked' : ''}`} style={{ position: 'absolute', left: 540, top: 200, display: 'grid', gridTemplateColumns: 'repeat(4, 160px)', gap: 16, maxHeight: 520, overflowY: 'auto', padding: '4px 8px 8px 4px' }}>
           {items.map(it => {
             const has = owned(it.id);
             const on = v.wear[slot] === it.key;
@@ -271,7 +303,7 @@ export function Adopt({ onBack }: { onBack: () => void }) {
                   {chosen && <div class="adopt-tag">❤ 함께해요</div>}
                   <Pet pet={p.id} stage={info.stage} level={info.level} wear={info.wear} size={196} motion={jump === p.id ? 'jump' : 'none'} autoTalk={false} />
                   <div style={{ fontSize: 30, color: '#5a3d73' }}>{p.name}</div>
-                  <div style={{ fontSize: 18, color: '#8a6aa0' }}>{p.breed}</div>
+                  <div style={{ fontSize: 18, color: '#8a6aa0' }}>{p.breed} · Lv.{info.level}</div>
                 </button>
               );
             })}

@@ -4,6 +4,8 @@ import { UNITS, WORDS, SENTENCES } from './curriculum';
 import { CHO, JUNG, compose, josa } from '../lib/hangul';
 import { FONT_SYLLABLES } from './fontchars';
 import { PETS, ITEM_LIST, SNACKS, BUILDS, partLine, doneBuildLine, iga, reul, iya, eul } from './pets';
+import { SLOTS, BUILD, MAX_LEVEL, type Slot } from './pets';
+import { WEAR_LV, partLv } from './unlock';
 
 export const FIXED = [
   // 칭찬·격려
@@ -252,6 +254,7 @@ export function allLines(name: string): string[] {
   L.add(MATH_NO_SNACK);
   L.add(STUDY_NO_MAT);
   L.add(STUDY_NO_SNACK);
+  levelLines().forEach(l => L.add(l));
   L.delete('');
   return [...L];
 }
@@ -289,3 +292,39 @@ export const MATH_NO_SNACK = '간식이 없어! 수학 문제를 맞히면 받�
 // 수학·맞춤법 모드(10-25): 맞춤법 정답으로도 재료·간식을 받으므로 '수학' 없이 (녹음 없음, 기기 음성으로 읽힘 — 위 두 문장은 그대로 남김)
 export const STUDY_NO_MAT = '재료가 없어! 문제를 맞히면 받을 수 있어!';
 export const STUDY_NO_SNACK = '간식이 없어! 문제를 맞히면 받을 수 있어!';
+// ---- 레벨업으로 열리기 (10-27 사용자 요청: 레벨이 올라도 크기는 그대로, 레벨이 올라야 꾸미기 착용·집 짓기·놀이터 짓기가 단계별로 열림 — data/unlock.ts) ----
+// 녹음 없음 → 서버 음성이 있으면 그것으로, 없으면 기기 음성으로 읽힘. 숫자 뒤 조사는 읽는 소리대로(2·4·5·9 → 가, 나머지 → 이)
+export const lvGa = (n: number) => `레벨 ${n}${[2, 4, 5, 9].includes(n % 10) ? '가' : '이'}`;
+/** 레벨업 창: '뭉치가 레벨 3이 됐어!' */
+export const levelUpLine = (name: string, lv: number) => `${iga(name)} ${lvGa(lv)} 됐어!`;
+const WEAR_DO: Record<Slot, string> = { hat: '모자를 쓸', clothes: '옷을 입을', glasses: '안경을 쓸', neck: '목걸이를 할', shoes: '신발을 신을', toy: '장난감을 줄' };
+/** 새로 열림: '이제 옷을 입을 수 있어!' */
+export const wearOpenLine = (slot: Slot) => `이제 ${WEAR_DO[slot]} 수 있어!`;
+/** 아직 잠김(옷장): '뭉치가 레벨 3이 되면 옷을 입을 수 있어!' */
+export const wearLockLine = (name: string, slot: Slot, lv: number) => `${iga(name)} ${lvGa(lv)} 되면 ${WEAR_DO[slot]} 수 있어!`;
+/** '바닥이랑 벽을', '그네랑 시소를' */
+const rangList = (parts: string[]) => parts.map((p, i) => (i < parts.length - 1 ? p + josa(p, '이랑', '랑') : eul(p))).join(' ');
+/** 새로 열림: '이제 바닥이랑 벽을 만들 수 있어!', '이제 놀이터에 모래밭이랑 미끄럼틀을 만들 수 있어!' */
+export const buildOpenLine = (id: string, parts: string[]) => `이제 ${id === 'park' ? '놀이터에 ' : ''}${rangList(parts)} 만들 수 있어!`;
+/** 아직 잠김(집 짓기): '뭉치가 레벨 3이 되면 지붕을 만들 수 있어!' / 놀이터: '강아지나 고양이가 레벨 7이 되면 모래밭을 만들 수 있어!' */
+export const buildLockLine = (id: string, name: string, part: string, lv: number) => `${id === 'park' ? '강아지나 고양이가' : iga(name)} ${lvGa(lv)} 되면 ${eul(part)} 만들 수 있어!`;
+export const LEVEL_MORE = '간식을 먹여서 레벨을 올려 보자!';
+/** 레벨업·잠김 말 전부 (allLines에 넣음) */
+export function levelLines(): string[] {
+  const L: string[] = [LEVEL_MORE];
+  for (const sl of SLOTS) L.push(wearOpenLine(sl));
+  for (const p of PETS) {
+    for (let lv = 2; lv <= MAX_LEVEL; lv++) L.push(levelUpLine(p.name, lv));
+    for (const sl of SLOTS) L.push(wearLockLine(p.name, sl, WEAR_LV[sl]));
+    const house = p.species === 'dog' ? 'doghouse' : 'cathouse';
+    BUILD[house].parts.forEach((pt, i) => L.push(buildLockLine(house, p.name, pt.name, partLv(house, i))));
+  }
+  BUILD.park.parts.forEach((pt, i) => L.push(buildLockLine('park', '', pt.name, partLv('park', i))));
+  // 그 레벨에 열리는 부분들 — 이미 지은 부분은 빼고 말하므로(앞에서부터 지음) 뒤쪽만 남은 것도
+  for (const b of BUILDS) {
+    const byLv = new Map<number, string[]>();
+    b.parts.forEach((pt, i) => { const lv = partLv(b.id, i); byLv.set(lv, [...(byLv.get(lv) || []), pt.name]); });
+    for (const parts of byLv.values()) for (let k = 0; k < parts.length; k++) L.push(buildOpenLine(b.id, parts.slice(k)));
+  }
+  return L;
+}

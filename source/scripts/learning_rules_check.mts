@@ -90,3 +90,5 @@ for (const kind of ['snack', 'item', 'mat']) {
 }
 store.flushSave();
 console.log(`새 글자 ${letters}개 40회·혼자 쓰기·${LESSONS.length}레슨 시험·다음날 복습·오답 보상 규칙 통과`);
+// 레벨업 되살림(10-27): 레벨이 올라야 꾸미기 착용·집 짓기·놀이터 짓기가 단계별로 열림 — 검사는 따로 파일(package.json은 그대로 두려고 여기서 불러옴)
+await import('./level_unlock_check.mts');

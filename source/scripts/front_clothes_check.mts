@@ -1,11 +1,24 @@
 import assert from 'node:assert/strict';import fs from 'node:fs';import crypto from 'node:crypto';import {execFileSync}from 'node:child_process';
 import {FRONT_CLOTHES}from '../src/art/frontclothes.gen';
+import {APPROVED_FRONT_CLOTHES}from '../src/art/frontwear-approved';
 import {hasFrontWear,prepareFrontWear,frontWearCloth,frontWearLoaded,frontWearReady}from '../src/art/frontwear';
 execFileSync(process.execPath,['scripts/build_front_clothes.mjs','--check'],{stdio:'inherit'});
 const data=JSON.parse(fs.readFileSync('scripts/data/front-clothes.json','utf8'));
 const dogs=['corgi','maltese','poodle','schnauzer','shiba'],cats=['fold','koshort','persian','russian','siamese'];
 assert.equal(data.entries.length,10);assert.deepEqual(data.entries.filter((e:any)=>e.item==='sweater').map((e:any)=>e.pet).sort(),cats);assert.deepEqual(data.entries.filter((e:any)=>e.item==='hoodie').map((e:any)=>e.pet).sort(),dogs);
 const hash=(bytes:Buffer)=>crypto.createHash('sha256').update(bytes).digest('hex');
+const manifest=JSON.parse(fs.readFileSync('../art/art-manifest.json','utf8'));
+const dotEntries=cats.map(pet=>APPROVED_FRONT_CLOTHES[`${pet}:dots`]);
+assert.equal(new Set(dotEntries.map(e=>e.url)).size,cats.length,'친구마다 다른 착용 그림');
+for(const [i,e] of dotEntries.entries()){
+ const path=e.url.replace(/^\.\//,''),bytes=fs.readFileSync('../'+path),short=path.match(/\.([0-9a-f]{8})\.webp$/)?.[1];
+ assert.ok(path.startsWith(`art/pets/${cats[i]}.paint-wear-clothes-dots-front.`));
+ assert.equal(hash(bytes).slice(0,8),short);assert.ok(bytes.length<=400000);
+ assert.equal(manifest.files.filter((f:any)=>f.u===path&&f.b===bytes.length).length,1);
+ assert.ok(e.x>=0&&e.y>=0&&e.width>0&&e.height>0&&e.x+e.width<=640&&e.y+e.height<=640);
+ assert.ok(hasFrontWear(cats[i],'clothes','dots'));
+}
+assert.ok(!hasFrontWear('corgi','clothes','dots'));
 assert.equal(data.sharedAssets.length,3);assert.deepEqual(data.sharedAssets.map((a:any)=>a.name).sort(),['body','collar','sleeve']);assert.equal(new Set(data.sharedAssets.map((a:any)=>a.url)).size,3);
 for(const a of data.sharedAssets){assert.deepEqual([...a.consumers].sort(),dogs);const bytes=fs.readFileSync('../'+a.url.replace(/^\.\//,''));assert.equal(hash(bytes),a.sha256);assert.equal(bytes.length,a.bytes);assert.ok(bytes.length<=40000);}
 for(const e of data.entries){
@@ -26,6 +39,10 @@ try{
  frontWearLoaded('koshort','clothes','sweater','wrong-url');assert.deepEqual(frontWearReady('koshort',{clothes:'sweater'}),[]);
  frontWearLoaded('koshort','clothes','sweater',layer.url);assert.deepEqual(frontWearReady('koshort',{clothes:'sweater'}),['clothes']);
  assert.deepEqual(frontWearReady('koshort',{clothes:'dots'}),[]);assert.equal(frontWearCloth('koshort','dots'),null);
+ const dots=await prepareFrontWear('koshort','clothes','dots');assert.ok(dots?.deform);assert.equal(frontWearCloth('koshort','dots')?.layer.url,dots.url);
+ assert.deepEqual(frontWearReady('koshort',{clothes:'dots'}),[]);
+ frontWearLoaded('koshort','clothes','dots',dots.url);assert.deepEqual(frontWearReady('koshort',{clothes:'dots'}),['clothes']);
+ assert.deepEqual(frontWearReady('koshort',{}),[],'옷을 벗으면 착용 층 표시 해제');
  fail=true;assert.equal(await prepareFrontWear('russian','clothes','sweater'),null);assert.equal(frontWearCloth('russian','sweater'),null);assert.deepEqual(frontWearReady('russian',{clothes:'sweater'}),[]);
  fail=false;const retry=await prepareFrontWear('russian','clothes','sweater');assert.ok(retry?.deform);assert.ok(frontWearCloth('russian','sweater'));
  fail=true;assert.equal(await prepareFrontWear('corgi','clothes','hoodie'),null);assert.equal(frontWearCloth('corgi','hoodie'),null);assert.deepEqual(frontWearReady('corgi',{clothes:'hoodie'}),[],'공유 부품 수신 실패 때 기존 옷 유지');

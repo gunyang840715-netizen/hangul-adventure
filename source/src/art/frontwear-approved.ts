@@ -50,4 +50,7 @@ export const APPROVED_FRONT_CLOTHES: Record<string, FrontClothesPart> = {
   'corgi:police': { url: './art/pets/corgi.paint-wear-clothes-police-front.9f2ffc99.webp', x: 178, y: 380, width: 307, height: 189 },
   'shiba:police': { url: './art/pets/shiba.paint-wear-clothes-police-front.235f8a5d.webp', x: 189, y: 386, width: 274, height: 170 },
   'schnauzer:police': { url: './art/pets/schnauzer.paint-wear-clothes-police-front.5af0ce76.webp', x: 193, y: 373, width: 276, height: 172 },
+  'russian:cat-extra-astronomer': { url: './art/pets/russian.paint-wear-clothes-cat-extra-astronomer-front.ab452eb5.webp', x: 175, y: 295, width: 294, height: 214 },
+  'siamese:cat-extra-astronomer': { url: './art/pets/siamese.paint-wear-clothes-cat-extra-astronomer-front.db1238ba.webp', x: 199, y: 297, width: 256, height: 206 },
+  'fold:cat-extra-astronomer': { url: './art/pets/fold.paint-wear-clothes-cat-extra-astronomer-front.70d401ed.webp', x: 153, y: 303, width: 333, height: 218 },
 };

@@ -31,6 +31,16 @@ for(const [i,e] of stripeEntries.entries()){
  assert.ok(hasFrontWear(stripeDogs[i],'clothes','stripe'));
 }
 assert.equal(APPROVED_FRONT_CLOTHES['corgi:stripe'],undefined,'기존 식빵이 그림 유지');
+// 각 승인 착용 그림이 정확한 친구·품목 파일과 크기·해시로 등록되었는지 검사한다.
+for(const [key,e] of Object.entries(APPROVED_FRONT_CLOTHES)){
+ const [pet,item,...extra]=key.split(':');assert.equal(extra.length,0);assert.ok(pet&&item);
+ const path=e.url.replace(/^\.\//,''),bytes=fs.readFileSync('../'+path),short=path.match(/\.([0-9a-f]{8})\.webp$/)?.[1];
+ assert.ok(path.startsWith(`art/pets/${pet}.paint-wear-clothes-${item}-front.`));
+ assert.equal(hash(bytes).slice(0,8),short);assert.ok(bytes.length<=400000);
+ assert.equal(manifest.files.filter((f:any)=>f.u===path&&f.b===bytes.length).length,1);
+ assert.ok(e.x>=0&&e.y>=0&&e.width>0&&e.height>0&&e.x+e.width<=640&&e.y+e.height<=640);
+ assert.ok(!e.shared,'검수한 착용 그림은 공유 부품이 아니다');assert.ok(hasFrontWear(pet,'clothes',item));
+}
 assert.equal(data.sharedAssets.length,3);assert.deepEqual(data.sharedAssets.map((a:any)=>a.name).sort(),['body','collar','sleeve']);assert.equal(new Set(data.sharedAssets.map((a:any)=>a.url)).size,3);
 for(const a of data.sharedAssets){assert.deepEqual([...a.consumers].sort(),dogs);const bytes=fs.readFileSync('../'+a.url.replace(/^\.\//,''));assert.equal(hash(bytes),a.sha256);assert.equal(bytes.length,a.bytes);assert.ok(bytes.length<=40000);}
 for(const e of data.entries){
@@ -60,6 +70,14 @@ try{
  frontWearLoaded('maltese','clothes','stripe',stripe.url);
  assert.deepEqual(frontWearReady('maltese',{clothes:'stripe'}),['clothes']);
  assert.deepEqual(frontWearReady('maltese',{}),[],'줄무늬 티를 벗으면 착용 층 표시 해제');
+ const police=await prepareFrontWear('maltese','clothes','police');assert.ok(police?.deform);
+ assert.equal(police.url,APPROVED_FRONT_CLOTHES['maltese:police'].url);
+ assert.deepEqual(frontWearReady('maltese',{clothes:'police'}),[]);
+ frontWearLoaded('maltese','clothes','police',police.url);
+ assert.deepEqual(frontWearReady('maltese',{clothes:'police'}),['clothes']);
+ assert.deepEqual(frontWearReady('maltese',{}),[],'경찰 조끼를 벗으면 착용 층 표시 해제');
+ const hoodie=await prepareFrontWear('maltese','clothes','hoodie');assert.ok(hoodie?.deform);
+ assert.equal(hoodie.url,APPROVED_FRONT_CLOTHES['maltese:hoodie'].url,'승인한 개별 후드티가 우선');
  fail=true;assert.equal(await prepareFrontWear('russian','clothes','sweater'),null);assert.equal(frontWearCloth('russian','sweater'),null);assert.deepEqual(frontWearReady('russian',{clothes:'sweater'}),[]);
  fail=false;const retry=await prepareFrontWear('russian','clothes','sweater');assert.ok(retry?.deform);assert.ok(frontWearCloth('russian','sweater'));
  fail=true;assert.equal(await prepareFrontWear('corgi','clothes','hoodie'),null);assert.equal(frontWearCloth('corgi','hoodie'),null);assert.deepEqual(frontWearReady('corgi',{clothes:'hoodie'}),[],'공유 부품 수신 실패 때 기존 옷 유지');

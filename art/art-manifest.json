@@ -3855,6 +3855,162 @@
   {
    "u": "art/pets/schnauzer.paint-wear-clothes-stripe-front.7c52db2f.webp",
    "b": 82616
+  },
+  {
+   "u": "art/pets/maltese.paint-wear-clothes-raincoat-front.3e4ff0dc.webp",
+   "b": 111894
+  },
+  {
+   "u": "art/pets/poodle.paint-wear-clothes-raincoat-front.39f0fcce.webp",
+   "b": 80976
+  },
+  {
+   "u": "art/pets/corgi.paint-wear-clothes-raincoat-front.e52e0498.webp",
+   "b": 106350
+  },
+  {
+   "u": "art/pets/shiba.paint-wear-clothes-raincoat-front.a8f60093.webp",
+   "b": 108066
+  },
+  {
+   "u": "art/pets/schnauzer.paint-wear-clothes-raincoat-front.f72d97f3.webp",
+   "b": 89888
+  },
+  {
+   "u": "art/pets/maltese.paint-wear-clothes-overall-front.cf7e146d.webp",
+   "b": 81020
+  },
+  {
+   "u": "art/pets/poodle.paint-wear-clothes-overall-front.da3a70f3.webp",
+   "b": 94418
+  },
+  {
+   "u": "art/pets/shiba.paint-wear-clothes-overall-front.2efb57f9.webp",
+   "b": 106634
+  },
+  {
+   "u": "art/pets/schnauzer.paint-wear-clothes-overall-front.544e8285.webp",
+   "b": 101178
+  },
+  {
+   "u": "art/pets/maltese.paint-wear-clothes-hanbok-front.c4267123.webp",
+   "b": 105278
+  },
+  {
+   "u": "art/pets/poodle.paint-wear-clothes-hanbok-front.20301016.webp",
+   "b": 112964
+  },
+  {
+   "u": "art/pets/corgi.paint-wear-clothes-hanbok-front.7431206f.webp",
+   "b": 116718
+  },
+  {
+   "u": "art/pets/shiba.paint-wear-clothes-hanbok-front.2118fd8f.webp",
+   "b": 120044
+  },
+  {
+   "u": "art/pets/schnauzer.paint-wear-clothes-hanbok-front.f768e0ab.webp",
+   "b": 117978
+  },
+  {
+   "u": "art/pets/koshort.paint-wear-clothes-hanbok-front.0577e7ce.webp",
+   "b": 125892
+  },
+  {
+   "u": "art/pets/russian.paint-wear-clothes-hanbok-front.f63dac73.webp",
+   "b": 138544
+  },
+  {
+   "u": "art/pets/siamese.paint-wear-clothes-hanbok-front.6bf362f0.webp",
+   "b": 108146
+  },
+  {
+   "u": "art/pets/fold.paint-wear-clothes-hanbok-front.e1fc51a1.webp",
+   "b": 156250
+  },
+  {
+   "u": "art/pets/persian.paint-wear-clothes-hanbok-front.0949c6be.webp",
+   "b": 135044
+  },
+  {
+   "u": "art/pets/maltese.paint-wear-clothes-cape-front.17046e57.webp",
+   "b": 102540
+  },
+  {
+   "u": "art/pets/poodle.paint-wear-clothes-cape-front.27953613.webp",
+   "b": 125200
+  },
+  {
+   "u": "art/pets/corgi.paint-wear-clothes-cape-front.617c690f.webp",
+   "b": 119770
+  },
+  {
+   "u": "art/pets/shiba.paint-wear-clothes-cape-front.0b78ab9d.webp",
+   "b": 121434
+  },
+  {
+   "u": "art/pets/schnauzer.paint-wear-clothes-cape-front.626e61c3.webp",
+   "b": 116588
+  },
+  {
+   "u": "art/pets/koshort.paint-wear-clothes-tutu-front.84b4e809.webp",
+   "b": 115414
+  },
+  {
+   "u": "art/pets/russian.paint-wear-clothes-tutu-front.8a11bcaf.webp",
+   "b": 140244
+  },
+  {
+   "u": "art/pets/siamese.paint-wear-clothes-tutu-front.39dca68a.webp",
+   "b": 105046
+  },
+  {
+   "u": "art/pets/fold.paint-wear-clothes-tutu-front.e2f57fe4.webp",
+   "b": 158348
+  },
+  {
+   "u": "art/pets/persian.paint-wear-clothes-tutu-front.9706197f.webp",
+   "b": 122504
+  },
+  {
+   "u": "art/pets/maltese.paint-wear-clothes-hoodie-front.533df7b6.webp",
+   "b": 107688
+  },
+  {
+   "u": "art/pets/poodle.paint-wear-clothes-hoodie-front.21ca1cbd.webp",
+   "b": 102490
+  },
+  {
+   "u": "art/pets/corgi.paint-wear-clothes-hoodie-front.c586ab9c.webp",
+   "b": 145452
+  },
+  {
+   "u": "art/pets/shiba.paint-wear-clothes-hoodie-front.5c1674bd.webp",
+   "b": 114814
+  },
+  {
+   "u": "art/pets/schnauzer.paint-wear-clothes-hoodie-front.245c8f97.webp",
+   "b": 115490
+  },
+  {
+   "u": "art/pets/maltese.paint-wear-clothes-police-front.b06d869e.webp",
+   "b": 67740
+  },
+  {
+   "u": "art/pets/poodle.paint-wear-clothes-police-front.4fbb305c.webp",
+   "b": 69288
+  },
+  {
+   "u": "art/pets/corgi.paint-wear-clothes-police-front.9f2ffc99.webp",
+   "b": 95826
+  },
+  {
+   "u": "art/pets/shiba.paint-wear-clothes-police-front.235f8a5d.webp",
+   "b": 73442
+  },
+  {
+   "u": "art/pets/schnauzer.paint-wear-clothes-police-front.5af0ce76.webp",
+   "b": 78352
   }
  ]
 }

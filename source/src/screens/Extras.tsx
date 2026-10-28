@@ -22,6 +22,7 @@ import { unlockTable } from '../data/unlock';
 import { STAGES, CATS, DAY_MIN_CHOICES, CAT_MAX, TIME_CHOICES, PASS_RATE, ITEM_EVERY, MAT_EVERY, UP_MIN, SP_CAT, catSecRange } from '../math/mathData';
 import { mathState, todayMath, todayCat, mathTotalCorrect, mathMatsLeft, mathSnackTotal, mathPetView, setMathLv, setMathDayMin, setMathTime, setMathName, modeTitle, spellStats, spellWrong } from '../math/mathStore';
 import { SENTS, SP_SEC_RANGE, makeSpellQ } from '../math/spellData';
+import { GateParent } from './GateUI';
 import '../math/math.css';
 
 // ---------- 제목 ----------
@@ -278,6 +279,8 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
         <button class="opt" onClick={() => { giveExtraMinutes(30); done('오늘 30분을 더 주었습니다.'); }}>오늘 +30분</button>
         <button class="opt" onClick={() => { giveExtraLesson(); done('오늘 새 단계를 1개 더 열었습니다.'); }}>새 단계 +1개</button>
       </div>
+
+      <GateParent onSaved={done} />
 
       <h3>초기화</h3>
       <div class="row">

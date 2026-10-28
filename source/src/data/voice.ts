@@ -255,6 +255,7 @@ export function allLines(name: string): string[] {
   L.add(STUDY_NO_MAT);
   L.add(STUDY_NO_SNACK);
   levelLines().forEach(l => L.add(l));
+  gateLines().forEach(l => L.add(l));
   L.delete('');
   return [...L];
 }
@@ -328,3 +329,11 @@ export function levelLines(): string[] {
   }
   return L;
 }
+// ---- 공부 먼저 (10-28 사용자 요청: 오늘 공부 분량을 채워야 꾸미기·집 짓기 같은 공부 아닌 화면이 열림 — lib/gate.ts) ----
+// 녹음 없음 → 서버 음성이 있으면 그것으로, 없으면 기기 음성으로 읽힘. 다정한 반말
+export const GATE_LOCKED = '오늘 공부를 마치면 열려! 조금만 힘내자!';
+export const GATE_OPENED = '오늘 공부 끝! 이제 놀 수 있어!';
+export const GATE_HINT = '오늘 공부를 마치면 우리 집에서 놀 수 있어!';
+export const GATE_SNACK_WAIT = '간식이 있어! 공부를 마치면 먹여 줄 수 있어!';
+/** 공부 먼저 말 전부 (allLines에 넣음) */
+export function gateLines(): string[] { return [GATE_LOCKED, GATE_OPENED, GATE_HINT, GATE_SNACK_WAIT]; }

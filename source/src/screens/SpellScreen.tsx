@@ -16,6 +16,7 @@ import { ITEM_EVERY, CAT_MAX, IDLE_MS, SP_CAT } from '../math/mathData';
 import { makeSpellQ, pickSpell, type SpQ } from '../math/spellData';
 import { mathState, todayMath, todayCat, answerSpell, addMathMs, mathTimeUp, catFull, toNextItem, mathPet, mathPetInfo, mathWear, mathWho, mathMatsLeft, mathSnackTotal, spellWrong } from '../math/mathStore';
 import { TodaySummary, leftText, useCountdown } from './MathScreen';
+import { gateLocked } from '../lib/gate';
 import '../math/math.css';
 
 /** 이 화면을 끝낼 까닭: 오늘 공부 시간 끝 / 맞춤법 오늘 150문제 끝 / (틀린 문제 다시 풀기) 틀린 문제를 다 고침 */
@@ -85,6 +86,7 @@ export function SpellScreen({ review, onBack, onCloset, onMore }: { review: bool
   const t = todayMath(m);
   const tc = todayCat(SP_CAT, m);
   const who = mathWho(m);
+  const gl = gateLocked('m');   // 공부 먼저(10-28): 오늘 공부 분량을 채우기 전에는 옷장이 잠김 (누르면 안내)
   const pet = mathPet(m);
   const pv = mathPetInfo(pet, m);   // 간식 먹은 만큼 자란 모습 (10-25 — 처음엔 아기)
   const wrongLeft = spellWrong(m).length;
@@ -147,7 +149,7 @@ export function SpellScreen({ review, onBack, onCloset, onMore }: { review: bool
           <span style={{ marginLeft: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }} data-snacks={mathSnackTotal(m)}><SnackIcon id="cookie" size={30} /> {mathSnackTotal(m)}</span>
         </div>
         {pop && <div key={pop.k} class="m-pop" data-mat-pop={pop.mat ? 1 : 0} data-snack-pop={pop.snack ?? ''}>{pop.mat && <><MatIcon size={30} /> +1</>}{pop.snack && <><SnackIcon id={pop.snack} size={36} /> +1</>}</div>}
-        <button class="btn violet small" style={{ position: 'absolute', left: 20, top: 112 }} onClick={() => { sfx.tap(); onCloset(); }}>👗 {who} 옷장</button>
+        <button class={`btn violet small ${gl ? 'gate-locked' : ''}`} style={{ position: 'absolute', left: 20, top: 112 }} data-gate-locked={gl ? '1' : undefined} onClick={() => { if (!gl) sfx.tap(); onCloset(); }}>{gl ? '🔒' : '👗'} {who} 옷장</button>
 
         {!done && q ? (
           <div class="m-card sp-card" data-q={q.key} data-ans={q.ans}>
@@ -184,7 +186,7 @@ export function SpellScreen({ review, onBack, onCloset, onMore }: { review: bool
             <TodaySummary />
             {done !== 'time' && <div style={{ fontSize: 30, color: '#4a2f63' }}>⏳ 오늘 공부 시간 {leftText(t.leftMs)}</div>}
             <div style={{ display: 'flex', gap: 30 }}>
-              <button class="btn violet" onClick={() => { sfx.tap(); onCloset(); }}>👗 {who} 옷장</button>
+              <button class={`btn violet ${gl ? 'gate-locked' : ''}`} data-gate-locked={gl ? '1' : undefined} onClick={() => { if (!gl) sfx.tap(); onCloset(); }}>{gl ? '🔒' : '👗'} {who} 옷장</button>
               {done === 'fixed' && onMore && <button class="btn mint" data-spell-more="1" onClick={() => { sfx.tap(); onMore(); }}>✍️ 새 문제 풀기</button>}
               <button class="btn" onClick={() => { sfx.tap(); onBack(); }}>처음 화면으로</button>
             </div>

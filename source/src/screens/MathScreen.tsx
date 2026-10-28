@@ -15,6 +15,7 @@ import { syncSoon } from '../engine/sync';
 import { ITEM, ITEM_LIST } from '../data/pets';
 import { makeProblemFor, stageName, catStage, CATS, CAT, ITEM_EVERY, MAT_EVERY, PASS_RATE, UP_MIN, CAT_MAX, IDLE_MS, SP_INFO, type Problem, type Mode, type Cat, type AnyCat } from '../math/mathData';
 import { mathState, todayMath, todayCat, answerMath, addMathMs, mathTimeUp, catFull, openCats, toNextItem, mathPet, mathPetInfo, mathWear, mathWho, mathMatsLeft, mathSnackTotal } from '../math/mathStore';
+import { gateLocked } from '../lib/gate';
 import '../math/math.css';
 
 /** 남은 시간(ms): key(문제)가 바뀌면 처음부터, active가 아니면(답을 보여 주는 중·선물 창) 그 자리에서 멈춤, 앱이 가려진 동안도 멈춤
@@ -116,6 +117,7 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
   const t = todayMath(m);
   const tc = mode === 'mix' ? null : todayCat(mode, m);
   const who = mathWho(m);
+  const gl = gateLocked('m');   // 공부 먼저(10-28): 오늘 공부 분량을 채우기 전에는 옷장이 잠김 (누르면 안내)
   const pet = mathPet(m);
   const pv = mathPetInfo(pet, m);   // 간식 먹은 만큼 자란 모습 (10-25 — 처음엔 아기)
   const allGot = m.owned.length >= ITEM_LIST.length;
@@ -175,7 +177,7 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
           <span style={{ marginLeft: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }} data-snacks={mathSnackTotal(m)}><SnackIcon id="cookie" size={30} /> {mathSnackTotal(m)}</span>
         </div>
         {pop && <div key={pop.k} class="m-pop" data-mat-pop={pop.mat ? 1 : 0} data-snack-pop={pop.snack ?? ''}>{pop.mat && <><MatIcon size={30} /> +1</>}{pop.snack && <><SnackIcon id={pop.snack} size={36} /> +1</>}</div>}
-        <button class="btn violet small" style={{ position: 'absolute', left: 20, top: 112 }} onClick={() => { sfx.tap(); onCloset(); }}>👗 {who} 옷장</button>
+        <button class={`btn violet small ${gl ? 'gate-locked' : ''}`} style={{ position: 'absolute', left: 20, top: 112 }} data-gate-locked={gl ? '1' : undefined} onClick={() => { if (!gl) sfx.tap(); onCloset(); }}>{gl ? '🔒' : '👗'} {who} 옷장</button>
 
         {!done ? (
           <div class="m-card" data-q={p.q}>
@@ -206,7 +208,7 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
               꾸미기는 정답 {ITEM_EVERY}개마다, 집 재료와 간식은 정답 {MAT_EVERY}개마다
             </div>
             <div style={{ display: 'flex', gap: 30 }}>
-              <button class="btn violet" onClick={() => { sfx.tap(); onCloset(); }}>👗 {who} 옷장</button>
+              <button class={`btn violet ${gl ? 'gate-locked' : ''}`} data-gate-locked={gl ? '1' : undefined} onClick={() => { if (!gl) sfx.tap(); onCloset(); }}>{gl ? '🔒' : '👗'} {who} 옷장</button>
               <button class="btn" onClick={() => { sfx.tap(); onBack(); }}>{done === 'cat' ? '다른 항목 고르기' : '처음 화면으로'}</button>
             </div>
           </div>

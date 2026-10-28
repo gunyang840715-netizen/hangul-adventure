@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { BurstLayer } from './art/Scene';
 import { TakeToast } from './games/TakeToast';
+import { GateNotice } from './screens/GateUI';
+import { gateBlock, gateWatch, setGateBypass, GATE_HOME, type GateStatus } from './lib/gate';
 import { MapScreen } from './screens/MapScreen';
 import { Session } from './screens/Session';
 import { Title, Book, Parent, Sleep } from './screens/Extras';
@@ -17,7 +19,7 @@ import { RoomScreen, ParkScreen, YardScreen } from './screens/Home';
 import { BuildArt } from './art/Build';
 import { buildLesson, buildPlay, refreshSteps, dictationStep, LETTER_SETS, type Step } from './engine/session';
 import { petView, load, remainingMs, startClock, onChange, addLessonToday, addAdventure, addStars, todayDoneLessons, getResume, setResume, setClockActive, today, curLesson, passLesson, reviewDue, passReview, failReview } from './engine/store';
-import { unlock, music, newScene } from './engine/audio';
+import { unlock, music, newScene, sfx } from './engine/audio';
 import { syncSoon } from './engine/sync';
 import { LESSONS } from './data/curriculum';
 import { Pet, ItemIcon, SnackIcon } from './art/Pet';
@@ -101,6 +103,8 @@ type Screen = 'title' | 'map' | 'session' | 'book' | 'house' | 'dress' | 'adopt'
   | 'math' | 'mathPlay' | 'mathSpell' | 'mathCloset' | 'mathBuild' | 'mathRoom' | 'mathPark' | 'mathYard' | 'mathFeed';
 const GALLERY = /[?&]gallery=/.test(location.search);
 const ICON = /[?&]icon=/.test(location.search);
+/** 시험용 주소(?screen=·?play=)로 연 화면은 '공부 먼저' 잠금을 건너뜀 (화면 확인용 — 평소 주소에는 없음) */
+const TEST_NAV = /[?&](screen|play)=/.test(location.search);
 /** 사용 시간을 세는 화면 */
 const COUNTED: Screen[] = ['map', 'session', 'book', 'house', 'dress', 'adopt', 'build', 'room', 'park', 'yard'];
 /** 시간이 다 되면 바로 잠자기로 가는 화면 */
@@ -120,6 +124,9 @@ export function App() {
   const [spellReview, setSpellReview] = useState(false);   // 맞춤법: 틀린 문제만 다시 풀기
   const [demo, setDemo] = useState(() => /[?&]demo=1/.test(location.search));
   const [ver, tick] = useState(0);
+  const [gateNote, setGateNote] = useState<{ st: GateStatus; n: number } | null>(null);   // 공부 먼저(10-28): 잠긴 곳을 눌렀을 때 안내
+  const scr = useRef<Screen>(screen); scr.current = screen;
+  setGateBypass(demo || TEST_NAV);   // 체험 모드·시험용 주소에서는 잠그지 않음
   const s = load();
 
   const timeOver = () => !demo && remainingMs(load()) <= 0;
@@ -170,16 +177,30 @@ export function App() {
     let day = today();
     startClock(() => {
       // 노는 화면에서 시간이 다 되면 잠자기 (모험 중에는 이번 놀이까지 하고)
-      if (timeOver()) setScreen(sc => IDLE.includes(sc) ? 'sleep' : sc);
+      const over = timeOver();
+      if (over) setScreen(sc => IDLE.includes(sc) ? 'sleep' : sc);
       // 날짜가 바뀌면 지도 새로 그리기 (새 단계 열림)
       if (today() !== day) { day = today(); tick(x => x + 1); }
+      // 공부 먼저(10-28): 문이 열리거나 닫히면 다시 그리기. 닫힌 곳에 있으면(날짜가 바뀌었거나 부모가 분량을 올렸을 때) 안내하고 처음 화면 격인 지도·수학 첫 화면으로
+      if (gateWatch()) tick(x => x + 1);
+      if (!over) {
+        const cur = scr.current, g = gateBlock(cur);
+        if (g) { setGateNote(n => ({ st: g, n: (n?.n ?? 0) + 1 })); setScreen(sc => (sc === cur ? GATE_HOME[g.kind] : sc)); }
+      }
     });
     // 다른 기기에서 진도가 들어오면 다시 그리기
     const off = onChange(() => tick(x => x + 1));
     return () => { off(); };
   }, [demo]);
 
-  const go = (sc: Screen) => { newScene(); setScreen(sc); };
+  /** 공부 먼저(10-28): 오늘 공부 분량을 채우기 전에는 꾸미기·집 짓기 같은 화면(lib/gate.ts GATE_SCREENS)으로 못 감 — 안내만 보여 줌 */
+  const go = (sc: Screen) => {
+    const g = gateBlock(sc);
+    if (g) { sfx.boing(); setGateNote(n => ({ st: g, n: (n?.n ?? 0) + 1 })); return; }
+    newScene(); setScreen(sc);
+  };
+  /** 부모 설정을 닫고 돌아갈 곳이 그새 잠겼으면(분량을 올렸을 때) 지도·수학 첫 화면으로 */
+  const leave = (sc: Screen): Screen => { const g = gateBlock(sc); return g ? GATE_HOME[g.kind] : sc; };
 
   /** 다음날 공부를 시작하기 전 복습 시험을 볼 차례인가 */
   const needReview = (idx: number, replay: boolean) => !demo && !replay && idx === curLesson() && reviewDue();
@@ -305,7 +326,7 @@ export function App() {
     case 'dress': view = <Dress onBack={() => { syncSoon(500); go('house'); }} />; break;
     case 'adopt': view = <Adopt onBack={() => { syncSoon(500); go('house'); }} />; break;
     case 'sleep': view = <Sleep onParent={openParent} onWake={wake} demo={demo} />; break;
-    case 'parent': view = <Parent demo={demo} onDemo={(on) => { setDemo(on); tick(x => x + 1); }} onClose={() => { music(load().settings.music); syncSoon(300); if (back === 'sleep' && !timeOver()) wake(); else go(back === 'parent' ? 'map' : back); }} />; break;
+    case 'parent': view = <Parent demo={demo} onDemo={(on) => { setDemo(on); tick(x => x + 1); }} onClose={() => { music(load().settings.music); syncSoon(300); if (back === 'sleep' && !timeOver()) wake(); else go(leave(back === 'parent' ? 'map' : back)); }} />; break;
   }
 
   useEffect(() => { (window as any).__FIT__?.(); });
@@ -316,6 +337,7 @@ export function App() {
         {view}
         <BurstLayer />
         <TakeToast />
+        {gateNote && <GateNotice key={gateNote.n} st={gateNote.st} onClose={() => setGateNote(null)} />}
       </div>
       <div class="rotate-hint"><div class="phone" /><div>화면을 가로로 돌려 주세요</div></div>
     </>

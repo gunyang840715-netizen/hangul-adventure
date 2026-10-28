@@ -5,11 +5,13 @@ import { stageInfo } from '../art/Scene';
 import { LESSONS, UNITS } from '../data/curriculum';
 import { say, sfx } from '../engine/audio';
 import { load, starsTotal, adventuresTotal, snackTotal, petView, curLesson } from '../engine/store';
-import { helloLine, REVIEW_FAIL, TEST_LOCKED } from '../data/voice';
+import { helloLine, REVIEW_FAIL, TEST_LOCKED, GATE_HINT, GATE_SNACK_WAIT } from '../data/voice';
 import { sayAll } from '../engine/audio';
 import { josa } from '../lib/hangul';
 import { artSrc } from '../art/artmap';
 import { useArtReady } from '../art/paintbg';
+import { gateLocked, peekGateOpened, takeGateOpened } from '../lib/gate';
+import { GatePill, GateBanner, celebrateGate } from './GateUI';
 
 interface Props {
   onStart: (idx: number, replay: boolean) => void;
@@ -53,8 +55,13 @@ function artPos(i: number, H: number): [number, number] {
   return [Math.round(uw * (u + lo + (hi - lo) * (j + 0.5) / n)), Math.round(0.14 * H + 395 + Math.sin(i * 1.3) * 32)];
 }
 
+// 공부 먼저(10-28): 오늘 공부 분량 안내 말은 앱을 켜고 한 번만
+let gateHinted = false;
+
 export function MapScreen({ onStart, onPlay, onBook, onHouse, onParent, todayDone, demo, resumeIdx = -1 }: Props) {
   const s = load();
+  const locked = gateLocked('h');         // 오늘 공부를 마치기 전: 스티커북·우리 집(꾸미기·집 짓기)이 잠김 (체험 모드는 안 잠김)
+  const [cele, setCele] = useState(false);
   const L = curLesson(s);                 // 지금 할 단계 (복습 시험에 떨어졌으면 다시 공부할 단계)
   const cur = Math.min(L, LESSONS.length - 1);
   const allDone = L >= LESSONS.length;
@@ -69,14 +76,22 @@ export function MapScreen({ onStart, onPlay, onBook, onHouse, onParent, todayDon
     const el = scroller.current!;
     el.scrollLeft = pos(cur)[0] - stageInfo().w * 0.4;
     const nm = s.name;
-    if (allDone) say(`${nm}${josa(nm, '아', '야')}, 모든 모험을 끝냈어! 놀이터에서 더 놀자!`);
+    if (peekGateOpened('h')) { /* 분량을 채워 방금 열림 — 아래 축하 말이 대신 나옴 */ }
+    else if (allDone) say(`${nm}${josa(nm, '아', '야')}, 모든 모험을 끝냈어! 놀이터에서 더 놀자!`);
     else if (s.hold && !todayDone) say(REVIEW_FAIL);
     else if (todayDone) say('오늘 새 모험은 끝! 놀이터에서 더 놀까?');
     else if (adventuresTotal() === 0) sayAll([helloLine(petView(s.lead).name), '분홍 단추를 누르면 모험이 시작돼!']);
     else if (resumeIdx === L) say('하던 모험을 이어서 하자!');
-    else if (snackTotal() >= 3) sayAll(['오늘의 모험을 떠나 볼까?', '간식이 있어! 우리 집에서 먹여 줄까?']);
+    else if (snackTotal() >= 3) sayAll(['오늘의 모험을 떠나 볼까?', locked ? GATE_SNACK_WAIT : '간식이 있어! 우리 집에서 먹여 줄까?']);
+    else if (locked && !gateHinted) sayAll(['오늘의 모험을 떠나 볼까?', GATE_HINT]);
     else say('오늘의 모험을 떠나 볼까?');
+    if (locked) gateHinted = true;
   }, []);
+  // 분량을 채워서 문이 열린 순간 축하 (시간으로 정했으면 지도에 있는 동안에도, 모험을 끝내고 돌아왔을 때도)
+  useEffect(() => {
+    if (demo || !takeGateOpened('h')) return;
+    setCele(true); celebrateGate();
+  });
 
   // 경로
   let d = '';
@@ -162,11 +177,13 @@ export function MapScreen({ onStart, onPlay, onBook, onHouse, onParent, todayDon
       <div class="topbar">
         <div class="pill" style={{ fontSize: 34 }}>⭐ {starsTotal()}</div>
         <div class="pill" style={{ fontSize: 28 }}>🔤 {countLetters()}개 글자 친구</div>
+        <GatePill kind="h" />
         <HoldGear onOpen={onParent} />
       </div>
+      {cele && <GateBanner onDone={() => setCele(false)} />}
       <div class="map-left">
-        <button class="fab" onClick={() => { sfx.tap(); onBook(); }}>📒<span>스티커북</span></button>
-        <button class={`fab ${snackTotal() > 0 ? 'has-snack' : ''}`} data-house="1" onClick={() => { sfx.tap(); onHouse(); }}>🏠<span>우리 집</span>{snackTotal() > 0 && <i class="fab-badge">{snackTotal()}</i>}</button>
+        <button class={`fab ${locked ? 'gate-locked' : ''}`} data-gate-locked={locked ? '1' : undefined} onClick={() => { if (!locked) sfx.tap(); onBook(); }}>📒<span>스티커북</span>{locked && <i class="fab-lock">🔒</i>}</button>
+        <button class={`fab ${snackTotal() > 0 && !locked ? 'has-snack' : ''} ${locked ? 'gate-locked' : ''}`} data-house="1" data-gate-locked={locked ? '1' : undefined} onClick={() => { if (!locked) sfx.tap(); onHouse(); }}>🏠<span>우리 집</span>{snackTotal() > 0 && <i class="fab-badge">{snackTotal()}</i>}{locked && <i class="fab-lock">🔒</i>}</button>
         {s.lessonIdx > 0 && <button class="fab" onClick={() => { sfx.tap(); onPlay(); }}>🎪<span>놀이터</span></button>}
       </div>
       <div class="map-actions">

@@ -1,6 +1,8 @@
 // 수학·맞춤법 첫 화면: 수학 항목 고르기(덧셈·뺄셈·곱셈·나눗셈·골고루) · 맞춤법(10-25 — 새 문제 / 틀린 문제 다시 풀기) · 옷장 · 집(집 짓기·집 안·마당·놀이터 — 한글 집과 따로) · 간식 주기
 // 하루 공부 시간(부모 설정 30분·1시간)이 다 되면 오늘은 못 고름, 한 항목은 하루 150문제까지 (맞춤법도 150문제)
+// 공부 먼저(10-28): 오늘 공부 분량을 채우기 전에는 옷장·집 꾸미기·간식 주기가 잠김(문제·맞춤법은 그대로) — lib/gate.ts
 // 화면 이름은 부모 설정의 이름(기기 저장값)만 — 10-25 사용자 요청으로 '○○ 수학' 대신 이름만(없으면 '수학·맞춤법'). 저장소에는 아이 이름을 쓰지 않는다
+import { useEffect, useState } from 'preact/hooks';
 import { Backdrop } from '../art/Scene';
 import { Pet } from '../art/Pet';
 import { MatIcon } from '../art/Build';
@@ -9,6 +11,8 @@ import { ITEM_LIST } from '../data/pets';
 import { CATS, STAGES, CAT_MAX, SP_CAT, catStage, type Mode } from '../math/mathData';
 import { mathState, todayMath, todayCat, mathTimeUp, openCats, mathPet, mathPetInfo, mathWear, mathWho, modeTitle, mathMatsLeft, mathSnackTotal, spellWrong, spellStats } from '../math/mathStore';
 import { TodaySummary, leftText } from './MathScreen';
+import { gateLocked, takeGateOpened } from '../lib/gate';
+import { GatePill, GateBanner, celebrateGate } from './GateUI';
 import '../math/math.css';
 
 export function MathHome({ onBack, onPlay, onSpell, onCloset, onHouse, onFeed }: {
@@ -16,6 +20,13 @@ export function MathHome({ onBack, onPlay, onSpell, onCloset, onHouse, onFeed }:
 }) {
   const m = mathState();
   const t = todayMath(m);
+  const locked = gateLocked('m');         // 오늘 공부를 마치기 전: 옷장·집 꾸미기·간식 주기 잠김
+  const [cele, setCele] = useState(false);
+  // 분량을 채워서 문이 열린 순간 축하 (문제를 풀다가 채웠으면 이 첫 화면으로 돌아왔을 때)
+  useEffect(() => {
+    if (!takeGateOpened('m')) return;
+    setCele(true); celebrateGate();
+  });
   const done = mathTimeUp(m);
   const open = openCats(m);
   const who = mathWho(m);
@@ -74,10 +85,12 @@ export function MathHome({ onBack, onPlay, onSpell, onCloset, onHouse, onFeed }:
           </button>
         </div>
         {(done || (!open.length && spFull)) && <div style={{ position: 'absolute', left: 0, right: 0, top: 572 }}><TodaySummary /></div>}
+        <div class="gate-math-pill"><GatePill kind="m" /></div>
+        {cele && <GateBanner onDone={() => setCele(false)} />}
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 40, display: 'flex', gap: 30, justifyContent: 'center' }}>
-          <button class="btn violet" onClick={() => { sfx.tap(); onCloset(); }}>👗 {who} 옷장</button>
-          <button class="btn mint" data-math-house="1" onClick={() => { sfx.tap(); onHouse(); }}>🏡 {who} 집 꾸미기</button>
-          {onFeed && <button class="btn yellow" data-math-feed-go="1" onClick={() => { sfx.tap(); onFeed(); }}>🍪 간식 주기{mathSnackTotal(m) ? ` (${mathSnackTotal(m)})` : ''}</button>}
+          <button class={`btn violet ${locked ? 'gate-locked' : ''}`} data-gate-locked={locked ? '1' : undefined} onClick={() => { if (!locked) sfx.tap(); onCloset(); }}>{locked ? '🔒' : '👗'} {who} 옷장</button>
+          <button class={`btn mint ${locked ? 'gate-locked' : ''}`} data-math-house="1" data-gate-locked={locked ? '1' : undefined} onClick={() => { if (!locked) sfx.tap(); onHouse(); }}>{locked ? '🔒' : '🏡'} {who} 집 꾸미기</button>
+          {onFeed && <button class={`btn yellow ${locked ? 'gate-locked' : ''}`} data-math-feed-go="1" data-gate-locked={locked ? '1' : undefined} onClick={() => { if (!locked) sfx.tap(); onFeed(); }}>{locked ? '🔒' : '🍪'} 간식 주기{mathSnackTotal(m) ? ` (${mathSnackTotal(m)})` : ''}</button>}
         </div>
         <div style={{ position: 'absolute', left: 10, bottom: 10, pointerEvents: 'none' }}>
           <Pet pet={pet} stage={pv.stage} level={pv.level} wear={mathWear(pet, m)} size={190} motion="bob" autoTalk={false} />

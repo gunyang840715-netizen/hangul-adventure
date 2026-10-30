@@ -4,6 +4,7 @@ import {artSrc} from './artmap';
 import {FRONT_CLOTHES,type SharedClothing} from './frontclothes.gen';
 import {FRONT_PETS,FRONT_PARTS,type FrontPoint,type FrontPetGeometry,type FrontWearPart} from './frontwear.gen';
 import {APPROVED_FRONT_CLOTHES} from './frontwear-approved';
+import {APPROVED_FRONT_NECK} from './frontwear-neck-approved';
 export interface FrontWearLayer {url:string;x:number;y:number;width:number;height:number;deform?:boolean}
 interface Cached {promise:Promise<FrontWearLayer|null>;layer?:FrontWearLayer;image?:HTMLImageElement;ready:boolean}
 const PX=160,PY=320,W=960,H=980,cache=new Map<string,Cached>(),images=new Map<string,Promise<HTMLImageElement>>();
@@ -63,11 +64,14 @@ function shoeLayer(base:HTMLImageElement,source:HTMLImageElement,part:FrontWearP
 function scarfLayer(base:HTMLImageElement,source:HTMLImageElement,geometry:FrontScarfGeometry){const cv=surface(),c=cv.getContext('2d')!,[sx,sy,sw,sh]=FRONT_SCARF.rects[0],scale=geometry.width/sw; c.drawImage(source,PX+geometry.target[0]-(sx+sw*.5)*scale,PY+geometry.target[1]-(sy+sh*.35)*scale,source.width*scale,source.height*scale);hideBehind(c,base,[geometry.occlusion]);return cv;}
 function crop(cv:HTMLCanvasElement):FrontWearLayer {const c=cv.getContext('2d')!,pixels=c.getImageData(0,0,W,H).data;let x=W,y=H,right=0,bottom=0;for(let i=3;i<pixels.length;i+=4)if(pixels[i]){const n=(i-3)/4,xx=n%W,yy=Math.floor(n/W);x=Math.min(x,xx);y=Math.min(y,yy);right=Math.max(right,xx+1);bottom=Math.max(bottom,yy+1);}if(right<=x||bottom<=y)throw Error('착용 부품이 비어 있음');const out=document.createElement('canvas');out.width=right-x;out.height=bottom-y;out.getContext('2d')!.drawImage(cv,x,y,out.width,out.height,0,0,out.width,out.height);const result={url:out.toDataURL('image/webp',.93),x:x-PX,y:y-PY,width:out.width,height:out.height};cv.width=cv.height=out.width=out.height=0;return result;}
 const clothingFor=(pet:string,item:string)=>APPROVED_FRONT_CLOTHES[`${pet}:${item}`]??FRONT_CLOTHES[`${pet}:${item}`];
-export function hasFrontWear(pet:string,slot:string,item?:string){if(slot==='clothes')return !!item&&!!clothingFor(pet,item);if(slot==='neck')return item==='scarf'&&!!FRONT_SCARVES[pet];const geometry=FRONT_PETS[pet],part=item&&FRONT_PARTS[`${slot}:${item}`];return !!geometry&&!!part&&slot==='shoes'&&(part.species==='both'||part.species===geometry.species);}
+export function hasApprovedFrontWear(pet:string,slot:string,item?:string){return slot==='neck'&&!!item&&!!APPROVED_FRONT_NECK[`${pet}:${item}`];}
+export function hasFrontWear(pet:string,slot:string,item?:string){if(slot==='clothes')return !!item&&!!clothingFor(pet,item);if(slot==='neck')return hasApprovedFrontWear(pet,slot,item)||(item==='scarf'&&!!FRONT_SCARVES[pet]);const geometry=FRONT_PETS[pet],part=item&&FRONT_PARTS[`${slot}:${item}`];return !!geometry&&!!part&&slot==='shoes'&&(part.species==='both'||part.species===geometry.species);}
 export function prepareFrontWear(pet:string,slot:string,item?:string):Promise<FrontWearLayer|null>{
  if(!item||!hasFrontWear(pet,slot,item))return Promise.resolve(null);
  const key=id(pet,slot,item),old=cache.get(key);if(old)return old.promise;
  const entry:Cached={ready:false,promise:Promise.resolve(null)};cache.set(key,entry);
+ const direct=slot==='neck'?APPROVED_FRONT_NECK[`${pet}:${item}`]:undefined;
+ if(direct){entry.promise=image(direct.url).then(source=>{entry.image=source;return entry.layer=direct;}).catch(()=>{cache.delete(key);return null;});return entry.promise;}
  const clothing=slot==='clothes'&&clothingFor(pet,item);
  if(clothing){entry.promise=(clothing.shared?sharedClothing(pet,clothing.shared):image(clothing.url).then(source=>({image:source,layer:{...clothing,deform:true}}))).then(result=>{entry.image=result.image;return entry.layer=result.layer;}).catch(()=>{cache.delete(key);return null;});return entry.promise;}
  const part=slot==='neck'?FRONT_SCARF:FRONT_PARTS[`${slot}:${item}`],geometry=FRONT_PETS[pet],baseURL=artSrc(`pet.${pet}.paint-front`);

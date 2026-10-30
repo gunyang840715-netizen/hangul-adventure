@@ -9,7 +9,7 @@ import type { Mat } from './petanim';
 import { artSrc } from './artmap';
 import { ITEM_ART } from './items.gen';
 import {wornEntry} from './wearable';
-import {prepareFrontWear,frontWearLoaded,hasFrontWear,type FrontWearLayer} from './frontwear';
+import {prepareFrontWear,frontWearLoaded,hasFrontWear,hasApprovedFrontWear,type FrontWearLayer} from './frontwear';
 
 export type Mood = 'happy' | 'wow' | 'think' | 'sleep' | 'love';
 export type Motion = 'bob' | 'jump' | 'cheer' | 'wiggle' | 'none' | 'fly' | 'hop';
@@ -165,7 +165,7 @@ function FittedFront({pet,slot,item}:{pet:string;slot:string;item?:string}){
   return layer&&item&&!layer.deform?<image data-front-fit="1" href={layer.url} x={layer.x} y={layer.y} width={layer.width} height={layer.height} onLoad={()=>frontWearLoaded(pet,slot,item,layer.url)}/>:null;
 }
 function WornFront({pet,slot,item}:{pet:string;slot:string;item?:string}){
-  if(slot==='clothes'&&hasFrontWear(pet,slot,item))return <FittedFront pet={pet} slot={slot} item={item}/>;
+  if((slot==='clothes'&&hasFrontWear(pet,slot,item))||hasApprovedFrontWear(pet,slot,item))return <FittedFront pet={pet} slot={slot} item={item}/>;
   const entry=wornEntry(pet,slot,item),rect=entry?.frames['front/0'];if(!entry||!rect)return <FittedFront pet={pet} slot={slot} item={item}/>;
   const [x,y,w,h,dx,dy]=rect,height=Math.max(...Object.values(entry.frames).map(r=>r[1]+r[3]));
   return <svg x={dx} y={dy} width={w} height={h} viewBox={`${x} ${y} ${w} ${h}`} overflow="hidden"><image href={artSrc(entry.art)} x="0" y="0" width={entry.width||2048} height={height}/></svg>;

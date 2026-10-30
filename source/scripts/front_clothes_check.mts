@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';import fs from 'node:fs';import crypto from 'node:crypto';import {execFileSync}from 'node:child_process';
 import {FRONT_CLOTHES}from '../src/art/frontclothes.gen';
 import {APPROVED_FRONT_CLOTHES}from '../src/art/frontwear-approved';
-import {hasFrontWear,prepareFrontWear,frontWearCloth,frontWearLoaded,frontWearReady}from '../src/art/frontwear';
+import {APPROVED_FRONT_NECK}from '../src/art/frontwear-neck-approved';
+import {hasFrontWear,hasApprovedFrontWear,prepareFrontWear,frontWearCloth,frontWearLoaded,frontWearReady}from '../src/art/frontwear';
 execFileSync(process.execPath,['scripts/build_front_clothes.mjs','--check'],{stdio:'inherit'});
 const data=JSON.parse(fs.readFileSync('scripts/data/front-clothes.json','utf8'));
 const dogs=['corgi','maltese','poodle','schnauzer','shiba'],cats=['fold','koshort','persian','russian','siamese'];
@@ -41,6 +42,17 @@ for(const [key,e] of Object.entries(APPROVED_FRONT_CLOTHES)){
  assert.ok(e.x>=0&&e.y>=0&&e.width>0&&e.height>0&&e.x+e.width<=640&&e.y+e.height<=640);
  assert.ok(!e.shared,'검수한 착용 그림은 공유 부품이 아니다');assert.ok(hasFrontWear(pet,'clothes',item));
 }
+// 목걸이도 친구별 승인 그림만 정면 좌표 그대로 사용한다.
+for(const [key,e] of Object.entries(APPROVED_FRONT_NECK)){
+ const [pet,item,...extra]=key.split(':');assert.equal(extra.length,0);assert.ok(pet&&item);
+ const path=e.url.replace(/^\.\//,''),bytes=fs.readFileSync('../'+path),short=path.match(/\.([0-9a-f]{8})\.webp$/)?.[1];
+ assert.ok(path.startsWith(`art/pets/${pet}.paint-wear-neck-${item}-front.`));
+ assert.equal(hash(bytes).slice(0,8),short);assert.ok(bytes.length<=400000);
+ assert.equal(manifest.files.filter((f:any)=>f.u===path&&f.b===bytes.length).length,1);
+ assert.ok(e.x>=0&&e.y>=0&&e.width>0&&e.height>0&&e.x+e.width<=640&&e.y+e.height<=640);
+ assert.ok(hasApprovedFrontWear(pet,'neck',item));assert.ok(hasFrontWear(pet,'neck',item));
+}
+assert.ok(!hasApprovedFrontWear('corgi','neck','medal'),'미승인 친구는 기존 표시를 유지한다');
 assert.equal(data.sharedAssets.length,3);assert.deepEqual(data.sharedAssets.map((a:any)=>a.name).sort(),['body','collar','sleeve']);assert.equal(new Set(data.sharedAssets.map((a:any)=>a.url)).size,3);
 for(const a of data.sharedAssets){assert.deepEqual([...a.consumers].sort(),dogs);const bytes=fs.readFileSync('../'+a.url.replace(/^\.\//,''));assert.equal(hash(bytes),a.sha256);assert.equal(bytes.length,a.bytes);assert.ok(bytes.length<=40000);}
 for(const e of data.entries){
@@ -78,6 +90,13 @@ try{
  assert.deepEqual(frontWearReady('maltese',{}),[],'경찰 조끼를 벗으면 착용 층 표시 해제');
  const hoodie=await prepareFrontWear('maltese','clothes','hoodie');assert.ok(hoodie?.deform);
  assert.equal(hoodie.url,APPROVED_FRONT_CLOTHES['maltese:hoodie'].url,'승인한 개별 후드티가 우선');
+ const medal=await prepareFrontWear('maltese','neck','medal');assert.ok(medal&&!medal.deform);
+ assert.equal(medal.url,APPROVED_FRONT_NECK['maltese:medal'].url);
+ assert.deepEqual(frontWearReady('maltese',{neck:'medal'}),[],'새 목걸이 수신 전 기존 표시 유지');
+ frontWearLoaded('maltese','neck','medal',medal.url);
+ assert.deepEqual(frontWearReady('maltese',{neck:'medal'}),['neck']);
+ assert.deepEqual(frontWearReady('maltese',{}),[],'목걸이를 벗으면 착용 층 해제');
+ assert.equal(await prepareFrontWear('corgi','neck','medal'),null,'미승인 메달은 대체하지 않음');
  fail=true;assert.equal(await prepareFrontWear('russian','clothes','sweater'),null);assert.equal(frontWearCloth('russian','sweater'),null);assert.deepEqual(frontWearReady('russian',{clothes:'sweater'}),[]);
  fail=false;const retry=await prepareFrontWear('russian','clothes','sweater');assert.ok(retry?.deform);assert.ok(frontWearCloth('russian','sweater'));
  fail=true;assert.equal(await prepareFrontWear('corgi','clothes','hoodie'),null);assert.equal(frontWearCloth('corgi','hoodie'),null);assert.deepEqual(frontWearReady('corgi',{clothes:'hoodie'}),[],'공유 부품 수신 실패 때 기존 옷 유지');

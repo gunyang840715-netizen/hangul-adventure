@@ -53,4 +53,11 @@ export const APPROVED_FRONT_CLOTHES: Record<string, FrontClothesPart> = {
   'russian:cat-extra-astronomer': { url: './art/pets/russian.paint-wear-clothes-cat-extra-astronomer-front.ab452eb5.webp', x: 175, y: 295, width: 294, height: 214 },
   'siamese:cat-extra-astronomer': { url: './art/pets/siamese.paint-wear-clothes-cat-extra-astronomer-front.db1238ba.webp', x: 199, y: 297, width: 256, height: 206 },
   'fold:cat-extra-astronomer': { url: './art/pets/fold.paint-wear-clothes-cat-extra-astronomer-front.70d401ed.webp', x: 153, y: 303, width: 333, height: 218 },
+  'maltese:dog-extra-firefighter': { url: './art/pets/maltese.paint-wear-clothes-dog-extra-firefighter-front.9dcb540c.webp', x: 171, y: 349, width: 304, height: 221 },
+  'poodle:dog-extra-firefighter': { url: './art/pets/poodle.paint-wear-clothes-dog-extra-firefighter-front.68a936d7.webp', x: 166, y: 360, width: 293, height: 204 },
+  'corgi:dog-extra-firefighter': { url: './art/pets/corgi.paint-wear-clothes-dog-extra-firefighter-front.7f6e8389.webp', x: 162, y: 321, width: 315, height: 250 },
+  'shiba:dog-extra-firefighter': { url: './art/pets/shiba.paint-wear-clothes-dog-extra-firefighter-front.0c5524f1.webp', x: 156, y: 349, width: 329, height: 223 },
+  'schnauzer:dog-extra-firefighter': { url: './art/pets/schnauzer.paint-wear-clothes-dog-extra-firefighter-front.e3de9c3d.webp', x: 161, y: 337, width: 306, height: 226 },
+  'koshort:cat-extra-astronomer': { url: './art/pets/koshort.paint-wear-clothes-cat-extra-astronomer-front.69a90992.webp', x: 196, y: 341, width: 262, height: 188 },
+  'persian:cat-extra-astronomer': { url: './art/pets/persian.paint-wear-clothes-cat-extra-astronomer-front.99308300.webp', x: 177, y: 365, width: 294, height: 210 },
 };

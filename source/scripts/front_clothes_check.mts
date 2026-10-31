@@ -52,7 +52,7 @@ for(const [key,e] of Object.entries(APPROVED_FRONT_NECK)){
  assert.ok(e.x>=0&&e.y>=0&&e.width>0&&e.height>0&&e.x+e.width<=640&&e.y+e.height<=640);
  assert.ok(hasApprovedFrontWear(pet,'neck',item));assert.ok(hasFrontWear(pet,'neck',item));
 }
-assert.ok(!hasApprovedFrontWear('corgi','neck','medal'),'미승인 친구는 기존 표시를 유지한다');
+assert.ok(!hasApprovedFrontWear('corgi','neck','bib'),'미승인 친구는 기존 표시를 유지한다');
 assert.equal(data.sharedAssets.length,3);assert.deepEqual(data.sharedAssets.map((a:any)=>a.name).sort(),['body','collar','sleeve']);assert.equal(new Set(data.sharedAssets.map((a:any)=>a.url)).size,3);
 for(const a of data.sharedAssets){assert.deepEqual([...a.consumers].sort(),dogs);const bytes=fs.readFileSync('../'+a.url.replace(/^\.\//,''));assert.equal(hash(bytes),a.sha256);assert.equal(bytes.length,a.bytes);assert.ok(bytes.length<=40000);}
 for(const e of data.entries){
@@ -96,7 +96,7 @@ try{
  frontWearLoaded('maltese','neck','medal',medal.url);
  assert.deepEqual(frontWearReady('maltese',{neck:'medal'}),['neck']);
  assert.deepEqual(frontWearReady('maltese',{}),[],'목걸이를 벗으면 착용 층 해제');
- assert.equal(await prepareFrontWear('corgi','neck','medal'),null,'미승인 메달은 대체하지 않음');
+ assert.equal(await prepareFrontWear('corgi','neck','bib'),null,'미승인 목걸이는 대체하지 않음');
  fail=true;assert.equal(await prepareFrontWear('russian','clothes','sweater'),null);assert.equal(frontWearCloth('russian','sweater'),null);assert.deepEqual(frontWearReady('russian',{clothes:'sweater'}),[]);
  fail=false;const retry=await prepareFrontWear('russian','clothes','sweater');assert.ok(retry?.deform);assert.ok(frontWearCloth('russian','sweater'));
  fail=true;assert.equal(await prepareFrontWear('corgi','clothes','hoodie'),null);assert.equal(frontWearCloth('corgi','hoodie'),null);assert.deepEqual(frontWearReady('corgi',{clothes:'hoodie'}),[],'공유 부품 수신 실패 때 기존 옷 유지');

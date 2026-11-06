@@ -88,6 +88,10 @@ GitHub Pages로 바로 공개되는 **공개 저장소**이고, 태블릿에서 
   수학 집은 한글과 같은 `Build.tsx`·`Home.tsx`를 `src/screens/homeApi.ts`의 `MATH_HOME`으로 · 첫 화면 '✏️ (부모 설정 화면 이름, 없으면 수학·맞춤법)' 버튼 · 부모 설정 '수학·맞춤법' · 검사 `scripts/math_check.mts`
   - **맞춤법 (10-25~, 같은 모드)**: `src/math/spellData.ts`(문장 은행 — 속담·외국 속담·명언·이솝 우화·좋은 말·생활 문장, `[바른말|틀린말|도움말]` 괄호마다 문제 하나, 문제 고르기·틀린 문제 다시) ·
     `src/screens/SpellScreen.tsx`(둘 중 하나 고르기·틀리면 도움말·'틀린 문제 다시 풀기') · 기록은 `State.math.sp` · 문제 열쇠는 `scripts/spell_keys_baseline.json`과 대조(뒤에 추가만)
+  - **빈칸 추리 (11-07~, 같은 모드 — 생각하는 힘·추리하는 힘)**: `src/math/blankData.ts`(문제 180 — 글 속 빈칸 `_`·단서 `{…}`·정답·오답 둘과 오답마다 까닭, 문제 고르기) ·
+    `src/screens/BlankScreen.tsx`(보기 셋·틀리면 단서 노랗게+오답 까닭+생각하는 방법·맞히면 '근거 찾기') · 1단계 한 문장 → 한 문장 문제를 20개 맞히면 2단계 짧은 이야기(기록에서 셈) ·
+    기록은 맞춤법과 같은 `State.math.sp`에 열쇠 `bk숫자`(새 칸 없음)·하루 기록 `날짜:bk` · 열쇠·정답은 `scripts/blank_keys_baseline.json`과 대조(뒤에 추가만) · 검사 `scripts/blank_check.mts`(math_check 끝에서) ·
+    오답 보기는 '그럴듯하지만 글 속 단서로 확실히 틀린 말'만(정답이 둘처럼 보이는 문제 X) · 화면 확인 `?screen=mathBlank&bk=bk146`
 - `shared/merge.js` — 두 기기 진도 합치기 규칙 (구글 Apps Script 서버와 같이 씀)
 - `scripts/` — 검사 스크립트, PWA 파일 만들기(`build_pwa.py`)
 - `backend/Code.template.gs` — 서버(구글 Apps Script) 원본. **자동 배포되지 않음** (사람이 Apps Script 편집기에 붙여 넣어야 함)

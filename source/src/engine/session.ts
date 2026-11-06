@@ -6,6 +6,7 @@ import { FONT_SYLLABLES } from '../data/fontchars';
 import { dueItems, weighted } from './srs';
 import { load } from './store';
 import { hasPack, hasClip } from './audio';
+import { letterSetCount, letterReps, dictReps } from '../lib/studyCfg';
 
 /** 음성팩이 있으면 녹음된 글자만 문제로 낸다 */
 const canSay = (s: string) => !hasPack() || hasClip(s);
@@ -29,6 +30,30 @@ export const LETTER_SETS: TraceGuide[][] = [
   ['full', ...Array(6).fill('faint'), ...Array(3).fill('none')],
   Array(10).fill('none'),
 ];
+
+/**
+ * 새 글자 쓰기 세트 (11-07 사용자 요청: 부모 설정에서 세트 수·세트당 횟수를 고침 — lib/studyCfg.ts).
+ * 기본 4세트×10번이면 위 LETTER_SETS 그대로. 다른 값이면 같은 흐름(처음은 모두 안내 → 그림자 → 마지막은 혼자)을 세트 수에 맞게 나눈다:
+ * 세트 위치 0·⅓·⅔·1에서 안내/그림자/혼자 비율이 1:0:0 · .5:.5:0 · .1:.6:.3 · 0:0:1 (그 사이는 이어서)
+ */
+export function letterSets(sets = letterSetCount(), reps = letterReps()): TraceGuide[][] {
+  if (sets === 4 && reps === 10) return LETTER_SETS;
+  const A = [[1, 0, 0], [0.5, 0.5, 0], [0.1, 0.6, 0.3], [0, 0, 1]];
+  return Array.from({ length: sets }, (_, b): TraceGuide[] => {
+    if (sets === 1) {
+      // 한 세트뿐: 그 안에서 안내 → 그림자 → 혼자 (짧으면 안내만)
+      if (reps <= 2) return Array(reps).fill('full');
+      const alone = Math.min(3, Math.max(1, Math.round(reps * 0.3)));
+      const full = Math.max(1, Math.ceil((reps - alone) * 0.45));
+      return [...Array(full).fill('full'), ...Array(reps - alone - full).fill('faint'), ...Array(alone).fill('none')];
+    }
+    const x = (b / (sets - 1)) * 3, i = Math.min(2, Math.floor(x)), f = x - i;
+    const fr = A[i].map((v, j) => v + (A[i + 1][j] - v) * f);
+    const full = Math.round(fr[0] * reps);
+    const none = Math.min(reps - full, Math.round(fr[2] * reps));
+    return [...Array(full).fill('full'), ...Array(reps - full - none).fill('faint'), ...Array(none).fill('none')];
+  });
+}
 
 export type Step =
   | { t: 'greet' }
@@ -330,16 +355,16 @@ function recallStep(two: string[], k: Known): Step {
   return { t: 'recall', cards: shuffle([...faces, ...others]), targets: two, order: spreadList(faces), showSec: 10 };
 }
 
-function traceReps() { return Math.max(3, Math.min(15, load().settings.traceReps || 10)); }
+function traceReps() { return Math.max(1, Math.min(15, Math.round(load().settings.traceReps) || 10)); }   // 11-07: 1~15번 (부모 설정)
 
 /**
  * 받아쓰기 시험: 읽어 주는 글자를 안 보고 쓰기. 글자마다 두 번씩, 순서는 무작위(같은 글자가 연달아 나오지 않게), 적어도 4문제
  * mode: lesson = 그날 공부 끝 시험(통과해야 다음 단계), review = 다음날 시작 전 복습 시험(떨어지면 전 단계 다시)
  */
-export function dictationStep(items: string[], mode: 'lesson' | 'review'): Step {
+export function dictationStep(items: string[], mode: 'lesson' | 'review', per = dictReps()): Step {
   const its = [...new Set(items.filter(Boolean))];
-  let qs = its.flatMap(x => [x, x]);
-  while (qs.length < 4 && its.length) qs = [...qs, ...its];
+  let qs = its.flatMap(x => Array<string>(per).fill(x));   // 글자마다 per번 (기본 2번 — 11-07부터 부모 설정 1~4번)
+  while (per >= 2 && qs.length < 4 && its.length) qs = [...qs, ...its];   // 적어도 4문제 (글자마다 1번으로 정하면 그대로)
   return { t: 'dictation', items: its, order: spreadList(qs), mode };
 }
 
@@ -373,9 +398,10 @@ export function buildLesson(idx: number): Step[] {
       for (const ch of g) {
         steps.push({ t: 'intro', ch });
         const kNow = learned([...seen, ch]);
-        // 쓰기 10번 → 놀이 → 쓰기 10번 → 놀이 → 쓰기 10번 → 놀이 → 쓰기 10번(혼자) → 놀이 (글자 하나에 40번, 놀이 4번)
-        LETTER_SETS.forEach((guides, b) => {
-          steps.push({ t: 'traceSet', items: [ch], reps: guides.length, level: b + 1, guides, part: b, parts: LETTER_SETS.length });
+        // 쓰기 10번 → 놀이 → 쓰기 10번 → 놀이 → 쓰기 10번 → 놀이 → 쓰기 10번(혼자) → 놀이 (글자 하나에 40번, 놀이 4번 — 기본값. 세트 수·횟수는 부모 설정)
+        const sets = letterSets();
+        sets.forEach((guides, b) => {
+          steps.push({ t: 'traceSet', items: [ch], reps: guides.length, level: b + 1, guides, part: b, parts: sets.length });
           steps.push(letterStep(next, [ch], reviewPick(seen, 2, [ch]), kNow));
         });
         seen.push(ch);

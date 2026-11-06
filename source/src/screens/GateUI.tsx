@@ -8,6 +8,8 @@ import {
   gateStatus, gateLocked, gateNeedText, gateLabel, gateProgressText, gateRule, setGate, openGateToday, closeGateToday,
   GATE_MODE_LABEL, GATE_MIN_CHOICES, GATE_N_CHOICES, GATE_KIND_LABEL, type GateKind, type GateMode, type GateStatus,
 } from '../lib/gate';
+import { Stepper } from './Stepper';
+import { RANGE } from '../lib/studyCfg';
 import { GATE_LOCKED, GATE_OPENED } from '../data/voice';
 
 /** 분량 막대 */
@@ -68,7 +70,10 @@ export function GateBanner({ onDone }: { onDone: () => void }) {
 
 // ---------- 부모 설정 '공부 먼저' 칸 (Extras.tsx Parent가 '오늘' 아래에 끼워 넣음) ----------
 const MODES: readonly GateMode[] = ['off', 'amount', 'time'];
-const fmtMin = (n: number) => (n >= 60 ? `${n / 60}시간` : `${n}분`);
+const fmtMin = (n: number) => (n >= 60 && n % 60 === 0 ? `${n / 60}시간` : n > 60 ? `${Math.floor(n / 60)}시간 ${n % 60}분` : `${n}분`);
+// 11-07 사용자 요청(공부량 자세히): 고르기 대신 －/＋로 5 단위 (저장 범위는 gateRule 그대로 — 분 1~180, 개 1~500)
+const GATE_MIN_RANGE = { min: 5, max: 180, step: 5, def: 10 };
+const GATE_N_RANGE = { min: 5, max: 300, step: 5, def: 10 };
 
 /** onSaved: 부모 설정의 안내 글 · 연동 저장 · 다시 그리기 (Parent의 done) */
 export function GateParent({ onSaved }: { onSaved: (m: string) => void }) {
@@ -86,17 +91,17 @@ export function GateParent({ onSaved }: { onSaved: (m: string) => void }) {
           {MODES.map(md => <Opt on={r.mode === md} onClick={() => { setGate(kind, { mode: md }); onSaved(md === 'off' ? `${who}: 공부 먼저를 껐습니다. 항상 열려 있습니다.` : `${who}: ${GATE_MODE_LABEL[md]}(으)로 정했습니다.`); }}>{GATE_MODE_LABEL[md]}</Opt>)}
           {r.mode === 'amount' && kind === 'h' && <>
             <span>오늘의 새 단계</span>
-            {[1, 2, 3].map(n => <Opt on={s.settings.newPerDay === n} onClick={() => { setSettings({ newPerDay: n }); onSaved(`오늘의 새 단계 ${n}개를 마치면 열립니다. (위 기본 설정의 '하루 새 단계'도 ${n}개로 같이 바뀝니다)`); }}>{n}개</Opt>)}
-            <span style={{ fontSize: 16, color: '#868e96' }}>마치면 열림 · 기본 설정의 '하루 새 단계'와 같은 값</span>
+            <Stepper id="gate-h-n" value={s.settings.newPerDay} r={RANGE.newPerDay} fmt={n => `${n}개`} onSet={n => { setSettings({ newPerDay: n }); onSaved(`오늘의 새 단계 ${n}개를 마치면 열립니다. (위 '공부량'의 '하루 새 단계'도 ${n}개로 같이 바뀝니다)`); }} />
+            <span style={{ fontSize: 16, color: '#868e96' }}>마치면 열림 · 위 '공부량'의 '하루 새 단계'와 같은 값</span>
           </>}
           {r.mode === 'amount' && kind === 'm' && <>
             <span>맞힌 문제</span>
-            {GATE_N_CHOICES.map(n => <Opt on={r.n === n} onClick={() => { setGate(kind, { n }); onSaved(`${who}: 오늘 문제를 ${n}개 맞히면 열립니다.`); }}>{n}개</Opt>)}
+            <Stepper id="gate-m-n" value={r.n} r={GATE_N_RANGE} fmt={n => `${n}개`} presets={GATE_N_CHOICES} onSet={n => { setGate(kind, { n }); onSaved(`${who}: 오늘 문제를 ${n}개 맞히면 열립니다.`); }} />
             <span style={{ fontSize: 16, color: '#868e96' }}>수학·맞춤법 합쳐서 · 틀린 것은 안 셈</span>
           </>}
           {r.mode === 'time' && <>
             <span>공부 시간</span>
-            {GATE_MIN_CHOICES[kind].map(n => <Opt on={r.min === n} onClick={() => { setGate(kind, { min: n }); onSaved(`${who}: 오늘 ${fmtMin(n)} 공부하면 열립니다.`); }}>{fmtMin(n)}</Opt>)}
+            <Stepper id={`gate-${kind}-min`} value={r.min} r={GATE_MIN_RANGE} fmt={fmtMin} presets={GATE_MIN_CHOICES[kind]} onSet={n => { setGate(kind, { min: n }); onSaved(`${who}: 오늘 ${fmtMin(n)} 공부하면 열립니다.`); }} />
             <span style={{ fontSize: 16, color: '#868e96' }}>{kind === 'h' ? '오늘 앱을 쓴 시간 · 3분 넘게 안 만지면 멈춤' : '문제 푼 시간 · 3분 넘게 안 만지면 멈춤'}</span>
           </>}
         </div>

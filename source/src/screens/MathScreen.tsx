@@ -13,7 +13,8 @@ import { MatIcon } from '../art/Build';
 import { sfx } from '../engine/audio';
 import { syncSoon } from '../engine/sync';
 import { ITEM, ITEM_LIST } from '../data/pets';
-import { makeProblemFor, stageName, catStage, CATS, CAT, ITEM_EVERY, MAT_EVERY, PASS_RATE, UP_MIN, CAT_MAX, IDLE_MS, SP_INFO, type Problem, type Mode, type Cat, type AnyCat } from '../math/mathData';
+import { makeProblemFor, stageName, catStage, CATS, CAT, ITEM_EVERY, MAT_EVERY, IDLE_MS, SP_INFO, type Problem, type Mode, type Cat, type AnyCat } from '../math/mathData';
+import { catMax, upMin, passRate } from '../lib/studyCfg';
 import { mathState, todayMath, todayCat, answerMath, addMathMs, mathTimeUp, catFull, openCats, toNextItem, mathPet, mathPetInfo, mathWear, mathWho, mathMatsLeft, mathSnackTotal } from '../math/mathStore';
 import { gateLocked } from '../lib/gate';
 import '../math/math.css';
@@ -154,14 +155,14 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
   const lvNow = mode === 'mix' ? -1 : m.lv[mode];
   const title = mode === 'mix' ? '🎲 골고루' : `${CAT[mode].icon} ${CAT[mode].name} ${lvNow + 1}단계 · ${stageName(catStage(mode, lvNow))}`;
   const live = done || pick ? 0 : 1;                         // 지금 풀고 있는 문제
-  const count = tc ? `📝 ${Math.min(tc.solved + live, CAT_MAX)} / ${CAT_MAX} · ⭕ ${tc.correct}` : `📝 ${t.solved + live}번째 · ⭕ ${t.correct}`;
+  const count = tc ? `📝 ${Math.min(tc.solved + live, catMax())} / ${catMax()} · ⭕ ${tc.correct}` : `📝 ${t.solved + live}번째 · ⭕ ${t.correct}`;
   const res = done === 'time' || !tc ? t : tc;               // 끝 화면에 보일 결과 (시간 끝은 오늘 전체, 항목 끝은 그 항목)
   const rate = res.solved ? Math.round(res.correct / res.solved * 100) : 0;
   const isRem = p.ans.includes('…');
   const frac = limit ? left / limit : 1;
   const head = done === 'time' ? '오늘 공부 끝! 🎉'
-    : done === 'all' ? `네 가지 모두 오늘 ${CAT_MAX}문제씩 끝! 🎉`
-    : mode !== 'mix' ? `오늘 ${CAT[mode].name} ${CAT_MAX}문제 끝! 🎉` : '';
+    : done === 'all' ? `네 가지 모두 오늘 ${catMax()}문제씩 끝! 🎉`
+    : mode !== 'mix' ? `오늘 ${CAT[mode].name} ${catMax()}문제 끝! 🎉` : '';
   return (
     <div class="screen" data-math="1" data-mode={mode}>
       <Backdrop theme="library" />
@@ -204,7 +205,7 @@ export function MathScreen({ mode, onBack, onCloset }: { mode: Mode; onBack: () 
             <TodaySummary ups={ups} />
             {done !== 'time' && <div style={{ fontSize: 30, color: '#4a2f63' }} data-left-today="1">⏳ 오늘 공부 시간 {leftText(t.leftMs)}{done === 'cat' ? ' · 다른 항목도 풀어 볼까?' : ''}</div>}
             <div style={{ fontSize: 22, color: '#7a5b8f', padding: '0 40px', lineHeight: 1.5, wordBreak: 'keep-all' }}>
-              공부 시간이 끝나거나 한 항목을 {CAT_MAX}문제 다 풀면, 그날 {UP_MIN}문제 이상 푼 항목을 {Math.round(PASS_RATE * 100)}% 이상 맞혔을 때 그 항목은 다음 단계로 가요<br />
+              공부 시간이 끝나거나 한 항목을 {catMax()}문제 다 풀면, 그날 {upMin()}문제 이상 푼 항목을 {Math.round(passRate() * 100)}% 이상 맞혔을 때 그 항목은 다음 단계로 가요<br />
               꾸미기는 정답 {ITEM_EVERY}개마다, 집 재료와 간식은 정답 {MAT_EVERY}개마다
             </div>
             <div style={{ display: 'flex', gap: 30 }}>

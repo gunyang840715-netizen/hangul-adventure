@@ -19,10 +19,13 @@ import { stat } from '../engine/srs';
 import { josa } from '../lib/hangul';
 import { ITEM_LIST, ITEM } from '../data/pets';
 import { unlockTable } from '../data/unlock';
-import { STAGES, CATS, DAY_MIN_CHOICES, CAT_MAX, TIME_CHOICES, PASS_RATE, ITEM_EVERY, MAT_EVERY, UP_MIN, SP_CAT, catSecRange } from '../math/mathData';
+import { STAGES, CATS, DAY_MIN_CHOICES, TIME_CHOICES, ITEM_EVERY, MAT_EVERY, SP_CAT, catSecRange } from '../math/mathData';
 import { mathState, todayMath, todayCat, mathTotalCorrect, mathMatsLeft, mathSnackTotal, mathPetView, setMathLv, setMathDayMin, setMathTime, setMathName, modeTitle, spellStats, spellWrong } from '../math/mathStore';
 import { SENTS, SP_SEC_RANGE, makeSpellQ } from '../math/spellData';
 import { GateParent } from './GateUI';
+import { Stepper } from './Stepper';
+import { RANGE, letterSetCount, letterReps, dictReps, catMax, upMin, passRate, setStudy } from '../lib/studyCfg';
+import { letterSets } from '../engine/session';
 import '../math/math.css';
 
 // ---------- 제목 ----------
@@ -280,6 +283,8 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
         <button class="opt" onClick={() => { giveExtraLesson(); done('오늘 새 단계를 1개 더 열었습니다.'); }}>새 단계 +1개</button>
       </div>
 
+      <StudyParent onSaved={done} jumpTo={jumpTo} />
+
       <GateParent onSaved={done} />
 
       <h3>초기화</h3>
@@ -309,11 +314,7 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
       <h3>기본 설정</h3>
       <div class="row">아이 이름 <input type="text" value={nameIn} onInput={(e: any) => setNameIn(e.target.value)} style={{ width: 160 }} />
         <button class="opt" onClick={() => { const v = nameIn.trim().slice(0, 10) || '친구'; setName(v); setNameIn(v); done(`이름을 '${v}'(으)로 바꿨습니다.`); }}>저장</button></div>
-      <div class="row">하루 사용 시간 {[20, 30, 45, 60, 0].map(m => <Opt on={s.settings.dailyMin === m} onClick={() => { setSettings({ dailyMin: m }); done('저장했습니다.'); }}>{m ? `${m}분` : '제한 없음'}</Opt>)}</div>
-      <div class="row">하루 새 단계 {[1, 2, 3].map(m => <Opt on={s.settings.newPerDay === m} onClick={() => { setSettings({ newPerDay: m }); done('저장했습니다.'); }}>{m}개</Opt>)}</div>
-      <div class="row">받침·낱말 쓰기 (한 세트에 글자마다) {[5, 10, 15].map(m => <Opt on={s.settings.traceReps === m} onClick={() => { setSettings({ traceReps: m }); done('다음 모험부터 적용됩니다.'); }}>{m}번</Opt>)} <span style={{ color: '#888', fontSize: 18 }}>· 새 글자는 10번씩 4번(총 40번, 마지막 10번은 그림자 없이)</span>
-        <span style={{ fontSize: 16, color: '#868e96' }}>받침·낱말 단계에서 세트마다 글자당 이 횟수만큼 (끝 3번은 그림자 없이 혼자 쓰기)</span></div>
-      <div class="row">받아쓰기 시험 통과 기준 {[60, 80, 100].map(m => <Opt on={(s.settings.testPass || 80) === m} onClick={() => { setSettings({ testPass: m }); done('다음 시험부터 적용됩니다.'); }}>{m}%</Opt>)} <span style={{ color: '#888', fontSize: 18 }}>· 그날 끝 시험에 떨어지면 다음 단계가 안 열리고, 다음날 복습 시험에 떨어지면 전 단계를 다시 공부</span></div>
+      <div class="row" style={{ fontSize: 16, color: '#868e96' }}>하루 사용 시간·하루 새 단계·쓰기 횟수·받아쓰기는 위 '📚 공부량·진도'에서 고칩니다.</div>
       <div class="row" style={{ fontSize: 18, color: '#666' }}>시험 상태: {s.hold ? `복습 시험 불합격 → ${s.hold.lesson + 1}단계 다시 공부 중` : s.lastPass ? `마지막 통과 ${s.lastPass.lesson + 1}단계 (${s.lastPass.items.join(' ')})` : '아직 없음'}</div>
       <div class="row">말 빠르기 {[[0.85, '느리게'], [1, '보통'], [1.15, '빠르게']].map(([v, l]) => <Opt on={s.settings.voiceRate === v} onClick={() => { setSettings({ voiceRate: v as number }); done('저장했습니다.'); }}>{l}</Opt>)}</div>
       <div class="row">배경 음악 <Opt on={s.settings.music} onClick={() => { setSettings({ music: true }); done('저장했습니다.'); }}>켜기</Opt><Opt on={!s.settings.music} onClick={() => { setSettings({ music: false }); done('저장했습니다.'); }}>끄기</Opt></div>
@@ -331,13 +332,7 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
       <h3>최근 2주 (두 기기 합계)</h3>
       <table><tr><th>날짜</th>{hist.map(h => <th>{fmtDay(h.day)}</th>)}</tr><tr><td>분</td>{hist.map(h => <td>{Math.round(h.ms / 60000)}</td>)}</tr><tr><td>새 단계</td>{hist.map(h => <td>{h.lessons}</td>)}</tr></table>
 
-      <h3>단계 이동</h3>
-      <div class="row">
-        <select disabled={storageNeedsRecovery()} style={{ fontSize: 20, padding: 8 }} onChange={(e: any) => jumpTo(+e.target.value)} value={Math.min(s.lessonIdx, LESSONS.length - 1)}>
-          {LESSONS.map((l, i) => <option value={i}>{i + 1}. {UNITS[l.unit - 1].name} · {l.title}</option>)}
-        </select>
-        <span style={{ fontSize: 16, color: '#868e96' }}>앞 단계 글자는 '익힌 것'으로 처리됩니다.</span>
-      </div>
+      <h3>체험 모드</h3>
       <div class="row">
         <Opt on={demo} onClick={() => onDemo(!demo)}>체험 모드 {demo ? '켜짐' : '꺼짐'}</Opt>
         <span style={{ fontSize: 16, color: '#868e96' }}>켜면 시간 제한 없이 모든 단계를 눌러 볼 수 있고, 화면 오른쪽 위 ⏭로 장면을 넘길 수 있습니다. 앱을 다시 열면 꺼집니다.</span>
@@ -382,19 +377,101 @@ function MathParent({ onSaved }: { onSaved: (m: string) => void }) {
       {showWrong && <div class="row" style={{ fontSize: 17, color: '#495057', display: 'block', lineHeight: 1.6 }} data-spell-wrong-list="1">
         {spellWrong(m).map(k => { const q = makeSpellQ(k, () => 0); return q ? <div>• {q.before}<b style={{ color: '#2b8a3e' }}>{q.ans}</b>{q.after} <span style={{ color: '#c92a2a' }}>(틀린 말: {q.wrong})</span></div> : null; })}
       </div>}
-      {CATS.map(c => (
-        <div class="row" style={{ gap: 6 }} data-math-cat={c.id}>{c.icon} {c.name}
-          {c.stages.map((st, i) => <Opt on={m.lv[c.id] === i} onClick={() => { setMathLv(c.id, i); onSaved(`${c.name}을 ${i + 1}단계(${STAGES[st].name} ${STAGES[st].sub})로 바꿨습니다.`); }}>{i + 1}. {STAGES[st].name} · {STAGES[st].sub}</Opt>)}
-        </div>
-      ))}
-      <div class="row" data-math-daymin="1">하루 공부 시간 {DAY_MIN_CHOICES.map(n => <Opt on={m.dayMin === n} onClick={() => { setMathDayMin(n); onSaved(`하루 ${n >= 60 ? `${n / 60}시간` : `${n}분`}으로 바꿨습니다. 오늘 공부한 시간은 그대로 셉니다.`); }}>{n >= 60 ? `${n / 60}시간` : `${n}분`}</Opt>)}
-        <span style={{ fontSize: 16, color: '#868e96' }}>문제 화면에서만 셈(3분 넘게 안 만지면 멈춤) · 시간이 다 되면 풀던 문제까지 풀고 끝 · 한 항목은 하루 {CAT_MAX}문제까지</span></div>
-      <div class="row">문제마다 시간 {TIME_CHOICES.map(([v, l]) => <Opt on={m.timeMul === v} onClick={() => { setMathTime(v); onSaved('다음 문제부터 적용됩니다.'); }}>{l}</Opt>)}
-        <span style={{ fontSize: 16, color: '#868e96' }}>보통: {CATS.map(c => { const [a, b] = catSecRange(c.id); return `${c.name} ${a === b ? a : `${a}~${b}`}초`; }).join(' · ')} · 맞춤법 {SP_SEC_RANGE[0]}~{SP_SEC_RANGE[1]}초(문장이 길수록 넉넉히) (넉넉하게 ×1.5 · 짧게 ×0.75) — 시간이 다 되면 틀린 것으로 하고 정답을 보여 줌</span></div>
+      <div class="row" style={{ fontSize: 16, color: '#868e96' }}>항목마다 단계·하루 공부 시간·하루 문제 수·다음 단계 조건·문제 시간은 위 '📚 공부량·진도'에서 고칩니다.</div>
       <div class="row" style={{ fontSize: 16, color: '#868e96' }}>
-        항목마다 단계가 따로 · 하루 공부 시간이 끝날 때(또는 그 항목을 {CAT_MAX}문제 다 풀 때), 그날 그 항목을 {UP_MIN}문제 이상 풀고 {Math.round(PASS_RATE * 100)}% 이상 맞혔으면 그 항목만 다음 단계(하루 한 단계까지 — 그날 단계를 직접 바꾼 항목은 다음 날 판정) · 정답 {ITEM_EVERY}개마다 꾸미기, {MAT_EVERY}개마다 집 재료와 간식(틀려도 안 가져감, 간식은 수학 '간식 주기'에서 먹임 — 강아지·고양이는 한글처럼 아기부터 간식 점수만큼 자람) ·
+        항목마다 단계가 따로 · 하루 공부 시간이 끝날 때(또는 그 항목을 {catMax()}문제 다 풀 때), 그날 그 항목을 {upMin()}문제 이상 풀고 {Math.round(passRate() * 100)}% 이상 맞혔으면 그 항목만 다음 단계(하루 한 단계까지 — 그날 단계를 직접 바꾼 항목은 다음 날 판정) · 정답 {ITEM_EVERY}개마다 꾸미기, {MAT_EVERY}개마다 집 재료와 간식(틀려도 안 가져감, 간식은 수학 '간식 주기'에서 먹임 — 강아지·고양이는 한글처럼 아기부터 간식 점수만큼 자람) ·
         한글 진도·하루 사용 시간·한글 옷장·한글 집과 따로 · '골고루'만 풀면 항목마다 문제 수가 적어 단계가 거의 안 오름(복습용) · 두 기기 연동됨<br />
-        맞춤법: 속담·명언·좋은 말 문장 속 괄호에서 바른 말 둘 중 하나 고르기(단계 없음, 쉬운 문제가 먼저 나오기 쉬움) · 같은 문장도 괄호 자리를 바꿔 다시 나옴 · 틀린 문제는 다음에 다시 나오고(열 문제쯤 뒤·다음 날), 맞히면 이틀 뒤 한 번 더 확인 · '틀린 문제 다시 풀기'로 따로 풀 수 있음 · 하루 공부 시간·하루 {CAT_MAX}문제·정답 보상은 수학과 같이 셈
+        맞춤법: 속담·명언·좋은 말 문장 속 괄호에서 바른 말 둘 중 하나 고르기(단계 없음, 쉬운 문제가 먼저 나오기 쉬움) · 같은 문장도 괄호 자리를 바꿔 다시 나옴 · 틀린 문제는 다음에 다시 나오고(열 문제쯤 뒤·다음 날), 맞히면 이틀 뒤 한 번 더 확인 · '틀린 문제 다시 풀기'로 따로 풀 수 있음 · 하루 공부 시간·하루 {catMax()}문제·정답 보상은 수학과 같이 셈
+      </div>
+    </>
+  );
+}
+
+// ---------- 부모 설정: 📚 공부량·진도 (11-07 사용자 요청 — "진도랑 하루 공부량이랑 다 디테일하게 내가 일일이 수정할 수 있게,
+//  한글이랑 수학이랑 횟수랑 시간이랑 다") — 값과 범위는 lib/studyCfg.ts, 누를 때마다 바로 저장·연동 ----------
+const GUIDE_NAME: Record<string, string> = { full: '따라 쓰기', faint: '흐린 선', none: '혼자' };
+/** '따라 쓰기 5 · 흐린 선 5' */
+function guideText(gs: string[]) {
+  const n: Record<string, number> = {};
+  gs.forEach(g => { n[g] = (n[g] || 0) + 1; });
+  return ['full', 'faint', 'none'].filter(k => n[k]).map(k => `${GUIDE_NAME[k]} ${n[k]}`).join(' · ');
+}
+const fmtMinute = (n: number) => (n >= 60 && n % 60 === 0 ? `${n / 60}시간` : n > 60 ? `${Math.floor(n / 60)}시간 ${n % 60}분` : `${n}분`);
+
+function StudyParent({ onSaved, jumpTo }: { onSaved: (m: string) => void; jumpTo: (idx: number) => void }) {
+  const s = load();
+  const m = mathState();
+  const Opt = ({ on, children, onClick }: any) => <button class={`opt ${on ? 'on' : ''}`} onClick={onClick}>{children}</button>;
+  const cur = Math.min(s.lessonIdx, LESSONS.length - 1);
+  const lesson = LESSONS[cur];
+  const sets = letterSets();
+  const ls = letterSetCount(), lr = letterReps();
+  const later = '다음 모험부터 적용됩니다. (하던 모험은 그대로)';
+  const dm = s.settings.dailyMin;
+  const cm = catMax(), um = upMin(), up = Math.round(passRate() * 100);
+  return (
+    <>
+      <h3>📚 공부량·진도</h3>
+      <div class="study-note" style={{ margin: '0 0 6px' }}>－ / ＋ 를 누를 때마다 바로 저장되고, 연동된 다른 기기에도 같이 바뀝니다. 기본값: 한글 새 글자 10번×4세트·하루 30분·새 단계 1개 / 수학 하루 30분·항목당 150문제·20문제 이상 90%면 다음 단계.</div>
+
+      <div class="study-box" data-study="h">
+        <h4>한글</h4>
+        <div class="row" data-study-progress="1"><span class="study-lbl">진도</span>
+          <button class="opt" disabled={storageNeedsRecovery() || cur <= 0} onClick={() => jumpTo(cur - 1)}>◀ 앞 단계</button>
+          <select disabled={storageNeedsRecovery()} style={{ fontSize: 20, padding: 8, maxWidth: 520 }} onChange={(e: any) => jumpTo(+e.target.value)} value={cur}>
+            {LESSONS.map((l, i) => <option value={i}>{i + 1}. {UNITS[l.unit - 1].name} · {l.title}</option>)}
+          </select>
+          <button class="opt" disabled={storageNeedsRecovery() || cur >= LESSONS.length - 1} onClick={() => jumpTo(cur + 1)}>다음 단계 ▶</button>
+          <span class="study-note">지금 {cur + 1}/{LESSONS.length}단계 ({UNITS[lesson.unit - 1].name} · {lesson.title}) · 옮기면 앞 단계 글자는 '익힌 것'으로 처리, 오늘 새 단계 수는 0부터</span></div>
+        <div class="row" data-study-row="dailyMin"><span class="study-lbl">하루 사용 시간</span>
+          <Stepper id="dailyMin" value={dm} r={RANGE.dailyMin} fmt={v => (v ? fmtMinute(v) : '제한 없음')} presets={[20, 30, 45, 60]} onSet={v => { setSettings({ dailyMin: v }); onSaved(`한글 하루 사용 시간을 ${fmtMinute(v)}으로 바꿨습니다.`); }} />
+          <Opt on={!dm} onClick={() => { setSettings({ dailyMin: 0 }); onSaved('한글 하루 사용 시간: 제한 없음'); }}>제한 없음</Opt></div>
+        <div class="row" data-study-row="newPerDay"><span class="study-lbl">하루 새 단계</span>
+          <Stepper id="newPerDay" value={s.settings.newPerDay} r={RANGE.newPerDay} fmt={v => `${v}개`} onSet={v => { setSettings({ newPerDay: v }); onSaved(`하루 새 단계를 ${v}개로 바꿨습니다. ('공부 먼저' 한글 학습량도 같은 값)`); }} /></div>
+        <div class="row" data-study-row="letter"><span class="study-lbl">새 글자 쓰기</span>
+          <Stepper id="ls" value={ls} r={RANGE.ls} fmt={v => `${v}세트`} onSet={v => { setStudy({ ls: v }); onSaved(`새 글자 쓰기 ${v}세트 × ${lr}번 = 글자마다 ${v * lr}번. ${later}`); }} />
+          <span>×</span>
+          <Stepper id="lr" value={lr} r={RANGE.lr} fmt={v => `${v}번`} presets={[5, 10]} onSet={v => { setStudy({ lr: v }); onSaved(`새 글자 쓰기 ${ls}세트 × ${v}번 = 글자마다 ${ls * v}번. ${later}`); }} />
+          <b data-letter-total={ls * lr}>= 글자마다 {ls * lr}번 · 놀이 {ls}판</b></div>
+        <div class="row study-note" style={{ display: 'block', margin: '0 0 8px', lineHeight: 1.6 }} data-letter-plan="1">
+          {sets.map((g, i) => <span>{i + 1}세트: {guideText(g)} → 놀이{i < sets.length - 1 ? ' / ' : ''}</span>)}<br />
+          세트 수 = 세트 사이 놀이 수. 처음 세트는 따라 쓰기(화살표·번호), 뒤로 갈수록 흐린 선 → 그림자 없이 혼자 쓰기로 바뀝니다.
+        </div>
+        <div class="row" data-study-row="traceReps"><span class="study-lbl">받침·낱말 쓰기 (세트마다)</span>
+          <Stepper id="traceReps" value={Math.max(1, Math.min(15, s.settings.traceReps || 10))} r={RANGE.traceReps} fmt={v => `${v}번`} presets={[5, 10, 15]} onSet={v => { setSettings({ traceReps: v }); onSaved(`받침·낱말 단계 쓰기를 세트마다 ${v}번으로 바꿨습니다. ${later}`); }} />
+          <span class="study-note">받침·낱말·복습 단계는 3세트(사이사이 놀이), 끝 몇 번은 혼자 쓰기</span></div>
+        <div class="row" data-study-row="dict"><span class="study-lbl">받아쓰기 시험</span>
+          <span>글자마다</span>
+          <Stepper id="dr" value={dictReps()} r={RANGE.dr} fmt={v => `${v}번`} onSet={v => { setStudy({ dr: v }); onSaved(`받아쓰기는 글자마다 ${v}번 묻습니다. 다음 시험부터 적용됩니다.`); }} />
+          <span>통과</span>
+          <Stepper id="testPass" value={s.settings.testPass || 80} r={RANGE.testPass} fmt={v => `${v}%`} onSet={v => { setSettings({ testPass: v }); onSaved(`받아쓰기 통과 기준을 ${v}%로 바꿨습니다. 다음 시험부터 적용됩니다.`); }} /></div>
+        <div class="row study-note" style={{ margin: '0 0 6px' }}>그날 끝 시험에 떨어지면 다음 단계가 안 열리고, 다음날 복습 시험에 떨어지면 전 단계를 다시 공부합니다(이 규칙은 그대로).</div>
+      </div>
+
+      <div class="study-box" data-study="m">
+        <h4>수학·맞춤법{m.name ? ` (${m.name})` : ''}</h4>
+        {CATS.map(c => (
+          <div class="row" style={{ gap: 6 }} data-math-cat={c.id}><span class="study-lbl">{c.icon} {c.name} 진도</span>
+            {c.stages.map((st, i) => <Opt on={m.lv[c.id] === i} onClick={() => { setMathLv(c.id, i); onSaved(`${c.name}을 ${i + 1}단계(${STAGES[st].name} ${STAGES[st].sub})로 바꿨습니다.`); }}>{i + 1}. {STAGES[st].name} · {STAGES[st].sub}</Opt>)}
+          </div>
+        ))}
+        <div class="row" data-math-daymin="1"><span class="study-lbl">하루 공부 시간</span>
+          <Stepper id="dayMin" value={m.dayMin} r={RANGE.dayMin} fmt={fmtMinute} presets={DAY_MIN_CHOICES} onSet={v => { setMathDayMin(v); onSaved(`수학·맞춤법 하루 공부 시간을 ${fmtMinute(v)}으로 바꿨습니다. 오늘 공부한 시간은 그대로 셉니다.`); }} />
+          <span class="study-note">문제 화면에서만 셈(3분 넘게 안 만지면 멈춤) · 다 되면 풀던 문제까지 풀고 끝</span></div>
+        <div class="row" data-study-row="cm"><span class="study-lbl">한 항목 하루 최대</span>
+          <Stepper id="cm" value={cm} r={RANGE.cm} fmt={v => `${v}문제`} presets={[50, 100, 150]} onSet={v => { setStudy({ cm: v }); onSaved(`덧셈·뺄셈·곱셈·나눗셈·맞춤법은 하루 항목마다 ${v}문제까지 풉니다.`); }} /></div>
+        <div class="row" data-study-row="up"><span class="study-lbl">다음 단계 조건</span>
+          <span>그날</span>
+          <Stepper id="um" value={um} r={RANGE.um} fmt={v => `${v}문제 이상`} onSet={v => { setStudy({ um: v }); onSaved(`그날 그 항목을 ${v}문제 이상 풀고 ${up}% 이상 맞히면 다음 단계로 갑니다.`); }} />
+          <Stepper id="up" value={up} r={RANGE.up} fmt={v => `${v}% 이상`} onSet={v => { setStudy({ up: v }); onSaved(`그날 그 항목을 ${um}문제 이상 풀고 ${v}% 이상 맞히면 다음 단계로 갑니다.`); }} /></div>
+        {um > cm && <div class="row" style={{ color: '#c92a2a', fontSize: 18 }} data-study-warn="up">⚠️ 다음 단계에 필요한 문제 수({um})가 하루 최대({cm})보다 많아 단계가 오르지 않습니다.</div>}
+        <div class="row study-note" style={{ margin: '0 0 6px' }}>공부 시간이 끝날 때(또는 그 항목을 하루 최대까지 풀 때) 판정 · 하루 한 단계까지</div>
+        <div class="row" data-study-row="timeMul"><span class="study-lbl">문제마다 시간</span>
+          <Stepper id="timeMul" value={m.timeMul} r={RANGE.timeMul} fmt={v => (v ? `×${v}` : '끄기')} presets={TIME_CHOICES.filter(([v]) => v > 0).map(([v]) => v)} onSet={v => { setMathTime(v); onSaved(`문제 시간 ×${v} — 다음 문제부터 적용됩니다.`); }} />
+          <Opt on={m.timeMul === 0} onClick={() => { setMathTime(0); onSaved('문제 시간 제한을 껐습니다.'); }}>끄기</Opt></div>
+        <div class="row study-note" style={{ margin: '0 0 6px' }}>
+          {m.timeMul ? <>지금 문제 시간: {CATS.map(c => { const [a, b] = catSecRange(c.id); const f = (x: number) => Math.round(x * m.timeMul); return `${c.name} ${a === b ? f(a) : `${f(a)}~${f(b)}`}초`; }).join(' · ')} · 맞춤법 {Math.round(SP_SEC_RANGE[0] * m.timeMul)}~{Math.round(SP_SEC_RANGE[1] * m.timeMul)}초 (×1 = 보통)</> : '문제 시간 제한 없음'} — 시간이 다 되면 틀린 것으로 하고 정답을 보여 줌
+        </div>
       </div>
     </>
   );

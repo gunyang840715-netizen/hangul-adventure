@@ -91,6 +91,8 @@
 13. 공부 먼저(10-28 사용자 요청 — 10장 K): 분량 설정은 새 State 칸이 아니라 기존 `settings` 주머니 안의 선택 키 `settings.gate`({h:{mode,min,n,free}, m:{…}} — 형식은 `lib/gate.ts`의 `declare module` 확장)에만 쓴다.
     `store.ts`의 State 구조·`shared/merge.js`·저장 키는 그대로(settings는 settingsT 나중에 바꾼 쪽이 이김, 예전 저장 데이터엔 칸이 없고 코드 기본값 `GATE_DEFAULT`). 백업·연동 검사(isBackupPayload·isSyncPayload)와 합치기는 gate_check가 확인한다.
     분량 판정은 이미 세는 값(한글 usage·lessonsByDay·newPerDay, 수학 State.math.ms·correct)만 읽고 새 기록을 만들지 않는다. 잠금은 화면 이동만 막고 진도·수학 기록·꾸미기·집·간식 데이터는 바꾸지 않는다.
+14. 공부량 자세히(11-07 사용자 요청 — AGENTS.md '공부량 자세히'): 부모가 고치는 새 값은 기존 `settings` 주머니 안의 선택 키 `settings.study`에만 쓴다(형식은 `lib/studyCfg.ts`의 `declare module` 확장).
+    기존 칸은 범위만 넓힘(수학 dayMin 5~180분·timeMul 0.25 단위는 `normalizeMath`). State 구조·`shared/merge.js`·저장 키는 그대로, 검사 `study_cfg_check`.
 
 ## 6. 이름 (반영함)
 

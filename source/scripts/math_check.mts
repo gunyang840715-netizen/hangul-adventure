@@ -222,7 +222,12 @@ for (let k = 0; k < 25; k++) ms.answerMath(true, 'mul');
 assert.deepEqual(timeUpNow(), [], '1시간이 끝날 때: 곱셈은 오늘 이미 올라서 그대로');
 assert.equal(ms.mathState().lv.mul, 2);
 ms.setMathDayMin(30);
-assert.equal(normalizeMath({ dayMin: 45 })!.dayMin, DAY_MIN, '30분·1시간이 아니면 30분');
+assert.equal(normalizeMath({ dayMin: 45 })!.dayMin, 45, '11-07부터 5~180분(5분 단위)은 그대로');
+assert.equal(normalizeMath({ dayMin: 47 })!.dayMin, DAY_MIN, '5분 단위가 아니면 30분');
+assert.equal(normalizeMath({ dayMin: 0 })!.dayMin, DAY_MIN, '0분은 30분');
+assert.equal(normalizeMath({ dayMin: 999 })!.dayMin, DAY_MIN, '180분 넘으면 30분');
+assert.equal(normalizeMath({ timeMul: 2.25 })!.timeMul, 2.25, '문제 시간 배율 0.25 단위');
+assert.equal(normalizeMath({ timeMul: 0.3 })!.timeMul, 1, '0.25 단위가 아니면 보통');
 assert.equal(normalizeMath({ dayMin: 60 })!.dayMin, 60);
 assert.deepEqual(normalizeMath({ ms: { x: 1, '20700': { e: 5, f: -1 } } })!.ms, { '20700': { e: 5 } });
 // 그날 부모가 단계를 직접 바꾼 항목은 그날 시간 끝에 또 오르지 않음 (다음 날 판정)

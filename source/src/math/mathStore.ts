@@ -4,7 +4,8 @@ import { sumMap } from '../../shared/merge.js';
 import { load, save, flushSave, dev, today, type Wear, type PetView } from '../engine/store';
 import { randomItemFrom, randomSnack } from '../engine/gifts';
 import { PET, BUILDS, BUILD, SNACK, levelOf, stageOf, type Slot, type Species } from '../data/pets';
-import { freshMath, ITEM_EVERY, MAT_EVERY, SNACK_EVERY, PASS_RATE, UP_MIN, CAT_MAX, CATS, SP_CAT, type Cat, type AnyCat, type MathState } from './mathData';
+import { freshMath, ITEM_EVERY, MAT_EVERY, SNACK_EVERY, CATS, SP_CAT, type Cat, type AnyCat, type MathState } from './mathData';
+import { catMax, upMin, passRate } from '../lib/studyCfg';
 import { spNext, spCode, spOf, spWrongKeys, SP_KEYS, SP_WRONG } from './spellData';
 
 /** 읽기용 (아직 수학을 안 했으면 처음 상태) */
@@ -39,7 +40,7 @@ export function todayCat(cat: AnyCat, m = mathState()) {
 /** 오늘 공부 시간을 다 썼나 */
 export const mathTimeUp = (m = mathState()) => { const t = todayMath(m); return t.ms >= t.limitMs; };
 /** 오늘 그 항목을 150문제 다 풀었나 (맞춤법도 하루 150문제까지) */
-export const catFull = (cat: AnyCat, m = mathState()) => todayCat(cat, m).solved >= CAT_MAX;
+export const catFull = (cat: AnyCat, m = mathState()) => todayCat(cat, m).solved >= catMax();
 /** 오늘 더 풀 수 있는 항목 (골고루는 이 항목들만 섞어 냄) */
 export const openCats = (m = mathState()): Cat[] => CATS.map(c => c.id).filter(c => !catFull(c, m));
 export const mathTotalCorrect = (m = mathState()) => sumMap(m.total) as number;
@@ -56,7 +57,7 @@ function judge(m: MathState, cats: Cat[]): Cat[] {
   for (const c of CATS) {
     if (!cats.includes(c.id)) continue;
     const r = todayCat(c.id, m);
-    if (r.solved < UP_MIN || r.correct < Math.ceil(r.solved * PASS_RATE)) continue;
+    if (r.solved < upMin() || r.correct < Math.ceil(r.solved * passRate())) continue;
     if (m.lv[c.id] >= c.stages.length - 1) continue;
     const t = m.lvT[c.id];
     if (t && dayOf(t) === day) continue;
@@ -99,7 +100,7 @@ function record(m: MathState, ok: boolean, cat: AnyCat): AnswerResult {
   // 간식: 정답 5개마다 하나 (종류는 한글 선물과 같은 비율로 무작위, 수학 간식 칸에만)
   let snack: string | null = null;
   if (ok && mathTotalCorrect(m) % SNACK_EVERY === 0) { snack = randomSnack(); bump(m.snacks[snack] ||= {}); }
-  const catDone = before < CAT_MAX && todayCat(cat, m).solved >= CAT_MAX;
+  const catDone = before < catMax() && todayCat(cat, m).solved >= catMax();
   const ups = catDone && cat !== SP_CAT ? judge(m, [cat]) : [];
   save();
   return { item, mat, snack, catDone, ups };

@@ -12,7 +12,8 @@ import { MatIcon } from '../art/Build';
 import { sfx } from '../engine/audio';
 import { syncSoon } from '../engine/sync';
 import { ITEM, ITEM_LIST } from '../data/pets';
-import { ITEM_EVERY, CAT_MAX, IDLE_MS, SP_CAT } from '../math/mathData';
+import { ITEM_EVERY, IDLE_MS, SP_CAT } from '../math/mathData';
+import { catMax } from '../lib/studyCfg';
 import { makeSpellQ, pickSpell, type SpQ } from '../math/spellData';
 import { mathState, todayMath, todayCat, answerSpell, addMathMs, mathTimeUp, catFull, toNextItem, mathPet, mathPetInfo, mathWear, mathWho, mathMatsLeft, mathSnackTotal, spellWrong } from '../math/mathStore';
 import { TodaySummary, leftText, useCountdown } from './MathScreen';
@@ -131,7 +132,7 @@ export function SpellScreen({ review, onBack, onCloset, onMore }: { review: bool
   const frac = limit ? left / limit : 1;
   const shown = q ? q.before + `(${q.opts[0]}, ${q.opts[1]})` + q.after : '';   // 글자 크기는 괄호까지 넣은 길이로 (답한 뒤에도 같은 크기)
   const title = review ? '🔁 틀린 문제 다시 풀기' : '✍️ 맞춤법';
-  const head = done === 'time' ? '오늘 공부 끝! 🎉' : done === 'fixed' ? '틀린 문제를 모두 고쳤어! 🎉' : `오늘 맞춤법 ${CAT_MAX}문제 끝! 🎉`;
+  const head = done === 'time' ? '오늘 공부 끝! 🎉' : done === 'fixed' ? '틀린 문제를 모두 고쳤어! 🎉' : `오늘 맞춤법 ${catMax()}문제 끝! 🎉`;
   const rate = tc.solved ? Math.round(tc.correct / tc.solved * 100) : 0;
   return (
     <div class="screen" data-spell={review ? 'review' : 'all'}>
@@ -141,7 +142,7 @@ export function SpellScreen({ review, onBack, onCloset, onMore }: { review: bool
         <div class="pill" style={{ position: 'absolute', left: 112, top: 24, fontSize: 25 }}>{title}</div>
         <div class="pill" style={{ position: 'absolute', right: 24, top: 24, fontSize: 25 }} data-count="1">
           <span data-left={Math.ceil(t.leftMs / 1000)} style={{ color: lastOne || t.leftMs <= 0 ? '#c92a2a' : undefined }}>⏳ {lastOne ? '시간 끝' : leftText(t.leftMs)}</span>
-          {' · '}📝 {Math.min(tc.solved + live, CAT_MAX)} / {CAT_MAX} · ⭕ {tc.correct}{review ? ` · 남은 틀린 문제 ${wrongLeft}` : ''}
+          {' · '}📝 {Math.min(tc.solved + live, catMax())} / {catMax()} · ⭕ {tc.correct}{review ? ` · 남은 틀린 문제 ${wrongLeft}` : ''}
         </div>
         <div class="pill" style={{ position: 'absolute', right: 24, top: 86, fontSize: 22 }}>
           🎁 {allGot ? '꾸미기 다 모음!' : <span style={{ letterSpacing: 2 }}>{'●'.repeat(filled)}{'○'.repeat(ITEM_EVERY - filled)}</span>}

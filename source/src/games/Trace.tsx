@@ -8,7 +8,7 @@ import { pick, decompose } from '../lib/hangul';
 import { Buddies } from './Buddies';
 import { useScene, praise, spoken, cue, sayCue, CUE_GAP, Speaker, useTurn, type GameProps } from './common';
 import { record } from '../engine/srs';
-import { REPS_START, REPS_DONE, REPS_MORE, REPS_LAST, REPS_ALL, REPS_ALL40 } from '../data/voice';
+import { REPS_MORE, REPS_LAST, REPS_ALL, REPS_ALL40, REPS_ALL_ANY, repsStartLine, repsDoneLine } from '../data/voice';
 import { buddy } from '../engine/bus';
 
 const PAD = 8, SPAN = 100 + PAD * 2;
@@ -283,8 +283,9 @@ export function TraceSet({ step, onDone, outfit }: GameProps<'traceSet'>) {
   const turn = useTurn();
   const cur = order[Math.min(k, order.length - 1)];
   const guide = guideAt(cur.r);
-  const startLine = part === 0 || reps !== 10 ? (REPS_START[reps] ?? '열 번 써 보자!') : part >= parts - 1 ? REPS_LAST : REPS_MORE;
-  const doneLine = parts > 1 && part >= parts - 1 && total === 40 ? REPS_ALL40 : parts > 1 && part >= parts - 1 && total === 30 ? REPS_ALL : (REPS_DONE[reps] ?? '열 번 다 썼어! 대단해!');
+  // 횟수·세트 수는 부모 설정으로 바뀜(11-07) — 녹음된 말(10번·40번·30번)이 맞을 때만 쓰고, 아니면 그 횟수의 새 말(기기 음성)
+  const startLine = part === 0 || reps !== 10 ? repsStartLine(reps) : part >= parts - 1 ? REPS_LAST : REPS_MORE;
+  const doneLine = parts > 1 && part >= parts - 1 ? (total === 40 ? REPS_ALL40 : total === 30 ? REPS_ALL : REPS_ALL_ANY) : repsDoneLine(reps);
 
   // 쓸 때마다 글자 이름과 소리를 한 번씩 ("기역" "그"), 새 세트·새 단계면 안내 한마디 — 말하는 중에도 바로 쓸 수 있음
   useEffect(() => {

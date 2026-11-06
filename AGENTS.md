@@ -54,6 +54,15 @@ GitHub Pages로 바로 공개되는 **공개 저장소**이고, 태블릿에서 
 - 막힌 날이 없게: 끄기 · 부모 설정 '오늘은 바로 열어 주기'(그날만) · 체험 모드·`?screen=`/`?play=` 시험 주소는 안 잠금 · 한글 모험을 다 끝냈으면 열림 · 시간이 하루 사용 시간 이상이면 부모 설정에 경고.
 - 새 화면을 더하면 `GATE_SCREENS`에서 잠글지 정한다(`scripts/gate_check.mts`가 App의 모든 화면이 분류됐는지 확인). 분량·잠그는 곳·기본값은 사용자가 직접 말할 때만 바꾼다. 새 말 4문장(`voice.ts` `GATE_*`)은 녹음 없음(기기 음성).
 
+## 공부량 자세히 — 부모가 횟수·시간·진도를 고침 (2026-11-07 사용자 요청)
+
+- 부모 설정 '📚 공부량·진도'(`screens/Extras.tsx` StudyParent, －/＋ 칸 `screens/Stepper.tsx`)에서 바로 고친다. 값·범위·기본값은 `source/src/lib/studyCfg.ts`(`RANGE`).
+  한글: 진도(앞·다음 단계·고르기) · 하루 사용 시간 5~180분/제한 없음 · 하루 새 단계 1~10 · 새 글자 쓰기 세트 1~8 × 세트당 1~15번(`letterSets()` — 기본 4×10은 `LETTER_SETS` 그대로) · 받침·낱말 쓰기 1~15번 · 받아쓰기 글자마다 1~4번·통과 10~100%.
+  수학·맞춤법: 항목별 진도 · 하루 공부 시간 5~180분 · 한 항목 하루 최대 10~500문제(`catMax()`) · 다음 단계 조건 그날 5~200문제·50~100%(`upMin()`·`passRate()`) · 문제 시간 ×0.25~3/끄기.
+- 저장: 새 State 칸 없음 — 기존 칸(settings.dailyMin·newPerDay·traceReps·testPass, State.math.dayMin·timeMul)은 범위만 넓힘, 새 값은 settings 안의 선택 키 `settings.study`({ls,lr,dr,cm,um,up}). 칸이 없거나 범위 밖이면 기본값 = 예전 규칙.
+- 공부 먼저(분량) 칸도 －/＋(5분·5개 단위). 세트·횟수가 녹음 말과 다르면 새 말(`voice.ts` `repsStartLine`·`repsDoneLine`·`REPS_ALL_ANY`, 녹음 없음). 검사 `scripts/study_cfg_check.mts`(learning_rules_check 끝에서 실행).
+- 기본값·범위는 사용자가 직접 말할 때만 바꾼다. 받아쓰기 불합격 규칙·다음날 복습·오답 회수·보상 간격은 그대로.
+
 ## 구조
 
 | 위치 | 내용 | 고쳐도 되나 |

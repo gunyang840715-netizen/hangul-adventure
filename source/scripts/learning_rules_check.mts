@@ -94,3 +94,5 @@ console.log(`새 글자 ${letters}개 40회·혼자 쓰기·${LESSONS.length}레
 await import('./level_unlock_check.mts');
 // 공부 먼저(10-28): 오늘 공부 분량을 채워야 꾸미기·집 짓기 같은 공부 아닌 화면이 열림(분량은 부모 설정에서 시간 또는 학습량) — 검사는 따로 파일
 await import('./gate_check.mts');
+// 공부량 자세히 (11-07 사용자 요청 — 세트 수·횟수·받아쓰기·수학 하루 문제·다음 단계 조건 부모 설정)
+await import('./study_cfg_check.mts');

@@ -256,6 +256,7 @@ export function allLines(name: string): string[] {
   L.add(STUDY_NO_SNACK);
   levelLines().forEach(l => L.add(l));
   gateLines().forEach(l => L.add(l));
+  studyLines().forEach(l => L.add(l));
   L.delete('');
   return [...L];
 }
@@ -337,3 +338,18 @@ export const GATE_HINT = '오늘 공부를 마치면 우리 집에서 놀 수 �
 export const GATE_SNACK_WAIT = '간식이 있어! 공부를 마치면 먹여 줄 수 있어!';
 /** 공부 먼저 말 전부 (allLines에 넣음) */
 export function gateLines(): string[] { return [GATE_LOCKED, GATE_OPENED, GATE_HINT, GATE_SNACK_WAIT]; }
+// ---- 공부량 자세히 (11-07 사용자 요청: 부모 설정에서 쓰기 횟수·세트 수를 마음대로 — lib/studyCfg.ts) ----
+// 녹음 없음 → 기기 음성. 5·10·15번은 위의 녹음된 말(REPS_START·REPS_DONE)을 그대로 쓴다
+const COUNT_WORD = ['한', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열', '열한', '열두', '열세', '열네', '열다섯'];
+/** 'N번 써 보자!' (1~15) */
+export const repsStartLine = (n: number) => REPS_START[n] ?? `${COUNT_WORD[Math.max(1, Math.min(15, n)) - 1]} 번 써 보자!`;
+/** 'N번 다 썼어! 대단해!' (1~15) */
+export const repsDoneLine = (n: number) => REPS_DONE[n] ?? `${COUNT_WORD[Math.max(1, Math.min(15, n)) - 1]} 번 다 썼어! 대단해!`;
+/** 새 글자 세트를 모두 끝냈을 때 (40번·30번이 아닐 때) */
+export const REPS_ALL_ANY = '오늘 글자를 모두 다 썼어! 정말 대단해!';
+/** 공부량 말 전부 (allLines에 넣음) */
+export function studyLines(): string[] {
+  const L: string[] = [REPS_ALL_ANY];
+  for (let n = 1; n <= 15; n++) L.push(repsStartLine(n), repsDoneLine(n));
+  return L;
+}

@@ -52,13 +52,14 @@ export const SP_INFO = { id: SP_CAT as AnyCat, icon: '✍️', name: '맞춤법'
 export const PER_DAY = 50;                // (예전) 하루 문제 수 기본값 — perDay 칸 읽기용으로만 남김
 export const DAY_MIN = 30;                // 하루 공부 시간 기본 30분 (10-24 사용자 요청)
 export const DAY_MIN_CHOICES = [30, 60];  // 부모 설정: 30분 · 1시간
-export const CAT_MAX = 150;               // 한 항목(덧셈·뺄셈·곱셈·나눗셈)은 하루 150문제까지 (10-24 사용자 요청)
+export const DAY_MIN_RANGE = [5, 180] as const;   // 11-07부터 부모 설정에서 5분 단위로 (DAY_MIN_CHOICES는 빠른 선택)
+export const CAT_MAX = 150;               // 한 항목(덧셈·뺄셈·곱셈·나눗셈)은 하루 150문제까지 (10-24 사용자 요청) — 11-07부터 기본값, 부모 설정에서 바꿈(lib/studyCfg.ts catMax())
 export const IDLE_MS = 180000;            // 3분 넘게 안 만지면 공부 시간을 안 셈 (한글 사용 시간과 같은 기준)
 export const ITEM_EVERY = 10;             // 정답 10개마다 꾸미기 하나
 export const MAT_EVERY = 5;               // 정답 5개마다 집 짓기·꾸미기 재료 하나
 export const SNACK_EVERY = 5;             // 정답 5개마다 간식 하나 (10-24 사용자 요청 — 수학 강아지·고양이에게 먹이기)
-export const PASS_RATE = 0.9;             // 그날 그 항목 문제의 90% 이상 맞히면 그 항목 다음 단계
-export const UP_MIN = 20;                 // 그 항목을 그날 이만큼은 풀어야 다음 단계 판정
+export const PASS_RATE = 0.9;             // 그날 그 항목 문제의 90% 이상 맞히면 그 항목 다음 단계 — 11-07부터 기본값(passRate())
+export const UP_MIN = 20;                 // 그 항목을 그날 이만큼은 풀어야 다음 단계 판정 — 11-07부터 기본값(upMin())
 export const TIME_CHOICES: [number, string][] = [[1.5, '넉넉하게'], [1, '보통'], [0.75, '짧게'], [0, '끄기']];
 const PLACES = ['doghouse', 'cathouse', 'park', 'doghouse-out', 'cathouse-out'];
 
@@ -143,7 +144,8 @@ export function normalizeMath(o: any): MathState | undefined {
   m.lv = lv;
   m.lvT = timeMap(o.lvT, isCat);
   m.solvedC = dayMap(o.solvedC, dayCatKey); m.correctC = dayMap(o.correctC, dayCatKey);
-  m.timeMul = TIME_CHOICES.some(([v]) => v === o.timeMul) ? o.timeMul : 1;
+  // 11-07 사용자 요청(공부량 자세히): 문제 시간 배율은 끄기(0) 또는 0.25~3배 (0.25 단위) — 예전 값(1.5·1·0.75·0)도 그대로
+  m.timeMul = isNum(o.timeMul) && (o.timeMul === 0 || (o.timeMul >= 0.25 && o.timeMul <= 3 && Math.abs(o.timeMul * 4 - Math.round(o.timeMul * 4)) < 1e-9)) ? o.timeMul : 1;
   m.timeMulT = isNum(o.timeMulT) ? o.timeMulT : 0;
   m.name = typeof o.name === 'string' ? o.name.trim().slice(0, 10) : '';
   m.nameT = isNum(o.nameT) ? o.nameT : 0;
@@ -161,7 +163,8 @@ export function normalizeMath(o: any): MathState | undefined {
   }
   m.decoT = timeMap(o.decoT, k => PLACES.includes(k));
   // 3차(10-24): 하루 공부 시간 · 공부한 시간 (없으면 30분 · 아직 0)
-  m.dayMin = DAY_MIN_CHOICES.includes(o.dayMin) ? o.dayMin : DAY_MIN;
+  // 11-07 사용자 요청(공부량 자세히): 하루 공부 시간은 5~180분 (5분 단위) — 예전 값(30·60)도 그대로
+  m.dayMin = isNum(o.dayMin) && o.dayMin >= DAY_MIN_RANGE[0] && o.dayMin <= DAY_MIN_RANGE[1] && o.dayMin % 5 === 0 ? o.dayMin : DAY_MIN;
   m.dayMinT = isNum(o.dayMinT) ? o.dayMinT : 0;
   m.ms = dayMap(o.ms);
   // 4차(10-24): 수학 간식 — 모르는 간식·친구는 버림

@@ -328,16 +328,11 @@ def item_affines(fr):
     sx, sy = rx / 46.0, ry / 34.0
     cy = fr['neck'][1] + (fr['ground'] - fr['neck'][1]) * 0.42
     clothes = [sx, 0, 0, sy, fr['chest'][0] - 100 * sx, cy - 158 * sy]
-    # 신발: 옛 발 (80,186)·(120,186) → 새 앞발
-    # 앞발은 대개 두 눈 아래(조금 안쪽). 옛 신발 두 짝 간격 40 → 새 앞발 간격
-    ss = 0.95 * fr['eyeDist'] / 40.0
-    pcx = (fr['eL'][0] + fr['eR'][0]) / 2
-    shoes = [ss, 0, 0, ss, pcx - 100 * ss, fr['ground'] - 0.01 * TEX - 188 * ss]
     # 장난감: 옛 (24,176) → 몸 왼쪽 바닥
     st = sn
     toy = [st, 0, 0, st, fr['bboxT'][0][0] - 6 - 24 * st + 30 * st, fr['ground'] - 6 - 176 * st]
     r = lambda v: [round(float(x), 4) for x in v]
-    return dict(head=r(head), hatDy=round(float(hat_dy), 1), neck=r(neck), clothes=r(clothes), shoes=r(shoes), toy=r(toy))
+    return dict(head=r(head), hatDy=round(float(hat_dy), 1), neck=r(neck), clothes=r(clothes), toy=r(toy))
 
 # ---------------------------------------------------------------------------------------------
 def split_frames(S, cols, rows, n):

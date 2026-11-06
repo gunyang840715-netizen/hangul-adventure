@@ -26,7 +26,7 @@ for (const sl of SLOTS) {
   assert.ok(!canWear(sl, 1), `Lv.1에는 ${sl}을 못 입음 (레벨업을 해야 입힘)`);
   assert.ok(canWear(sl, WEAR_LV[sl]) && !canWear(sl, WEAR_LV[sl] - 1), `${sl}은 Lv.${WEAR_LV[sl]}부터`);
 }
-assert.deepEqual(SLOTS.map(sl => WEAR_LV[sl]), [2, 3, 4, 5, 6, 7], '옷장 칸 순서(모자·옷·안경·목걸이·신발·장난감)대로 한 레벨에 하나씩');
+assert.deepEqual(SLOTS.map(sl => WEAR_LV[sl]), [2, 3, 4, 5, 6], '옷장 칸 순서(모자·옷·안경·목걸이·장난감)대로 한 레벨에 하나씩');
 for (const b of BUILDS) {
   const t = BUILD_LV[b.id];
   assert.equal(t.length, b.parts.length, `${b.name}: 부품마다 레벨`);
@@ -70,12 +70,13 @@ assert.deepEqual(opensFor(1, 2, 'dog', 1, none), [{ kind: 'wear', slot: 'hat' },
 assert.deepEqual(opensFor(1, 2, 'cat', 1, none), [{ kind: 'wear', slot: 'hat' }, { kind: 'build', id: 'cathouse', parts: ['바닥', '벽'] }], 'Lv.2 고양이: 모자 + 고양이 집 바닥·벽');
 assert.deepEqual(opensFor(1, 2, 'dog', 1, id => (id === 'doghouse' ? 1 : 0)), [{ kind: 'wear', slot: 'hat' }, { kind: 'build', id: 'doghouse', parts: ['벽'] }], '이미 지은 바닥은 빼고 알려 줌');
 assert.deepEqual(opensFor(4, 5, 'dog', 1, id => (id === 'doghouse' ? 8 : 0)), [{ kind: 'wear', slot: 'neck' }], '다 지은 집은 알려 주지 않음');
-assert.deepEqual(opensFor(6, 7, 'dog', 3, none), [{ kind: 'wear', slot: 'toy' }, { kind: 'build', id: 'park', parts: ['모래밭', '미끄럼틀'] }], 'Lv.7: 장난감 + 놀이터');
-assert.deepEqual(opensFor(6, 7, 'dog', 8, none), [{ kind: 'wear', slot: 'toy' }], '고양이가 이미 Lv.8이면 놀이터 앞부분은 벌써 열려 있음');
+assert.deepEqual(opensFor(5, 6, 'dog', 3, none), [{ kind: 'wear', slot: 'toy' }], 'Lv.6: 장난감');
+assert.deepEqual(opensFor(6, 7, 'dog', 3, none), [{ kind: 'build', id: 'park', parts: ['모래밭', '미끄럼틀'] }], 'Lv.7: 놀이터');
+assert.deepEqual(opensFor(6, 7, 'dog', 8, none), [], '고양이가 이미 Lv.8이면 놀이터 앞부분은 벌써 열려 있음');
 assert.deepEqual(opensFor(9, 10, 'cat', 1, id => (id === 'park' ? 7 : 0)), [{ kind: 'build', id: 'park', parts: ['벤치'] }], 'Lv.10: 남은 놀이터 부분만');
 assert.equal(opensFor(1, 3, 'dog', 1, none).length, 4, '두 레벨을 한꺼번에 올라도 빠짐없이');
 assert.deepEqual(nextOpens(MAX_LEVEL, 'dog', 1, none), [], '최고 레벨이면 다음 없음');
-assert.deepEqual(nextOpens(5, 'dog', 1, none), [{ kind: 'wear', slot: 'shoes' }], 'Lv.5 다음은 신발');
+assert.deepEqual(nextOpens(5, 'dog', 1, none), [{ kind: 'wear', slot: 'toy' }], 'Lv.5 다음은 장난감');
 
 // 말: 숫자 조사·allLines에 다 있음·빈 말 없음
 assert.deepEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(V.lvGa), ['레벨 1이', '레벨 2가', '레벨 3이', '레벨 4가', '레벨 5가', '레벨 6이', '레벨 7이', '레벨 8이', '레벨 9가', '레벨 10이']);

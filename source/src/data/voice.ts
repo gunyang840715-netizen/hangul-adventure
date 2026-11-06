@@ -298,7 +298,7 @@ export const STUDY_NO_SNACK = '간식이 없어! 문제를 맞히면 받을 수 
 export const lvGa = (n: number) => `레벨 ${n}${[2, 4, 5, 9].includes(n % 10) ? '가' : '이'}`;
 /** 레벨업 창: '뭉치가 레벨 3이 됐어!' */
 export const levelUpLine = (name: string, lv: number) => `${iga(name)} ${lvGa(lv)} 됐어!`;
-const WEAR_DO: Record<Slot, string> = { hat: '모자를 쓸', clothes: '옷을 입을', glasses: '안경을 쓸', neck: '목걸이를 할', shoes: '신발을 신을', toy: '장난감을 줄' };
+const WEAR_DO: Record<Slot, string> = { hat: '모자를 쓸', clothes: '옷을 입을', glasses: '안경을 쓸', neck: '목걸이를 할', toy: '장난감을 줄' };
 /** 새로 열림: '이제 옷을 입을 수 있어!' */
 export const wearOpenLine = (slot: Slot) => `이제 ${WEAR_DO[slot]} 수 있어!`;
 /** 아직 잠김(옷장): '뭉치가 레벨 3이 되면 옷을 입을 수 있어!' */

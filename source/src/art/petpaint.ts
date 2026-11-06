@@ -23,7 +23,7 @@ export interface PaintRig {
   cat: boolean; ears: string;
   grid: number;                                // 격자 한 변의 꼭짓점 수
   w: string;                                   // 꼭짓점마다 머리·왼귀·오른귀·꼬리·꼬리끝 가중치(0~255) — 0이 많아 [0,개수]로 줄여 base64
-  items: { head: number[]; hatDy: number; neck: number[]; clothes: number[]; shoes: number[]; toy: number[] };
+  items: { head: number[]; hatDy: number; neck: number[]; clothes: number[]; toy: number[] };
   motions: Record<string, PaintMotion>;
   eyesBox: number[]; mouthBox?: number[];
 }
@@ -396,9 +396,9 @@ export class PaintPet {
         if(modern.clothes){c.save();c.translate(dx,dy);c.scale(s,s);drawWorn(c,key,fi,{clothes:modern.clothes},k=>IMGS[k]?.img,undefined,this.o.id);c.restore();}
         if (sf||Object.keys(modern).length) {
           c.translate(dx, dy); c.scale(s, s);
-          for (const sl of ['shoes','neck','hat','glasses'] as const) {
+          for (const sl of ['neck','hat','glasses'] as const) {
             if(modern[sl]){drawWorn(c,key,fi,{[sl]:modern[sl]},k=>IMGS[k]?.img,undefined,this.o.id);continue;}
-            if(!sf||sl==='shoes')continue;
+            if(!sf)continue;
             const it = this.side[sl], si = it && IMGS[it.key]?.img;
             if (!it || !si) continue;
             c.save();

@@ -14,7 +14,7 @@ import { WEAR_LV, canWear } from '../data/unlock';
 import { wearLockLine, LEVEL_MORE } from '../data/voice';
 import '../math/math.css';
 
-const SLOTS: Slot[] = ['hat', 'clothes', 'glasses', 'neck', 'shoes', 'toy'];
+const SLOTS: Slot[] = ['hat', 'clothes', 'glasses', 'neck', 'toy'];
 
 export function MathCloset({ onBack }: { onBack: () => void }) {
   const [, force] = useState(0);

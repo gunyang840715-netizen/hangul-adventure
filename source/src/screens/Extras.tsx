@@ -17,7 +17,7 @@ import { status as syncStatus, onStatus, syncNow, syncSoon, syncCode, syncUrl, s
 import { server, onServer, connectVoice } from '../engine/boot';
 import { stat } from '../engine/srs';
 import { josa } from '../lib/hangul';
-import { ITEM_LIST } from '../data/pets';
+import { ITEM_LIST, ITEM } from '../data/pets';
 import { unlockTable } from '../data/unlock';
 import { STAGES, CATS, DAY_MIN_CHOICES, CAT_MAX, TIME_CHOICES, PASS_RATE, ITEM_EVERY, MAT_EVERY, UP_MIN, SP_CAT, catSecRange } from '../math/mathData';
 import { mathState, todayMath, todayCat, mathTotalCorrect, mathMatsLeft, mathSnackTotal, mathPetView, setMathLv, setMathDayMin, setMathTime, setMathName, modeTitle, spellStats, spellWrong } from '../math/mathStore';
@@ -350,7 +350,7 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
       <textarea value={code} onInput={(e: any) => setCode(e.target.value)} placeholder="백업 코드 (예전 '몽글이' 앱의 백업 코드도 불러올 수 있습니다)" />
 
       {msg && <p style={{ color: '#5f3dc4', position: 'sticky', bottom: 0, background: '#f3efff', padding: 12, borderRadius: 10 }}>{msg}</p>}
-      <p style={{ fontSize: 15, color: '#999' }}>꾸미기 아이템 {s.owned.length}/{ITEM_LIST.length} · 간식 {snackTotal()}개 · {petView('dog').name} Lv.{petView('dog').level} · {petView('cat').name} Lv.{petView('cat').level} · 별 {starsTotal()} · 누적 모험 {adventuresTotal()}회 · 오늘 {fmtDay(today())} · 기기 {dev()}</p>
+      <p style={{ fontSize: 15, color: '#999' }}>꾸미기 아이템 {s.owned.filter(id => ITEM[id]).length}/{ITEM_LIST.length} · 간식 {snackTotal()}개 · {petView('dog').name} Lv.{petView('dog').level} · {petView('cat').name} Lv.{petView('cat').level} · 별 {starsTotal()} · 누적 모험 {adventuresTotal()}회 · 오늘 {fmtDay(today())} · 기기 {dev()}</p>
       <p style={{ fontSize: 15, color: '#999' }} data-unlock-table="1">레벨이 오르면 열리는 것(크기는 그대로 — 친구마다 간식 먹은 점수로 레벨, 한글·수학 같음): {unlockTable().map(r => `Lv.${r.lv} ${r.text}`).join(' / ')} — 꾸미기는 그 친구, 강아지 집·고양이 집은 지금 그 집 친구, 놀이터는 둘 중 높은 레벨. 이미 입힌 것·지은 것은 그대로.</p>
     </div>
   );

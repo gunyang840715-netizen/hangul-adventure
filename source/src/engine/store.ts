@@ -297,7 +297,7 @@ export function addOwned(it: string) {
 }
 /** 지금 가진 꾸미기 아이템인가 (돌려준 뒤 다시 받으면 다시 가짐) */
 export function hasItem(it: string, s = load()) { return s.owned.includes(it) && (s.itemGot[it] || 1) > (s.itemLost[it] || 0); }
-export function ownedNow(s = load()) { return s.owned.filter(it => hasItem(it, s)); }
+export function ownedNow(s = load()) { return s.owned.filter(it => !!ITEM[it] && hasItem(it, s)); }
 export function advanceLesson(to: number) { const s = load(); s.lessonIdx = Math.max(s.lessonIdx, to); save(); }
 
 // ---------- 지금 할 단계 · 받아쓰기 시험 ----------

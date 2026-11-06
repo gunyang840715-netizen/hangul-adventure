@@ -90,10 +90,10 @@ export const CLASSIC_SNACKS = ['bone', 'meat', 'fish', 'churu', 'cookie', 'milk'
 export const SNACK: Record<string, SnackDef> = Object.fromEntries(SNACKS.map(s => [s.id, s]));
 
 // ---------------- 꾸미기 아이템 ----------------
-export type Slot = 'hat' | 'clothes' | 'glasses' | 'neck' | 'shoes' | 'toy';
-export const SLOTS: Slot[] = ['hat', 'clothes', 'glasses', 'neck', 'shoes', 'toy'];
-export const SLOT_NAME: Record<Slot, string> = { hat: '모자', clothes: '옷', glasses: '안경', neck: '목걸이', shoes: '신발', toy: '장난감' };
-export const SLOT_ICON: Record<Slot, string> = { hat: '🎩', clothes: '👕', glasses: '🕶️', neck: '📿', shoes: '👟', toy: '🧸' };
+export type Slot = 'hat' | 'clothes' | 'glasses' | 'neck' | 'toy';
+export const SLOTS: Slot[] = ['hat', 'clothes', 'glasses', 'neck', 'toy'];
+export const SLOT_NAME: Record<Slot, string> = { hat: '모자', clothes: '옷', glasses: '안경', neck: '목걸이', toy: '장난감' };
+export const SLOT_ICON: Record<Slot, string> = { hat: '🎩', clothes: '👕', glasses: '🕶️', neck: '📿', toy: '🧸' };
 
 export interface ItemDef { id: string; slot: Slot; key: string; name: string; for: Species | 'both' }
 const I = (slot: Slot, key: string, name: string, f: Species | 'both' = 'both'): ItemDef => ({ id: `${slot}:${key}`, slot, key, name, for: f });
@@ -112,8 +112,6 @@ export const ITEM_LIST: ItemDef[] = [
   // 목걸이
   I('neck', 'bell', '방울 목걸이', 'cat'), I('neck', 'pearl', '진주 목걸이', 'cat'), I('neck', 'bowtie', '나비넥타이', 'dog'), I('neck', 'scarf', '목도리', 'dog'),
   I('neck', 'heart', '하트 목걸이', 'cat'), I('neck', 'lei', '꽃 목걸이'), I('neck', 'bandana', '빨간 반다나', 'dog'), I('neck', 'ribbon', '리본 목걸이', 'cat'),
-  // 신발
-  I('shoes', 'sneaker', '운동화', 'dog'), I('shoes', 'boots', '노란 장화', 'dog'), I('shoes', 'ballet', '발레 신발', 'cat'), I('shoes', 'fur', '털 부츠', 'cat'), I('shoes', 'socks', '줄무늬 양말'),
   // 장난감
   I('toy', 'ball', '공', 'dog'), I('toy', 'yarn', '털실 뭉치', 'cat'), I('toy', 'duck', '오리 인형', 'dog'), I('toy', 'mouse', '쥐 인형', 'cat'),
   I('toy', 'frisbee', '원반', 'dog'), I('toy', 'teddy', '곰 인형'), I('toy', 'feather', '깃털 낚싯대', 'cat'), I('toy', 'bone', '뼈다귀 인형', 'dog'),
@@ -128,8 +126,6 @@ export const ITEM_LIST: ItemDef[] = [
   I('clothes', 'hoodie', '곰돌이 후드티', 'dog'), I('clothes', 'police', '경찰 조끼', 'dog'), I('clothes', 'soccer', '축구 유니폼', 'dog'), I('clothes', 'padding', '오리털 패딩', 'dog'),
   I('clothes', 'princess', '공주 드레스', 'cat'), I('clothes', 'apron', '앞치마', 'cat'), I('clothes', 'fairy', '요정 날개 원피스', 'cat'), I('clothes', 'cardigan', '꽃 가디건', 'cat'),
   I('clothes', 'sailor', '세일러복'), I('clothes', 'pajama', '별무늬 잠옷'),
-  I('shoes', 'light', '반짝이 불빛 운동화', 'dog'), I('shoes', 'skate', '롤러스케이트', 'dog'), I('shoes', 'hiking', '등산화', 'dog'), I('shoes', 'slipper', '토끼 실내화', 'cat'),
-  I('shoes', 'rain', '개구리 장화', 'cat'), I('shoes', 'ruby', '빨간 구두', 'cat'), I('shoes', 'sandal', '샌들'),
   I('toy', 'car', '장난감 자동차', 'dog'), I('toy', 'stick', '나뭇가지', 'dog'), I('toy', 'tennis', '테니스공', 'dog'), I('toy', 'squeaky', '삑삑이 닭 인형', 'dog'),
   I('toy', 'butterfly', '나비 장난감', 'cat'), I('toy', 'box', '종이 상자', 'cat'), I('toy', 'catnip', '캣닢 쿠션', 'cat'),
   I('toy', 'balloon', '풍선'), I('toy', 'kite', '연'), I('toy', 'bubble', '비눗방울'), I('toy', 'pinwheel', '바람개비'), I('toy', 'boat', '종이배'),
@@ -150,7 +146,7 @@ export const ITEM: Record<string, ItemDef> = Object.fromEntries(ITEM_LIST.map(i 
 
 /** 받는 순서: 종류가 골고루, 강아지용·고양이용이 번갈아 나오도록 */
 export const DROP_ORDER: string[] = (() => {
-  const slots: Slot[] = ['hat', 'glasses', 'neck', 'clothes', 'toy', 'shoes'];
+  const slots: Slot[] = ['hat', 'glasses', 'neck', 'clothes', 'toy'];
   const q: Record<string, ItemDef[]> = { dog: [], cat: [], both: [] };
   // 칸 수 제한 없이 모두 넣는다 (예전엔 20에서 멈춰서, 한 종류가 20개를 넘으면 아래 반복이 끝나지 않았음)
   for (let r = 0; r < ITEM_LIST.length; r++) slots.forEach(sl => { (['dog', 'cat', 'both'] as const).forEach(f => { const x = ITEM_LIST.filter(i => i.slot === sl && i.for === f)[r]; if (x) q[f].push(x); }); });

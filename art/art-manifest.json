@@ -1425,54 +1425,6 @@
    "b": 13534
   },
   {
-   "u": "art/items/shoes-ballet.8eeee633.webp",
-   "b": 17482
-  },
-  {
-   "u": "art/items/shoes-boots.faf676fb.webp",
-   "b": 15412
-  },
-  {
-   "u": "art/items/shoes-fur.d69e50d0.webp",
-   "b": 15842
-  },
-  {
-   "u": "art/items/shoes-hiking.6384ebb5.webp",
-   "b": 16892
-  },
-  {
-   "u": "art/items/shoes-light.016d95dd.webp",
-   "b": 14394
-  },
-  {
-   "u": "art/items/shoes-rain.f70e0fc6.webp",
-   "b": 17046
-  },
-  {
-   "u": "art/items/shoes-ruby.34f3283f.webp",
-   "b": 17822
-  },
-  {
-   "u": "art/items/shoes-sandal.8dfc5913.webp",
-   "b": 20384
-  },
-  {
-   "u": "art/items/shoes-skate.e7d5467c.webp",
-   "b": 18160
-  },
-  {
-   "u": "art/items/shoes-slipper.65efffbc.webp",
-   "b": 12142
-  },
-  {
-   "u": "art/items/shoes-sneaker.24e3fb72.webp",
-   "b": 18232
-  },
-  {
-   "u": "art/items/shoes-socks.93041bed.webp",
-   "b": 16508
-  },
-  {
    "u": "art/items/toy-ball.2ebef7a5.webp",
    "b": 16240
   },
@@ -3549,10 +3501,6 @@
    "b": 314352
   },
   {
-   "u": "art/pets/corgi.paint-wear-shoes.0e404053.webp",
-   "b": 278020
-  },
-  {
    "u": "art/pets/corgi.paint-wear-neck-bowtie.77adc5e1.webp",
    "b": 48416
   },
@@ -3633,10 +3581,6 @@
    "b": 11164
   },
   {
-   "u": "art/pets/maltese.paint-wear-shoes-sneaker.9cbb9ed4.webp",
-   "b": 16650
-  },
-  {
    "u": "art/pets/maltese.paint-wear-glasses-round.13c08190.webp",
    "b": 10250
   },
@@ -3655,18 +3599,6 @@
   {
    "u": "art/pets/maltese.paint-wear-neck-bowtie-walk.8d8da78c.webp",
    "b": 20914
-  },
-  {
-   "u": "art/pets/poodle.paint-wear-shoes-sneaker.65444f9d.webp",
-   "b": 13628
-  },
-  {
-   "u": "art/pets/shiba.paint-wear-shoes-sneaker.ab7c049e.webp",
-   "b": 17444
-  },
-  {
-   "u": "art/pets/schnauzer.paint-wear-shoes-sneaker.041b24ef.webp",
-   "b": 16858
   },
   {
    "u": "art/pets/maltese.paint-wear-clothes-stripe.aaf0ab57.webp",
@@ -3775,14 +3707,6 @@
   {
    "u": "art/pets/persian.paint-wear-glasses-heart.d69fd604.webp",
    "b": 10854
-  },
-  {
-   "u": "art/items/shoes-boots-four-feet.0af93535.webp",
-   "b": 25782
-  },
-  {
-   "u": "art/items/shoes-ruby-four-feet.de68b50a.webp",
-   "b": 35562
   },
   {
    "u": "art/items/neck-scarf-front-shared.d0e5e0b8.webp",

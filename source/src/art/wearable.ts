@@ -9,7 +9,7 @@ export function inverse(m:Mat):Mat{
  const d=m[0]*m[3]-m[1]*m[2];
  return [m[3]/d,-m[1]/d,-m[2]/d,m[0]/d,(m[2]*m[5]-m[3]*m[4])/d,(m[1]*m[4]-m[0]*m[5])/d];
 }
-const slots=['clothes','shoes','neck','hat','glasses'] as const;
+const slots=['clothes','neck','hat','glasses'] as const;
 type RuntimeWorn=WornPetAtlas&{transforms?:Record<string,Mat>};
 const registered=new Map<string,RuntimeWorn>();
 for(const slot of slots)registered.set(`corgi:${slot}:${WORN[slot].key}`,WORN[slot]);

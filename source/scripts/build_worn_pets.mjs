@@ -20,7 +20,7 @@ let text="// build_worn_pets.mjs로 자동 생성. 좌표 수정은 scripts/data
 for(const[pet,slots]of Object.entries(data.pets)){
  name(pet);let first=true;
  for(const[slot,e]of Object.entries(slots)){
-  assert(['clothes','hat','glasses','neck','shoes'].includes(slot));name(e.key);
+  assert(['clothes','hat','glasses','neck'].includes(slot));name(e.key);
   if(e.width!==undefined)assert(Number.isInteger(e.width)&&e.width>0);
   const frames=Object.entries(e.frames).map(([key,r])=>{assert.match(key,/^[a-z]+\/\d+$/);return `${name(key)}:${rect(r)}`;}).join(',');
   text+=`${first?' '+pet+':{':','}${slot}:{key:${name(e.key)},art:${art(e.art)}${e.width!==undefined?',width:'+e.width:''},frames:{${frames}},frameAssets:{\n`;
@@ -37,7 +37,7 @@ const variants=data.variants??[];assert(Array.isArray(variants),'추가 품목 �
 const extra=new Map(),seen=new Set();
 for(const e of variants){
  name(e.pet);assert(Object.hasOwn(data.pets,e.pet),'미등록 친구의 추가 품목');
- assert(['clothes','hat','glasses','neck','shoes'].includes(e.slot),'추가 품목 슬롯');name(e.key);
+ assert(['clothes','hat','glasses','neck'].includes(e.slot),'추가 품목 슬롯');name(e.key);
  const id=`${e.pet}:${e.slot}:${e.key}`;assert(!seen.has(id),'추가 품목 중복');seen.add(id);
  assert(data.pets[e.pet][e.slot]?.key!==e.key,'기본 품목 덮어쓰기 금지');
  if(e.width!==undefined)assert(Number.isInteger(e.width)&&e.width>0);

@@ -63,7 +63,7 @@ for(const e of data.entries){
  for(const p of e.shared.parts){assert.equal(data.sharedAssets.filter((a:any)=>a.name===p.name&&a.url===p.url).length,1,'모든 친구가 동일 부품을 참조');assert.equal(p.rect.length,4);assert.equal(p.sourceSize.length,2);assert.ok(p.rect.every((n:number)=>Number.isFinite(n)&&n>=0));assert.ok(p.rect[0]+p.rect[2]<=p.sourceSize[0]&&p.rect[1]+p.rect[3]<=p.sourceSize[1]);}
  assert.equal(e.shared.grid.length,2);assert.ok(e.shared.grid.every((n:number)=>Number.isInteger(n)&&n>0&&n<=32));assert.equal(e.shared.body.length,6);assert.equal(e.shared.arms.length,2);assert.ok([e.shared.body,...e.shared.arms].every((m:number[])=>m.length===6&&m.every(Number.isFinite)&&Math.abs(m[0]*m[3]-m[1]*m[2])>.01));assert.equal(e.shared.feet.length,4);assert.ok(e.shared.bodyBottomScale>0&&e.shared.bodyBottomScale<=1);
 }
-assert.ok(hasFrontWear('poodle','shoes','boots'));assert.ok(hasFrontWear('koshort','shoes','ruby'));assert.ok(hasFrontWear('maltese','neck','scarf'));
+assert.ok(!hasFrontWear('poodle','shoes','boots'));assert.ok(!hasFrontWear('koshort','shoes','ruby'));assert.ok(hasFrontWear('maltese','neck','scarf'));
 const globalImages=globalThis as unknown as {Image:any};const previous=globalImages.Image;let fail=false;
 class TestImage{decoding='';onload=()=>{};onerror=()=>{};set src(_url:string){queueMicrotask(()=>fail?this.onerror():this.onload());}}
 try{

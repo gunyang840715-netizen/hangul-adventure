@@ -132,7 +132,6 @@ export function Pet({ pet, size = 220, mood = 'happy', motion = 'bob', wear = {}
           <Body pet={def.id} L={L} />
           {wear.clothes && <Clothes k={wear.clothes} clip={`url(#${id}-body)`} />}
           <Paws L={L} />
-          {wear.shoes && <Shoes k={wear.shoes} />}
           {wear.neck && <Neck k={wear.neck} />}
           <g transform={`translate(100 150) scale(${H}) translate(-100 -150)`}>
             {photo ? <PhotoHead src={photo} mood={mood} talking={talking} onError={() => setFailedPhoto(photo)} /> : <>
@@ -232,8 +231,8 @@ function PaintedPet({ pid, size, mood, motion, wear, g, stage, talking, cls, sty
           {/* 장난감: 친구 옆 바닥에(앞에 그려야 몸에 가리지 않음), 몸이 움직여도 그 자리 */}
           {wear.toy && <g transform={mtx(A.toy)}><Toy k={wear.toy} /></g>}
           <g ref={rootG}>
-            {(['clothes','shoes','neck']as const).map(slot=><g>
-              <g data-wear-slot={slot} data-wear-kind="old" transform={mtx(A[slot])}>{slot==='clothes'?wear.clothes&&<Clothes k={wear.clothes} clip={`url(#${cid}-body)`}/>:slot==='shoes'?wear.shoes&&<Shoes k={wear.shoes}/>:wear.neck&&<Neck k={wear.neck}/>}</g>
+            {(['clothes','neck']as const).map(slot=><g>
+              <g data-wear-slot={slot} data-wear-kind="old" transform={mtx(A[slot])}>{slot==='clothes'?wear.clothes&&<Clothes k={wear.clothes} clip={`url(#${cid}-body)`}/>:wear.neck&&<Neck k={wear.neck}/>}</g>
               <g data-wear-slot={slot} data-wear-kind="new" visibility="hidden"><WornFront pet={pid} slot={slot} item={wear[slot]}/></g>
             </g>)}
           </g>
@@ -601,21 +600,6 @@ function clothesArt(k: string, clip: string): JSX.Element | null {
   return null;
 }
 
-export function Shoes({ k }: { k: string }) {
-  return <ItemPic id={`shoes:${k}`}>{shoesArt(k)}</ItemPic>;
-}
-function shoesArt(k: string): JSX.Element | null {
-  const pair = (f: (x: number) => JSX.Element) => <g>{[80, 120].map(f)}</g>;
-  switch (k) {
-    case 'sneaker': return pair(x => <g><path d={`M${x - 17} 188 C ${x - 17} 176, ${x + 17} 174, ${x + 17} 186 L ${x + 17} 190 Q ${x} 196 ${x - 17} 190 Z`} fill="#ff6b6b" stroke="#c92a2a" stroke-width="3" /><path d={`M${x - 17} 190 Q ${x} 197 ${x + 17} 190`} fill="none" stroke="#fff" stroke-width="3.5" /><path d={`M${x - 6} 180 l8 4 M${x - 6} 185 l8 -4`} stroke="#fff" stroke-width="2" /></g>);
-    case 'boots': return pair(x => <g><path d={`M${x - 13} 168 h26 v18 a9 9 0 0 1 -9 9 h-10 a9 9 0 0 1 -9 -9 z`} fill="#ffd43b" stroke="#e0a800" stroke-width="3" stroke-linejoin="round" /><rect x={x - 15} y="166" width="30" height="7" rx="3" fill="#ffe066" stroke="#e0a800" stroke-width="2.5" /></g>);
-    case 'ballet': return pair(x => <g><ellipse cx={x} cy="188" rx="16" ry="9" fill="#ffc9de" stroke="#e64980" stroke-width="2.5" /><path d={`M${x - 8} 182 L ${x + 6} 170 M${x + 8} 182 L ${x - 6} 170`} stroke="#f783ac" stroke-width="2.5" /><circle cx={x} cy="182" r="2.5" fill="#f783ac" /></g>);
-    case 'fur': return pair(x => <g><path d={`M${x - 14} 172 h28 v14 a9 9 0 0 1 -9 9 h-10 a9 9 0 0 1 -9 -9 z`} fill="#b07d4f" stroke="#7a5230" stroke-width="3" stroke-linejoin="round" /><Fluff c={[[x - 10, 172, 5], [x - 3, 170, 5], [x + 4, 170, 5], [x + 11, 172, 5]]} fill="#fff" line="#dcd0c4" w={2} /></g>);
-    case 'socks': return pair(x => <g><path d={`M${x - 14} 174 h28 v12 a10 10 0 0 1 -10 10 h-8 a10 10 0 0 1 -10 -10 z`} fill="#fff" stroke="#adb5bd" stroke-width="2.5" />{[176, 182, 188].map((y, i) => <rect x={x - 13} y={y} width="26" height="3.2" fill={['#ff8787', '#ffd43b', '#74c0fc'][i]} />)}</g>);
-  }
-  return null;
-}
-
 export function Toy({ k }: { k: string }) {
   return <ItemPic id={`toy:${k}`}>{toyArt(k)}</ItemPic>;
 }
@@ -637,7 +621,7 @@ function toyArt(k: string): JSX.Element | null {
 }
 
 /** 아이템 하나만 크게 (보상 창·옷장 칸에서) */
-const ICON_BOX: Record<Slot, string> = { hat: '40 -40 120 100', clothes: '40 118 120 84', glasses: '50 66 100 52', neck: '52 126 96 48', shoes: '58 164 84 36', toy: '-10 142 68 60' };
+const ICON_BOX: Record<Slot, string> = { hat: '40 -40 120 100', clothes: '40 118 120 84', glasses: '50 66 100 52', neck: '52 126 96 48', toy: '-10 142 68 60' };
 export function ItemIcon({ id, size = 100 }: { id: string; size?: number }) {
   const src = itemSrc(id);
   const [bad, setBad] = useState(false);
@@ -675,7 +659,6 @@ function ItemIconSvg({ id, size = 100 }: { id: string; size?: number }) {
         {slot === 'clothes' && <g>{key === 'cape' && <CapeBack />}<ellipse cx="100" cy="158" rx="46" ry="34" fill="#f3eef8" />{key !== 'cape' && <Clothes k={key} clip={`url(#${cid}-b)`} />}{key === 'cape' && <Clothes k={key} clip="" />}</g>}
         {slot === 'glasses' && <Glasses k={key} rb={`url(#${cid}-rb)`} />}
         {slot === 'neck' && <Neck k={key} />}
-        {slot === 'shoes' && <Shoes k={key} />}
         {slot === 'toy' && <Toy k={key} />}
       </g>
     </svg>

@@ -10,8 +10,8 @@ import { BUILD, SLOTS, SLOT_ICON, SLOT_NAME, MAX_LEVEL, type Slot, type Species 
 
 export type BuildId = 'doghouse' | 'cathouse' | 'park';
 
-/** 꾸미기 종류마다 입힐 수 있게 되는 레벨 — 옷장 칸 순서(모자·옷·안경·목걸이·신발·장난감)대로 한 레벨에 하나씩 */
-export const WEAR_LV: Record<Slot, number> = { hat: 2, clothes: 3, glasses: 4, neck: 5, shoes: 6, toy: 7 };
+/** 꾸미기 종류마다 입힐 수 있게 되는 레벨 — 옷장 칸 순서(모자·옷·안경·목걸이·장난감)대로 한 레벨에 하나씩 (신발은 10-31 사용자 지시로 삭제 → 장난감이 Lv.6으로 당겨짐) */
+export const WEAR_LV: Record<Slot, number> = { hat: 2, clothes: 3, glasses: 4, neck: 5, toy: 6 };
 
 /** 집 짓기 부품(BUILDS의 부품 순서)마다 지을 수 있게 되는 레벨 — 집은 Lv.2~5에 두 부분씩, 놀이터는 Lv.7~10에 두 부분씩 */
 export const BUILD_LV: Record<BuildId, number[]> = {

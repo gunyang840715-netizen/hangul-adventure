@@ -49,16 +49,16 @@ function Gallery() {
   );
   if (g === '3') {
     const outfits: any[] = [
-      { hat: 'crown', neck: 'bell', clothes: 'stripe', shoes: 'sneaker', toy: 'ball' },
-      { hat: 'bow', glasses: 'heart', clothes: 'dots', neck: 'pearl', shoes: 'ballet' },
-      { hat: 'cap', glasses: 'sun', clothes: 'overall', shoes: 'boots', toy: 'frisbee' },
-      { hat: 'beanie', clothes: 'sweater', neck: 'scarf', shoes: 'fur', toy: 'teddy' },
-      { hat: 'straw', glasses: 'round', clothes: 'raincoat', shoes: 'boots', toy: 'duck' },
-      { hat: 'bunny', clothes: 'tutu', neck: 'heart', shoes: 'ballet', toy: 'yarn' },
+      { hat: 'crown', neck: 'bell', clothes: 'stripe', toy: 'ball' },
+      { hat: 'bow', glasses: 'heart', clothes: 'dots', neck: 'pearl' },
+      { hat: 'cap', glasses: 'sun', clothes: 'overall', toy: 'frisbee' },
+      { hat: 'beanie', clothes: 'sweater', neck: 'scarf', toy: 'teddy' },
+      { hat: 'straw', glasses: 'round', clothes: 'raincoat', toy: 'duck' },
+      { hat: 'bunny', clothes: 'tutu', neck: 'heart', toy: 'yarn' },
       { hat: 'wizard', glasses: 'star', clothes: 'cape', neck: 'bowtie', toy: 'feather' },
-      { hat: 'flower', clothes: 'hanbok', neck: 'lei', shoes: 'socks', toy: 'mouse' },
+      { hat: 'flower', clothes: 'hanbok', neck: 'lei', toy: 'mouse' },
       { hat: 'party', glasses: 'rainbow', clothes: 'stripe', neck: 'bell', toy: 'bone' },
-      { hat: 'chef', clothes: 'sweater', neck: 'bowtie', shoes: 'sneaker', toy: 'ball' },
+      { hat: 'chef', clothes: 'sweater', neck: 'bowtie', toy: 'ball' },
     ];
     return <div style={box}>{PETS.map((p, i) => <div><Pet pet={p.id} wear={outfits[i]} size={230} motion="none" autoTalk={false} mood={(['happy', 'wow', 'love', 'think', 'happy'] as const)[i % 5]} />{lab(p.breed)}</div>)}</div>;
   }

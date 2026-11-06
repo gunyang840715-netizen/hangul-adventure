@@ -4,9 +4,10 @@ import { sumMap } from '../../shared/merge.js';
 import { load, save, flushSave, dev, today, type Wear, type PetView } from '../engine/store';
 import { randomItemFrom, randomSnack } from '../engine/gifts';
 import { PET, BUILDS, BUILD, SNACK, levelOf, stageOf, type Slot, type Species } from '../data/pets';
-import { freshMath, ITEM_EVERY, MAT_EVERY, SNACK_EVERY, CATS, SP_CAT, type Cat, type AnyCat, type MathState } from './mathData';
+import { freshMath, ITEM_EVERY, MAT_EVERY, SNACK_EVERY, CATS, SP_CAT, BK_CAT, type Cat, type AnyCat, type MathState } from './mathData';
 import { catMax, upMin, passRate } from '../lib/studyCfg';
 import { spNext, spCode, spOf, spWrongKeys, SP_KEYS, SP_WRONG } from './spellData';
+import { BK_KEYS, BK_BY, blankWrongKeys, storyProgress } from './blankData';
 
 /** 읽기용 (아직 수학을 안 했으면 처음 상태) */
 export function mathState(): MathState { return load().math ?? freshMath(); }
@@ -83,7 +84,16 @@ export function answerSpell(ok: boolean, key: string): AnswerResult {
   return record(m, ok, SP_CAT);
 }
 
-/** 푼 문제 기록·보상 (수학 항목·맞춤법 같이) */
+/** 빈칸 추리 한 문제를 풀었을 때 (11-07): 맞춤법과 같은 문제 상태(같은 sp 칸, 열쇠만 다름) + 수학과 같은 기록·보상
+ *  (단계 판정 없음 — 하루 150문제·하루 공부 시간·정답 보상은 수학·맞춤법과 같이 씀) */
+export function answerBlank(ok: boolean, key: string): AnswerResult {
+  const m = edit();
+  const sp = { ...m.sp, [key]: spCode(Date.now() / 60000, spNext(m.sp[key], ok)) };
+  m.sp = Object.fromEntries(Object.keys(sp).sort().map(k => [k, sp[k]]));
+  return record(m, ok, BK_CAT);
+}
+
+/** 푼 문제 기록·보상 (수학 항목·맞춤법·빈칸 추리 같이) */
 function record(m: MathState, ok: boolean, cat: AnyCat): AnswerResult {
   const d = dayKey(), dc = d + ':' + cat;
   const before = todayCat(cat, m).solved;
@@ -101,7 +111,7 @@ function record(m: MathState, ok: boolean, cat: AnyCat): AnswerResult {
   let snack: string | null = null;
   if (ok && mathTotalCorrect(m) % SNACK_EVERY === 0) { snack = randomSnack(); bump(m.snacks[snack] ||= {}); }
   const catDone = before < catMax() && todayCat(cat, m).solved >= catMax();
-  const ups = catDone && cat !== SP_CAT ? judge(m, [cat]) : [];
+  const ups = catDone && cat !== SP_CAT && cat !== BK_CAT ? judge(m, [cat as Cat]) : [];
   save();
   return { item, mat, snack, catDone, ups };
 }
@@ -114,6 +124,19 @@ export function spellStats(m = mathState()) {
   let seen = 0, wrong = 0;
   for (const k of SP_KEYS) { const p = spOf(m.sp[k]); if (p) { seen++; if (p.st === SP_WRONG) wrong++; } }
   return { total: SP_KEYS.length, seen, wrong };
+}
+
+// ---------- 빈칸 추리 기록 (11-07) ----------
+/** 지금 틀린 빈칸 추리 문제 — 오래전에 틀린 것부터 */
+export const blankWrong = (m = mathState()) => blankWrongKeys(m.sp);
+/** 빈칸 추리 기록 요약: 전체(한 문장·이야기) · 풀어 본 문제 · 지금 틀린 문제 · 이야기까지(맞힌 한 문장 문제 수) */
+export function blankStats(m = mathState()) {
+  let seen = 0, wrong = 0, sent = 0;
+  for (const k of BK_KEYS) {
+    if (BK_BY[k].lv < 3) sent++;
+    const p = spOf(m.sp[k]); if (p) { seen++; if (p.st === SP_WRONG) wrong++; }
+  }
+  return { total: BK_KEYS.length, sent, story: BK_KEYS.length - sent, seen, wrong, ...storyProgress(m.sp) };
 }
 
 /** 문제 화면에서 공부한 시간 더하기(ms). 오늘 공부 시간을 넘는 그 순간 한 번 모든 항목 판정 → 오른 항목 */

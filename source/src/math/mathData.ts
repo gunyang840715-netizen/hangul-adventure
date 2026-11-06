@@ -7,6 +7,7 @@
 import { ITEM, PET, BUILD, SNACK, type Slot } from '../data/pets';
 import { FURN_BY } from '../data/home';
 import { SP_KEY_SET } from './spellData';
+import { BK_KEY_SET } from './blankData';
 
 type DevMap = Record<string, number>;
 type DayMap = Record<string, DevMap>;
@@ -40,14 +41,18 @@ export interface MathState {
   fed: DayMap;                            // 친구 id → 기기 → 간식을 먹은 횟수 (하트)
   // ---- 10-25 5차: 맞춤법 (같은 모드 안에서 수학과 나란히 — 하루 공부 시간·정답 보상은 같이 씀) ----
   sp: Record<string, number>;             // 맞춤법 문제 열쇠 → 마지막으로 푼 때(분)×10 + 상태 (0 맞힘 · 1 틀림 · 2 고침 · 3 다시 확인까지 맞힘 — spellData.ts)
+                                          // 11-07: 빈칸 추리 문제 열쇠('bk숫자', blankData.ts)도 같은 칸·같은 상태 규칙 (새 칸 없음 — 합치기는 열쇠마다 큰 값)
   // ---- 10-25 6차: 수학 친구도 아기부터 간식을 먹으면 자람 (한글과 같은 레벨·단계, 한글 성장과 따로) ----
   fedPlus: DayMap;                        // 친구 id → 기기 → 2·3점 간식의 덤 점수(간식 점수 − 1). 성장 점수 = fed + fedPlus
                                           // (이 칸이 생기기 전에 먹은 간식은 fed에만 있어 1점씩으로 친다)
 }
 /** 맞춤법 항목 (하루 기록 열쇠 '날짜:sp' — 단계 판정은 없음) */
 export const SP_CAT = 'sp';
-export type AnyCat = Cat | typeof SP_CAT;
+export type AnyCat = Cat | typeof SP_CAT | typeof BK_CAT;
 export const SP_INFO = { id: SP_CAT as AnyCat, icon: '✍️', name: '맞춤법' };
+/** 빈칸 추리 항목 (11-07 — 하루 기록 열쇠 '날짜:bk', 단계 판정 없음. 2단계(짧은 이야기)는 기록에서 셈 — blankData.ts storyProgress) */
+export const BK_CAT = 'bk';
+export const BK_INFO = { id: BK_CAT as AnyCat, icon: '🧩', name: '빈칸 추리' };
 
 export const PER_DAY = 50;                // (예전) 하루 문제 수 기본값 — perDay 칸 읽기용으로만 남김
 export const DAY_MIN = 30;                // 하루 공부 시간 기본 30분 (10-24 사용자 요청)
@@ -106,11 +111,11 @@ const timeMap = (m: any, ok: (k: string) => boolean): Record<string, number> => 
   if (obj(m)) for (const k of Object.keys(m)) if (ok(k) && isNum(m[k]) && m[k] >= 0) o[k] = m[k];
   return o;
 };
-const dayCatKey = (k: string) => /^\d+:(add|sub|mul|div|sp)$/.test(k);
-/** 맞춤법 기록: 있는 문제 열쇠만, 값은 분×10+상태(0~3) — 열쇠 순서는 정렬 (합친 결과와 같은 모양) */
+const dayCatKey = (k: string) => /^\d+:(add|sub|mul|div|sp|bk)$/.test(k);
+/** 맞춤법·빈칸 추리(11-07) 기록: 있는 문제 열쇠만, 값은 분×10+상태(0~3) — 열쇠 순서는 정렬 (합친 결과와 같은 모양) */
 const spMap = (m: any): Record<string, number> => {
   const o: Record<string, number> = {};
-  if (obj(m)) for (const k of Object.keys(m).sort()) if (SP_KEY_SET.has(k) && isNum(m[k]) && m[k] > 0 && m[k] < 1e11 && Math.floor(m[k]) % 10 <= 3) o[k] = Math.floor(m[k]);
+  if (obj(m)) for (const k of Object.keys(m).sort()) if ((SP_KEY_SET.has(k) || BK_KEY_SET.has(k)) && isNum(m[k]) && m[k] > 0 && m[k] < 1e11 && Math.floor(m[k]) % 10 <= 3) o[k] = Math.floor(m[k]);
   return o;
 };
 

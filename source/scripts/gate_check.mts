@@ -176,7 +176,7 @@ assert.ok(G.gateStatus('h').free && G.gateStatus('h').open, '분량을 바꿔도
 // ---------- 3) 잠그는 화면 ----------
 const HANGUL_DECO = ['book', 'house', 'dress', 'adopt', 'build', 'room', 'park', 'yard'];
 const MATH_DECO = ['mathCloset', 'mathBuild', 'mathRoom', 'mathPark', 'mathYard', 'mathFeed'];
-const ALWAYS_OPEN = ['title', 'map', 'session', 'parent', 'sleep', 'math', 'mathPlay', 'mathSpell'];
+const ALWAYS_OPEN = ['title', 'map', 'session', 'parent', 'sleep', 'math', 'mathPlay', 'mathSpell', 'mathBlank'];
 reset();
 for (const sc of HANGUL_DECO) { const b = G.gateBlock(sc); assert.ok(b && b.kind === 'h', `${sc}: 한글 분량 전에는 잠김`); }
 for (const sc of MATH_DECO) { const b = G.gateBlock(sc); assert.ok(b && b.kind === 'm', `${sc}: 수학 분량 전에는 잠김`); }

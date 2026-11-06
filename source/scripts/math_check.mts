@@ -560,3 +560,5 @@ assert.equal(JSON.stringify(normalizeMath(JSON.parse(JSON.stringify(once)))), JS
 }
 console.log(`수학 모드: ${STAGES.length}단계 문제·보기 각 ${N}개, 항목 ${CATS.length}개(+골고루)·문제 시간, 하루 공부 시간(${DAY_MIN_CHOICES.join('·')}분)·항목당 하루 ${CAT_MAX}문제·정답 ${ITEM_EVERY}개마다 꾸미기·${MAT_EVERY}개마다 재료·${SNACK_EVERY}개마다 간식(먹이기)·항목마다 다음 단계,`
   + ` 수학 옷장·집(짓기·가구·마당)·이름이 한글과 따로, 초기화·예전 백업·망가진 칸·예전 기록 옮기기 통과`);
+// ---------- 6) 빈칸 추리 (11-07 사용자 요청): 문제 은행·고르기·기록·보상·저장 — scripts/blank_check.mts (package.json 그대로) ----------
+await import('./blank_check.mts');

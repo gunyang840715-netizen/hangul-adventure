@@ -1,5 +1,5 @@
-// 수학·맞춤법 첫 화면: 수학 항목 고르기(덧셈·뺄셈·곱셈·나눗셈·골고루) · 맞춤법(10-25 — 새 문제 / 틀린 문제 다시 풀기) · 옷장 · 집(집 짓기·집 안·마당·놀이터 — 한글 집과 따로) · 간식 주기
-// 하루 공부 시간(부모 설정 30분·1시간)이 다 되면 오늘은 못 고름, 한 항목은 하루 150문제까지 (맞춤법도 150문제)
+// 수학·맞춤법 첫 화면: 수학 항목 고르기(덧셈·뺄셈·곱셈·나눗셈·골고루) · 맞춤법(10-25 — 새 문제 / 틀린 문제 다시 풀기) · 빈칸 추리(11-07) · 옷장 · 집(집 짓기·집 안·마당·놀이터 — 한글 집과 따로) · 간식 주기
+// 하루 공부 시간(부모 설정 30분·1시간)이 다 되면 오늘은 못 고름, 한 항목은 하루 150문제까지 (맞춤법·빈칸 추리도 150문제)
 // 공부 먼저(10-28): 오늘 공부 분량을 채우기 전에는 옷장·집 꾸미기·간식 주기가 잠김(문제·맞춤법은 그대로) — lib/gate.ts
 // 화면 이름은 부모 설정의 이름(기기 저장값)만 — 10-25 사용자 요청으로 '○○ 수학' 대신 이름만(없으면 '수학·맞춤법'). 저장소에는 아이 이름을 쓰지 않는다
 import { useEffect, useState } from 'preact/hooks';
@@ -8,16 +8,16 @@ import { Pet } from '../art/Pet';
 import { MatIcon } from '../art/Build';
 import { sfx } from '../engine/audio';
 import { ITEM_LIST } from '../data/pets';
-import { CATS, STAGES, SP_CAT, catStage, type Mode } from '../math/mathData';
+import { CATS, STAGES, SP_CAT, BK_CAT, catStage, type Mode } from '../math/mathData';
 import { catMax } from '../lib/studyCfg';
-import { mathState, todayMath, todayCat, mathTimeUp, openCats, mathPet, mathPetInfo, mathWear, mathWho, modeTitle, mathMatsLeft, mathSnackTotal, spellWrong, spellStats } from '../math/mathStore';
+import { mathState, todayMath, todayCat, mathTimeUp, openCats, mathPet, mathPetInfo, mathWear, mathWho, modeTitle, mathMatsLeft, mathSnackTotal, spellWrong, spellStats, blankStats } from '../math/mathStore';
 import { TodaySummary, leftText } from './MathScreen';
 import { gateLocked, takeGateOpened } from '../lib/gate';
 import { GatePill, GateBanner, celebrateGate } from './GateUI';
 import '../math/math.css';
 
-export function MathHome({ onBack, onPlay, onSpell, onCloset, onHouse, onFeed }: {
-  onBack: () => void; onPlay: (mode: Mode) => void; onSpell: (review: boolean) => void; onCloset: () => void; onHouse: () => void; onFeed?: () => void;
+export function MathHome({ onBack, onPlay, onSpell, onBlank, onCloset, onHouse, onFeed }: {
+  onBack: () => void; onPlay: (mode: Mode) => void; onSpell: (review: boolean) => void; onBlank?: () => void; onCloset: () => void; onHouse: () => void; onFeed?: () => void;
 }) {
   const m = mathState();
   const t = todayMath(m);
@@ -48,6 +48,11 @@ export function MathHome({ onBack, onPlay, onSpell, onCloset, onHouse, onFeed }:
   );
   const spOff = done || spFull;
   const reviewOff = spOff || !wrongN;
+  // 빈칸 추리 (11-07): 오늘 문제 수 · 짧은 이야기까지 (한 문장 문제를 20개 맞히면 열림)
+  const bk = todayCat(BK_CAT, m).solved;
+  const bkFull = bk >= catMax();
+  const bkOff = done || bkFull;
+  const bs = blankStats(m);
   return (
     <div class="screen" data-math-home="1">
       <Backdrop theme="sky" />
@@ -58,7 +63,7 @@ export function MathHome({ onBack, onPlay, onSpell, onCloset, onHouse, onFeed }:
           ⏳ {leftText(t.leftMs)} · 📝 {t.solved} · ⭕ {t.correct} · <MatIcon size={30} /> {mathMatsLeft(m)} · 👗 {m.owned.length}/{ITEM_LIST.length}
         </div>
         <div style={{ position: 'absolute', left: 0, right: 0, top: 104, textAlign: 'center', fontSize: 32, color: '#fff', textShadow: '0 3px 0 #9775fa' }}>
-          {done ? '오늘 공부 시간이 끝났어! 내일 또 하자 🎉' : !open.length && spFull ? `오늘 수학·맞춤법 모두 ${catMax()}문제씩 풀었어! 🎉` : `무엇을 풀까? (오늘 공부 시간 ${m.dayMin}분)`}
+          {done ? '오늘 공부 시간이 끝났어! 내일 또 하자 🎉' : !open.length && spFull && bkFull ? `오늘 수학·맞춤법·빈칸 추리 모두 ${catMax()}문제씩 풀었어! 🎉` : `무엇을 풀까? (오늘 공부 시간 ${m.dayMin}분)`}
         </div>
         <div class="m-cats">
           {CATS.map(c => { const k = todayCat(c.id, m).solved; return card(c.id, c.icon, c.name, `${m.lv[c.id] + 1}단계 · ${STAGES[catStage(c.id, m.lv[c.id])].sub}`, k, done || k >= catMax()); })}
@@ -81,11 +86,22 @@ export function MathHome({ onBack, onPlay, onSpell, onCloset, onHouse, onFeed }:
             <span class="sp-home-icon">🔁</span>
             <span class="sp-home-text">
               <span class="sp-home-name">틀린 문제</span>
-              <span class="sp-home-sub">{wrongN ? `${wrongN}개 다시 풀기` : '지금은 없어 👍'}</span>
+              <span class="sp-home-sub">{wrongN ? `맞춤법 ${wrongN}개 다시` : '지금은 없어 👍'}</span>
             </span>
           </button>
+          {/* 빈칸 추리 (11-07): 글 속 빈칸에 알맞은 말 고르기 — 틀린 문제는 다음에 저절로 다시 나옴 */}
+          {onBlank && <button class={`sp-home blank ${bkOff ? 'off' : ''}`} data-blank-go="1" data-off={bkOff ? '1' : undefined}
+            onClick={() => { if (bkOff) { sfx.boing(); return; } sfx.tap(); onBlank(); }}>
+            <span class="sp-home-icon">🧩</span>
+            <span class="sp-home-text">
+              <span class="sp-home-name">빈칸 추리</span>
+              <span class="sp-home-sub">글 속 알맞은 말 고르기</span>
+              <span class="sp-home-sub" data-story-open={bs.open ? '1' : '0'}>{bs.open ? '📖 짧은 이야기도 나와요' : `📖 이야기까지 ⭕ ${bs.got}/${bs.need}`}</span>
+            </span>
+            {bkFull ? <span class="m-cat-count">오늘 {catMax()}문제 끝!</span> : bk ? <span class="m-cat-count">오늘 {bk}/{catMax()}</span> : null}
+          </button>}
         </div>
-        {(done || (!open.length && spFull)) && <div style={{ position: 'absolute', left: 0, right: 0, top: 572 }}><TodaySummary /></div>}
+        {(done || (!open.length && spFull && bkFull)) && <div style={{ position: 'absolute', left: 0, right: 0, top: 572 }}><TodaySummary /></div>}
         <div class="gate-math-pill"><GatePill kind="m" /></div>
         {cele && <GateBanner onDone={() => setCele(false)} />}
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 40, display: 'flex', gap: 30, justifyContent: 'center' }}>

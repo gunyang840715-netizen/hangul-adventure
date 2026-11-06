@@ -19,9 +19,10 @@ import { stat } from '../engine/srs';
 import { josa } from '../lib/hangul';
 import { ITEM_LIST, ITEM } from '../data/pets';
 import { unlockTable } from '../data/unlock';
-import { STAGES, CATS, DAY_MIN_CHOICES, TIME_CHOICES, ITEM_EVERY, MAT_EVERY, SP_CAT, catSecRange } from '../math/mathData';
-import { mathState, todayMath, todayCat, mathTotalCorrect, mathMatsLeft, mathSnackTotal, mathPetView, setMathLv, setMathDayMin, setMathTime, setMathName, modeTitle, spellStats, spellWrong } from '../math/mathStore';
+import { STAGES, CATS, DAY_MIN_CHOICES, TIME_CHOICES, ITEM_EVERY, MAT_EVERY, SP_CAT, BK_CAT, catSecRange } from '../math/mathData';
+import { mathState, todayMath, todayCat, mathTotalCorrect, mathMatsLeft, mathSnackTotal, mathPetView, setMathLv, setMathDayMin, setMathTime, setMathName, modeTitle, spellStats, spellWrong, blankStats, blankWrong } from '../math/mathStore';
 import { SENTS, SP_SEC_RANGE, makeSpellQ } from '../math/spellData';
+import { BK_BY, BK_SEC_RANGE, BK_TYPE_NAME, bkFull } from '../math/blankData';
 import { GateParent } from './GateUI';
 import { Stepper } from './Stepper';
 import { RANGE, letterSetCount, letterReps, dictReps, catMax, upMin, passRate, setStudy } from '../lib/studyCfg';
@@ -362,7 +363,9 @@ function MathParent({ onSaved }: { onSaved: (m: string) => void }) {
   const t = todayMath(m);
   const [nameIn, setNameIn] = useState(m.name);
   const [showWrong, setShowWrong] = useState(false);
+  const [showBkWrong, setShowBkWrong] = useState(false);
   const sp = spellStats(m), spToday = todayCat(SP_CAT, m);
+  const bs = blankStats(m), bkToday = todayCat(BK_CAT, m);
   const Opt = ({ on, children, onClick }: any) => <button class={`opt ${on ? 'on' : ''}`} onClick={onClick}>{children}</button>;
   return (
     <>
@@ -377,11 +380,19 @@ function MathParent({ onSaved }: { onSaved: (m: string) => void }) {
       {showWrong && <div class="row" style={{ fontSize: 17, color: '#495057', display: 'block', lineHeight: 1.6 }} data-spell-wrong-list="1">
         {spellWrong(m).map(k => { const q = makeSpellQ(k, () => 0); return q ? <div>• {q.before}<b style={{ color: '#2b8a3e' }}>{q.ans}</b>{q.after} <span style={{ color: '#c92a2a' }}>(틀린 말: {q.wrong})</span></div> : null; })}
       </div>}
+      {/* 빈칸 추리 (11-07): 글 속 빈칸에 알맞은 말 고르기 — 한 문장 → 짧은 이야기 */}
+      <div class="row" data-blank-parent="1">🧩 빈칸 추리: 문제 {bs.total}개(한 문장 {bs.sent} · 짧은 이야기 {bs.story}) · 풀어 본 문제 {bs.seen}개 · 지금 틀린 문제 {bs.wrong}개 · 오늘 {bkToday.solved}문제 중 {bkToday.correct}개 맞힘 ·
+        {bs.open ? ' 짧은 이야기 열림' : ` 짧은 이야기까지 한 문장 문제 ${bs.need - bs.got}개 더 맞히면 열림`}
+        {bs.wrong > 0 && <button class="opt" onClick={() => setShowBkWrong(x => !x)}>{showBkWrong ? '틀린 문제 닫기' : '틀린 문제 보기'}</button>}</div>
+      {showBkWrong && <div class="row" style={{ fontSize: 17, color: '#495057', display: 'block', lineHeight: 1.6 }} data-blank-wrong-list="1">
+        {blankWrong(m).map(k => { const b = BK_BY[k]; return b ? <div>• {bkFull(b)} <span style={{ color: '#2b8a3e' }}>(정답: {b.a})</span> <span style={{ color: '#868e96' }}>· {BK_TYPE_NAME[b.ty]}</span></div> : null; })}
+      </div>}
       <div class="row" style={{ fontSize: 16, color: '#868e96' }}>항목마다 단계·하루 공부 시간·하루 문제 수·다음 단계 조건·문제 시간은 위 '📚 공부량·진도'에서 고칩니다.</div>
       <div class="row" style={{ fontSize: 16, color: '#868e96' }}>
         항목마다 단계가 따로 · 하루 공부 시간이 끝날 때(또는 그 항목을 {catMax()}문제 다 풀 때), 그날 그 항목을 {upMin()}문제 이상 풀고 {Math.round(passRate() * 100)}% 이상 맞혔으면 그 항목만 다음 단계(하루 한 단계까지 — 그날 단계를 직접 바꾼 항목은 다음 날 판정) · 정답 {ITEM_EVERY}개마다 꾸미기, {MAT_EVERY}개마다 집 재료와 간식(틀려도 안 가져감, 간식은 수학 '간식 주기'에서 먹임 — 강아지·고양이는 한글처럼 아기부터 간식 점수만큼 자람) ·
         한글 진도·하루 사용 시간·한글 옷장·한글 집과 따로 · '골고루'만 풀면 항목마다 문제 수가 적어 단계가 거의 안 오름(복습용) · 두 기기 연동됨<br />
-        맞춤법: 속담·명언·좋은 말 문장 속 괄호에서 바른 말 둘 중 하나 고르기(단계 없음, 쉬운 문제가 먼저 나오기 쉬움) · 같은 문장도 괄호 자리를 바꿔 다시 나옴 · 틀린 문제는 다음에 다시 나오고(열 문제쯤 뒤·다음 날), 맞히면 이틀 뒤 한 번 더 확인 · '틀린 문제 다시 풀기'로 따로 풀 수 있음 · 하루 공부 시간·하루 {catMax()}문제·정답 보상은 수학과 같이 셈
+        맞춤법: 속담·명언·좋은 말 문장 속 괄호에서 바른 말 둘 중 하나 고르기(단계 없음, 쉬운 문제가 먼저 나오기 쉬움) · 같은 문장도 괄호 자리를 바꿔 다시 나옴 · 틀린 문제는 다음에 다시 나오고(열 문제쯤 뒤·다음 날), 맞히면 이틀 뒤 한 번 더 확인 · '틀린 문제 다시 풀기'로 따로 풀 수 있음 · 하루 공부 시간·하루 {catMax()}문제·정답 보상은 수학과 같이 셈<br />
+        빈칸 추리: 글 속 빈칸에 알맞은 말을 보기 셋 중에서 고르기(오답 보기도 그럴듯하지만 글 속 단서로 틀린 것을 알 수 있게 만듦) · 1단계 한 문장(쉬운 것 먼저) → 한 문장 문제를 맞힌 개수가 {bs.need}개가 되면 2단계 짧은 이야기도 섞여 나옴 · 틀리면 단서를 노랗게 보여 주고 고른 말이 왜 아닌지 설명 · 맞히면 가끔 '어느 말을 보고 알았어?'(근거 찾기) · 틀린 문제는 맞춤법처럼 다음에 다시 나옴 · 하루 공부 시간·하루 {catMax()}문제·정답 보상은 수학과 같이 셈
       </div>
     </>
   );
@@ -459,7 +470,7 @@ function StudyParent({ onSaved, jumpTo }: { onSaved: (m: string) => void; jumpTo
           <Stepper id="dayMin" value={m.dayMin} r={RANGE.dayMin} fmt={fmtMinute} presets={DAY_MIN_CHOICES} onSet={v => { setMathDayMin(v); onSaved(`수학·맞춤법 하루 공부 시간을 ${fmtMinute(v)}으로 바꿨습니다. 오늘 공부한 시간은 그대로 셉니다.`); }} />
           <span class="study-note">문제 화면에서만 셈(3분 넘게 안 만지면 멈춤) · 다 되면 풀던 문제까지 풀고 끝</span></div>
         <div class="row" data-study-row="cm"><span class="study-lbl">한 항목 하루 최대</span>
-          <Stepper id="cm" value={cm} r={RANGE.cm} fmt={v => `${v}문제`} presets={[50, 100, 150]} onSet={v => { setStudy({ cm: v }); onSaved(`덧셈·뺄셈·곱셈·나눗셈·맞춤법은 하루 항목마다 ${v}문제까지 풉니다.`); }} /></div>
+          <Stepper id="cm" value={cm} r={RANGE.cm} fmt={v => `${v}문제`} presets={[50, 100, 150]} onSet={v => { setStudy({ cm: v }); onSaved(`덧셈·뺄셈·곱셈·나눗셈·맞춤법·빈칸 추리는 하루 항목마다 ${v}문제까지 풉니다.`); }} /></div>
         <div class="row" data-study-row="up"><span class="study-lbl">다음 단계 조건</span>
           <span>그날</span>
           <Stepper id="um" value={um} r={RANGE.um} fmt={v => `${v}문제 이상`} onSet={v => { setStudy({ um: v }); onSaved(`그날 그 항목을 ${v}문제 이상 풀고 ${up}% 이상 맞히면 다음 단계로 갑니다.`); }} />
@@ -470,7 +481,7 @@ function StudyParent({ onSaved, jumpTo }: { onSaved: (m: string) => void; jumpTo
           <Stepper id="timeMul" value={m.timeMul} r={RANGE.timeMul} fmt={v => (v ? `×${v}` : '끄기')} presets={TIME_CHOICES.filter(([v]) => v > 0).map(([v]) => v)} onSet={v => { setMathTime(v); onSaved(`문제 시간 ×${v} — 다음 문제부터 적용됩니다.`); }} />
           <Opt on={m.timeMul === 0} onClick={() => { setMathTime(0); onSaved('문제 시간 제한을 껐습니다.'); }}>끄기</Opt></div>
         <div class="row study-note" style={{ margin: '0 0 6px' }}>
-          {m.timeMul ? <>지금 문제 시간: {CATS.map(c => { const [a, b] = catSecRange(c.id); const f = (x: number) => Math.round(x * m.timeMul); return `${c.name} ${a === b ? f(a) : `${f(a)}~${f(b)}`}초`; }).join(' · ')} · 맞춤법 {Math.round(SP_SEC_RANGE[0] * m.timeMul)}~{Math.round(SP_SEC_RANGE[1] * m.timeMul)}초 (×1 = 보통)</> : '문제 시간 제한 없음'} — 시간이 다 되면 틀린 것으로 하고 정답을 보여 줌
+          {m.timeMul ? <>지금 문제 시간: {CATS.map(c => { const [a, b] = catSecRange(c.id); const f = (x: number) => Math.round(x * m.timeMul); return `${c.name} ${a === b ? f(a) : `${f(a)}~${f(b)}`}초`; }).join(' · ')} · 맞춤법 {Math.round(SP_SEC_RANGE[0] * m.timeMul)}~{Math.round(SP_SEC_RANGE[1] * m.timeMul)}초 · 빈칸 추리 {Math.round(BK_SEC_RANGE[0] * m.timeMul)}~{Math.round(BK_SEC_RANGE[1] * m.timeMul)}초 (×1 = 보통)</> : '문제 시간 제한 없음'} — 시간이 다 되면 틀린 것으로 하고 정답을 보여 줌
         </div>
       </div>
     </>

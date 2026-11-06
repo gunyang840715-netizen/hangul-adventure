@@ -22,4 +22,12 @@ export const APPROVED_FRONT_NECK: Record<string, FrontWearLayer> = {
   'persian:medal': { url: './art/pets/persian.paint-wear-neck-medal-front.7744e1af.webp', x: 151, y: 279, width: 338, height: 228 },
   'poodle:medal': { url: './art/pets/poodle.paint-wear-neck-medal-front.1067e7a0.webp', x: 149, y: 279, width: 342, height: 228 },
   'russian:medal': { url: './art/pets/russian.paint-wear-neck-medal-front.0b9e1071.webp', x: 157, y: 281, width: 315, height: 226 },
+  'poodle:bib': { url: './art/pets/poodle.paint-wear-neck-bib-front.734247d0.webp', x: 206, y: 353, width: 230, height: 161 },
+  'russian:bib': { url: './art/pets/russian.paint-wear-neck-bib-front.cf8d6b3b.webp', x: 194, y: 314, width: 250, height: 156 },
+  'schnauzer:bib': { url: './art/pets/schnauzer.paint-wear-neck-bib-front.5924ff24.webp', x: 204, y: 355, width: 227, height: 152 },
+  'shiba:bib': { url: './art/pets/shiba.paint-wear-neck-bib-front.e506ec1f.webp', x: 203, y: 357, width: 241, height: 157 },
+  'siamese:bib': { url: './art/pets/siamese.paint-wear-neck-bib-front.553dd8af.webp', x: 213, y: 301, width: 215, height: 143 },
+  'corgi:bib': { url: './art/pets/corgi.paint-wear-neck-bib-front.cbc9574a.webp', x: 203, y: 369, width: 235, height: 183 },
+  'fold:bib': { url: './art/pets/fold.paint-wear-neck-bib-front.5349b5d2.webp', x: 194, y: 328, width: 249, height: 184 },
+  'persian:bib': { url: './art/pets/persian.paint-wear-neck-bib-front.3c657988.webp', x: 197, y: 356, width: 245, height: 186 },
 };

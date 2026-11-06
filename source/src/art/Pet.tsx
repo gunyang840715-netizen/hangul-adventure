@@ -8,6 +8,7 @@ import { paintable, baseState, loadBase, loadMotions, retryPaintImages, rigOf, P
 import type { Mat } from './petanim';
 import { artSrc } from './artmap';
 import { ITEM_ART } from './items.gen';
+import { ITEM_ICON_EXTRA } from './items-extra';
 import {wornEntry} from './wearable';
 import {prepareFrontWear,frontWearLoaded,hasFrontWear,hasApprovedFrontWear,type FrontWearLayer} from './frontwear';
 
@@ -623,10 +624,12 @@ function toyArt(k: string): JSX.Element | null {
 /** 아이템 하나만 크게 (보상 창·옷장 칸에서) */
 const ICON_BOX: Record<Slot, string> = { hat: '40 -40 120 100', clothes: '40 118 120 84', glasses: '50 66 100 52', neck: '52 126 96 48', toy: '-10 142 68 60' };
 export function ItemIcon({ id, size = 100 }: { id: string; size?: number }) {
-  const src = itemSrc(id);
+  // 아이콘만 있는 아이템(items-extra.ts)도 옷장에 그림으로 — 몸에 얹는 자리(ItemPic)는 items.gen.ts에 있는 것만
+  const box = ITEM_ART[id]?.b ?? ITEM_ICON_EXTRA[id]?.b;
+  const src = box ? artSrc(`item.${id.replace(':', '.')}`) : undefined;
   const [bad, setBad] = useState(false);
-  if (src && !bad) {
-    const b = ITEM_ART[id].b, m = 0.06;
+  if (src && box && !bad) {
+    const b = box, m = 0.06;
     const w = Math.max(b[2] - b[0], b[3] - b[1]) + 2 * m, cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
     return (
       <svg viewBox={`${(cx - w / 2) * 100} ${(cy - w / 2) * 100} ${w * 100} ${w * 100}`} width={size} height={size} style={{ overflow: 'visible' }}>

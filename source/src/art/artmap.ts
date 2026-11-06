@@ -296,6 +296,7 @@ export const ART_MAP: Record<string, string> = {
   "item.hat.bow": "art/items/hat-bow.9aabf656.webp",
   "item.hat.bunny": "art/items/hat-bunny.4478757c.webp",
   "item.hat.cap": "art/items/hat-cap.14f7fc15.webp",
+  "item.hat.captain": "art/items/hat-captain.d205f399.webp",
   "item.hat.chef": "art/items/hat-chef.a890ad79.webp",
   "item.hat.crown": "art/items/hat-crown.4f79229b.webp",
   "item.hat.fire": "art/items/hat-fire.0b4a482e.webp",

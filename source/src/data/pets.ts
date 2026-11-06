@@ -140,6 +140,8 @@ export const ITEM_LIST: ItemDef[] = [
   I('clothes', 'cat-extra-rose-corset', '장미 레이스 조끼', 'cat'), I('clothes', 'cat-extra-moon-robe', '초승달 잠옷 가운', 'cat'), I('clothes', 'cat-extra-gingham-smock', '체크 피크닉 스목', 'cat'), I('clothes', 'cat-extra-bluebell', '초롱꽃 원피스', 'cat'),
   I('clothes', 'cat-extra-maple', '단풍 산책 조끼', 'cat'), I('clothes', 'cat-extra-snowflake-coat', '눈꽃 겨울 망토 코트', 'cat'), I('clothes', 'cat-extra-velvet-tux', '벨벳 턱시도', 'cat'), I('clothes', 'cat-extra-pearl-twinset', '진주 단추 니트 세트', 'cat'),
   I('clothes', 'cat-extra-lemon-romper', '레몬 여름 롬퍼', 'cat'), I('clothes', 'cat-extra-pumpkin', '호박 축제 의상', 'cat'), I('clothes', 'cat-extra-mushroom', '버섯 숲 튜닉', 'cat'), I('clothes', 'cat-extra-sakura-jacket', '벚꽃 누빔 재킷', 'cat'),
+  // ---- 11-07 사용자 요청: 선장 모자(강아지 5마리 정면 착용 그림 Claude 검수 합격) — 뒤에 추가만, 이름 녹음 없음 → 칭찬 말로 ----
+  I('hat', 'captain', '선장 모자', 'dog'),
 ];
 export const itemFits = (it: ItemDef, sp: Species) => it.for === 'both' || it.for === sp;
 export const ITEM: Record<string, ItemDef> = Object.fromEntries(ITEM_LIST.map(i => [i.id, i]));

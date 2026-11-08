@@ -95,8 +95,9 @@ export function MathHome({ onBack, onPlay, onSpell, onBlank, onCloset, onHouse, 
             <span class="sp-home-icon">🧩</span>
             <span class="sp-home-text">
               <span class="sp-home-name">빈칸 추리</span>
-              <span class="sp-home-sub">글 속 알맞은 말 고르기</span>
-              <span class="sp-home-sub" data-story-open={bs.open ? '1' : '0'}>{bs.open ? '📖 짧은 이야기도 나와요' : `📖 이야기까지 ⭕ ${bs.got}/${bs.need}`}</span>
+              {/* 11-08: '이야기까지 n/20'이 전체 문제 수로 보이지 않게 — 전체 문제 수를 따로 보이고, 이야기는 '몇 개 더 맞히면'으로 */}
+              <span class="sp-home-sub" data-blank-total={bs.total}>{bs.total}문제 · 알맞은 말 고르기</span>
+              <span class="sp-home-sub" data-story-open={bs.open ? '1' : '0'}>{bs.open ? '📖 짧은 이야기 문제도 나와요' : `📖 ⭕${bs.need - bs.got}개 더 맞히면 이야기 문제`}</span>
             </span>
             {bkFull ? <span class="m-cat-count">오늘 {catMax()}문제 끝!</span> : bk ? <span class="m-cat-count">오늘 {bk}/{catMax()}</span> : null}
           </button>}

@@ -52,14 +52,17 @@ for (const b of BANK) {
   for (const c of hangulOf(b.t + opts.join('') + b.why.join(''))) assert.ok(FONT_SYLLABLES.has(c), `앱 글꼴에 없는 글자 '${c}' (${b.id}) — 다른 글자로 바꾸기`);
 }
 for (const v of Object.values(BK_TIP)) for (const c of hangulOf(v)) assert.ok(FONT_SYLLABLES.has(c), `도움말 글꼴 '${c}'`);
-assert.ok(BANK.length >= 150, '문제 수 ' + BANK.length);
+assert.ok(BANK.length >= 300, '문제 수 ' + BANK.length);   // 11-08 사용자 요청으로 180 → 316
 assert.ok(byLv[1] + byLv[2] >= STORY_OPEN * 4, '한 문장 문제가 넉넉히');
-assert.ok(byLv[3] >= 40, '짧은 이야기 문제 ' + byLv[3]);
+assert.ok(byLv[3] >= 100, '짧은 이야기 문제 ' + byLv[3]);
+// 같은 글이 두 번 들어가지 않게 (문제를 늘릴 때 겹침 막기)
+assert.equal(new Set(BANK.map(bkFull)).size, BANK.length, '같은 글의 문제가 둘');
 // 열쇠: 맞춤법 열쇠('문장id.번호')와 절대 겹치지 않음 · 예전 문제의 id·정답은 그대로(뒤에 추가만)
 assert.ok(BK_KEYS.every(k => !k.includes('.')) && SP_KEYS.every(k => k.includes('.')), '빈칸 추리 열쇠와 맞춤법 열쇠가 겹치지 않음');
 const base = JSON.parse(readFileSync(new URL('./blank_keys_baseline.json', import.meta.url), 'utf8')) as Record<string, string>;
 for (const [k, a] of Object.entries(base)) { assert.ok(BK_KEY_SET.has(k), '예전 문제 열쇠가 사라짐: ' + k); assert.equal(BK_BY[k].a, a, '예전 문제의 정답이 바뀜: ' + k); }
-assert.ok(Object.keys(base).length >= 180, '기준표');
+assert.ok(Object.keys(base).length >= 316, '기준표');
+assert.ok(BANK.every(b => b.id in base), '새 문제는 열쇠 기준표에도 (blank_keys_baseline.json — 뒤에 추가만)');
 
 // ---------- 2) 글 나누기 · 보기 섞기 · 문제 시간 ----------
 for (const b of BANK) {

@@ -187,7 +187,7 @@ export function BlankScreen({ onBack, onCloset }: { onBack: () => void; onCloset
         </div>
         {pop && <div key={pop.k} class="m-pop" data-mat-pop={pop.mat ? 1 : 0} data-snack-pop={pop.snack ?? ''}>{pop.mat && <><MatIcon size={30} /> +1</>}{pop.snack && <><SnackIcon id={pop.snack} size={36} /> +1</>}</div>}
         <button class={`btn violet small ${gl ? 'gate-locked' : ''}`} style={{ position: 'absolute', left: 20, top: 112 }} data-gate-locked={gl ? '1' : undefined} onClick={() => { if (!gl) sfx.tap(); onCloset(); }}>{gl ? '🔒' : '👗'} {who} 옷장</button>
-        {!story.open && <div class="pill bk-story-pill" data-story-left={story.need - story.got}>📖 이야기까지 ⭕ {story.got}/{story.need}</div>}
+        {!story.open && <div class="pill bk-story-pill" data-story-left={story.need - story.got}>📖 ⭕{story.need - story.got}개 더 맞히면 이야기 문제</div>}
 
         {!done && q ? (
           <div class={`m-card bk-card phase-${phase}`} data-q={q.key} data-ans={q.ans} data-lv={q.lv} data-phase={phase}>

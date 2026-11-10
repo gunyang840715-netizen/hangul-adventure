@@ -4815,6 +4815,190 @@
   {
    "u": "art/pets/fold.paint-wear-neck-pearl-front.fcf0acca.webp",
    "b": 16124
+  },
+  {
+   "u": "art/pets/koshort.paint-wear-hat-beret-front.5529c3c8.webp",
+   "b": 34234
+  },
+  {
+   "u": "art/pets/russian.paint-wear-hat-beret-front.2181a3c6.webp",
+   "b": 34632
+  },
+  {
+   "u": "art/pets/siamese.paint-wear-hat-beret-front.4364912e.webp",
+   "b": 32006
+  },
+  {
+   "u": "art/pets/fold.paint-wear-hat-beret-front.45fb25bc.webp",
+   "b": 35964
+  },
+  {
+   "u": "art/pets/persian.paint-wear-hat-beret-front.1cf97739.webp",
+   "b": 47836
+  },
+  {
+   "u": "art/pets/maltese.paint-wear-neck-bandana-front.6913d330.webp",
+   "b": 60988
+  },
+  {
+   "u": "art/pets/koshort.paint-wear-neck-heart-front.ce7dc905.webp",
+   "b": 14904
+  },
+  {
+   "u": "art/pets/russian.paint-wear-neck-heart-front.589ee5d0.webp",
+   "b": 13944
+  },
+  {
+   "u": "art/pets/siamese.paint-wear-neck-heart-front.96c032a8.webp",
+   "b": 14188
+  },
+  {
+   "u": "art/pets/fold.paint-wear-neck-heart-front.e0860d8e.webp",
+   "b": 20472
+  },
+  {
+   "u": "art/pets/persian.paint-wear-neck-heart-front.bf5b9379.webp",
+   "b": 14556
+  },
+  {
+   "u": "art/pets/koshort.paint-wear-neck-ribbon-front.09903420.webp",
+   "b": 42906
+  },
+  {
+   "u": "art/pets/russian.paint-wear-neck-ribbon-front.bc18d3ca.webp",
+   "b": 46576
+  },
+  {
+   "u": "art/pets/siamese.paint-wear-neck-ribbon-front.d4145805.webp",
+   "b": 39428
+  },
+  {
+   "u": "art/pets/fold.paint-wear-neck-ribbon-front.7a027b75.webp",
+   "b": 57982
+  },
+  {
+   "u": "art/pets/persian.paint-wear-neck-ribbon-front.39626af9.webp",
+   "b": 53014
+  },
+  {
+   "u": "art/pets/maltese.paint-wear-neck-tag-front.1191a01c.webp",
+   "b": 50480
+  },
+  {
+   "u": "art/pets/poodle.paint-wear-neck-tag-front.2b2f3622.webp",
+   "b": 44434
+  },
+  {
+   "u": "art/pets/corgi.paint-wear-neck-tag-front.a5dd046d.webp",
+   "b": 74514
+  },
+  {
+   "u": "art/pets/shiba.paint-wear-neck-tag-front.fd2fc86c.webp",
+   "b": 53234
+  },
+  {
+   "u": "art/pets/schnauzer.paint-wear-neck-tag-front.1ddea465.webp",
+   "b": 50734
+  },
+  {
+   "u": "art/pets/maltese.paint-wear-neck-whistle-front.26d16170.webp",
+   "b": 42558
+  },
+  {
+   "u": "art/pets/poodle.paint-wear-neck-whistle-front.28ab4d59.webp",
+   "b": 33810
+  },
+  {
+   "u": "art/pets/corgi.paint-wear-neck-whistle-front.c39d7fd0.webp",
+   "b": 60806
+  },
+  {
+   "u": "art/pets/shiba.paint-wear-neck-whistle-front.7cd5124a.webp",
+   "b": 43236
+  },
+  {
+   "u": "art/pets/schnauzer.paint-wear-neck-whistle-front.22ce2ffd.webp",
+   "b": 43580
+  },
+  {
+   "u": "art/pets/koshort.paint-wear-neck-star-front.a3e265cd.webp",
+   "b": 11458
+  },
+  {
+   "u": "art/pets/russian.paint-wear-neck-star-front.d0fe0980.webp",
+   "b": 11980
+  },
+  {
+   "u": "art/pets/siamese.paint-wear-neck-star-front.e4c59296.webp",
+   "b": 10876
+  },
+  {
+   "u": "art/pets/fold.paint-wear-neck-star-front.d113a453.webp",
+   "b": 16742
+  },
+  {
+   "u": "art/pets/persian.paint-wear-neck-star-front.5ef9d645.webp",
+   "b": 14486
+  },
+  {
+   "u": "art/pets/fold.paint-wear-hat-flower-front.de092515.webp",
+   "b": 34052
+  },
+  {
+   "u": "art/pets/koshort.paint-wear-hat-flower-front.fa387a2a.webp",
+   "b": 30826
+  },
+  {
+   "u": "art/pets/persian.paint-wear-hat-flower-front.09fec3ff.webp",
+   "b": 48304
+  },
+  {
+   "u": "art/pets/russian.paint-wear-hat-flower-front.c4a89648.webp",
+   "b": 29272
+  },
+  {
+   "u": "art/pets/siamese.paint-wear-hat-flower-front.d3670098.webp",
+   "b": 31678
+  },
+  {
+   "u": "art/pets/corgi.paint-wear-hat-beanie-front.30d57933.webp",
+   "b": 67070
+  },
+  {
+   "u": "art/pets/maltese.paint-wear-hat-beanie-front.611a8487.webp",
+   "b": 53638
+  },
+  {
+   "u": "art/pets/poodle.paint-wear-hat-beanie-front.e0b55d1a.webp",
+   "b": 67188
+  },
+  {
+   "u": "art/pets/schnauzer.paint-wear-hat-beanie-front.1f952425.webp",
+   "b": 66800
+  },
+  {
+   "u": "art/pets/shiba.paint-wear-hat-beanie-front.a98db2a6.webp",
+   "b": 71084
+  },
+  {
+   "u": "art/pets/fold.paint-wear-hat-bunny-front.3885fc99.webp",
+   "b": 43538
+  },
+  {
+   "u": "art/pets/koshort.paint-wear-hat-bunny-front.db8122bd.webp",
+   "b": 47746
+  },
+  {
+   "u": "art/pets/russian.paint-wear-hat-bunny-front.b9b80c96.webp",
+   "b": 46832
+  },
+  {
+   "u": "art/pets/siamese.paint-wear-hat-bunny-front.c189f8f8.webp",
+   "b": 42030
+  },
+  {
+   "u": "art/pets/schnauzer.paint-wear-hat-straw-front.61987fa8.webp",
+   "b": 64862
   }
  ]
 }

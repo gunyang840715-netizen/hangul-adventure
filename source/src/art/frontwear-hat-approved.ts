@@ -17,4 +17,9 @@ export const APPROVED_FRONT_HAT: Record<string, FrontWearLayer> = {
   'poodle:cap': { url: './art/pets/poodle.paint-wear-hat-cap-front.52d54358.webp', x: 185, y: 132, width: 262, height: 146 },
   'schnauzer:cap': { url: './art/pets/schnauzer.paint-wear-hat-cap-front.2359f260.webp', x: 191, y: 130, width: 253, height: 139 },
   'shiba:cap': { url: './art/pets/shiba.paint-wear-hat-cap-front.49ec6c41.webp', x: 191, y: 117, width: 261, height: 153 },
+  'maltese:police': { url: './art/pets/maltese.paint-wear-hat-police-front.f35ddeaa.webp', x: 177, y: 76, width: 306, height: 163 },
+  'poodle:police': { url: './art/pets/poodle.paint-wear-hat-police-front.899905dd.webp', x: 179, y: 106, width: 281, height: 141 },
+  'corgi:police': { url: './art/pets/corgi.paint-wear-hat-police-front.3e739103.webp', x: 196, y: 133, width: 240, height: 134 },
+  'shiba:police': { url: './art/pets/shiba.paint-wear-hat-police-front.2eb65e04.webp', x: 181, y: 79, width: 293, height: 149 },
+  'schnauzer:police': { url: './art/pets/schnauzer.paint-wear-hat-police-front.e334ce26.webp', x: 177, y: 117, width: 278, height: 138 },
 };

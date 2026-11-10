@@ -55,6 +55,53 @@ export function letterSets(sets = letterSetCount(), reps = letterReps()): TraceG
   });
 }
 
+/**
+ * 이어 하기 때 저장된 쓰기 단계를 지금 부모 설정에 맞춘다 (11-10 사용자 지적: "5번씩 3세트로 설정해도 10번씩 4세트 그대로").
+ * 하던 모험은 시작할 때 만든 단계를 저장해 두고 이어 가므로, 설정을 바꿔도 그 모험이 끝날 때까지 예전 횟수가 남아 있었다.
+ * - 새 글자 세트: 이미 끝낸 세트는 그대로, 아직 안 한 세트만 지금 설정(세트 수·횟수)으로 다시 만든다.
+ *   세트 사이 놀이는 저장돼 있던 그 글자의 놀이를 차례로 다시 쓴다(새로 뽑지 않음 → 안 배운 글자 없음).
+ * - 받침·낱말 쓰기(세트 표시 없는 쓰기): 아직 안 한 것만 지금 횟수(traceReps)로.
+ * from(이어 할 자리) 앞의 단계는 개수·순서를 바꾸지 않으므로 이어 할 자리는 그대로 맞다.
+ */
+export function applyStudySettings(steps: Step[], from: number): Step[] {
+  const want = letterSets();
+  const reps = traceReps();
+  const out: Step[] = [];
+  let i = 0;
+  while (i < steps.length) {
+    const st = steps[i];
+    if (st.t !== 'traceSet') { out.push(st); i++; continue; }
+    if (st.parts == null) {
+      out.push(i >= from && !st.guides && st.reps !== reps ? { ...st, reps } : st);
+      i++; continue;
+    }
+    // 한 글자의 세트 묶음: [쓰기 0세트, 놀이, 쓰기 1세트, 놀이, …]
+    const ch = st.items[0];
+    const block: { set: Step; game?: Step; at: number }[] = [];
+    let j = i;
+    while (j < steps.length) {
+      const s = steps[j];
+      if (s.t !== 'traceSet' || s.parts == null || s.items[0] !== ch || (s.part ?? 0) !== block.length) break;
+      const g = steps[j + 1];
+      const game = g && g.t !== 'traceSet' && g.t !== 'intro' ? g : undefined;
+      block.push({ set: s, game, at: j });
+      j += game ? 2 : 1;
+    }
+    if (j <= from) { out.push(...steps.slice(i, j)); i = j; continue; }   // 다 끝낸 글자는 그대로
+    const done = block.filter(b => b.at < from);
+    for (const b of done) { out.push(b.set); if (b.game) out.push(b.game); }
+    const games = [...block.slice(done.length), ...done].map(b => b.game).filter((g): g is Step => !!g);
+    for (let b = done.length; b < want.length; b++) {
+      const guides = want[b];
+      out.push({ t: 'traceSet', items: [ch], reps: guides.length, level: b + 1, guides, part: b, parts: want.length });
+      const g = games[(b - done.length) % Math.max(1, games.length)];
+      if (g) out.push(g);
+    }
+    i = j;
+  }
+  return out;
+}
+
 export type Step =
   | { t: 'greet' }
   | { t: 'intro'; ch: string }

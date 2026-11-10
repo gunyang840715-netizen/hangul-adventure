@@ -18,7 +18,7 @@ import { House, Dress, Adopt } from './screens/House';
 import { BuildScreen } from './screens/Build';
 import { RoomScreen, ParkScreen, YardScreen } from './screens/Home';
 import { BuildArt } from './art/Build';
-import { buildLesson, buildPlay, refreshSteps, dictationStep, LETTER_SETS, type Step } from './engine/session';
+import { buildLesson, buildPlay, refreshSteps, applyStudySettings, dictationStep, LETTER_SETS, type Step } from './engine/session';
 import { petView, load, remainingMs, startClock, onChange, addLessonToday, addAdventure, addStars, todayDoneLessons, getResume, setResume, setClockActive, today, curLesson, passLesson, reviewDue, passReview, failReview } from './engine/store';
 import { unlock, music, newScene, sfx } from './engine/audio';
 import { syncSoon } from './engine/sync';
@@ -219,6 +219,8 @@ export function App() {
     // 예전 판에서 저장된 남은 놀이에 안 배운 글자가 있으면 그 자리만 배운 글자로 다시 만든다
     let steps = r.steps as Step[];
     try { steps = refreshSteps(steps, r.lessonIdx, r.stepIdx); } catch { /* 그대로 */ }
+    // 하던 모험도 아직 안 한 쓰기는 지금 부모 설정(새 글자 세트 수·횟수, 받침·낱말 횟수)으로 (11-10 사용자 지적)
+    try { steps = applyStudySettings(steps, r.stepIdx); } catch { /* 그대로 */ }
     // 시험이 없던 예전 판에서 저장된 모험이면, 끝나기 전에 받아쓰기 시험을 넣는다 (시험 없이 다음 단계로 못 가게)
     if (!r.replay && !steps.some(x => x.t === 'dictation')) {
       try {

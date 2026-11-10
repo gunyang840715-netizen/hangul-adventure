@@ -151,6 +151,48 @@ assert.equal(V.repsStartLine(10), V.REPS_START[10], '10번은 녹음된 말 그�
 assert.equal(V.repsStartLine(3), '세 번 써 보자!');
 assert.ok(CATS.length === 4);
 
+// ---------- 7) 이어 하기 (11-10 사용자 지적: 5번×3세트로 바꿔도 하던 모험은 10번×4세트 그대로) ----------
+reset();
+const lt = (st: any[]) => st.filter((x: any) => x.t === 'traceSet' && x.parts != null);
+const lIdx = LESSONS.findIndex(l => l.kind === 'letters' || l.kind === 'vowel' || l.kind === 'cons');
+const saved = S.buildLesson(lIdx);                 // 기본 10번×4세트로 저장된 모험
+assert.ok(lt(saved).every((x: any) => x.reps === 10 && x.parts === 4));
+C.setStudy({ ls: 3, lr: 5 });
+// 처음부터 이어 하기: 모든 글자가 5번×3세트, 세트마다 놀이, 놀이는 저장된 그 글자 놀이에서
+const a0 = S.applyStudySettings(saved, 1);
+const per = (st: any[]) => { const m: Record<string, any[]> = {}; for (const x of lt(st)) (m[x.items[0]] ??= []).push(x); return m; };
+for (const [ch, xs] of Object.entries(per(a0))) {
+  assert.equal(xs.length, 3, `${ch}: 3세트`); assert.ok(xs.every((x: any, i: number) => x.reps === 5 && x.guides.length === 5 && x.part === i && x.parts === 3), `${ch}: 5번씩`);
+  const i0 = a0.indexOf(xs[0]); assert.equal(a0[i0 - 1].t, 'intro', `${ch}: 만나기 다음 첫 세트`);
+  xs.forEach((x: any) => { const n = a0[a0.indexOf(x) + 1]; assert.ok(n && n.t !== 'traceSet' && n.t !== 'intro', `${ch}: 세트 뒤 놀이`); assert.ok(saved.includes(n), `${ch}: 놀이는 저장된 것`); });
+}
+assert.ok(a0.some(x => x.t === 'dictation') && a0.some(x => x.t === 'rescue'), '시험·마무리 그대로');
+// 첫 글자 2세트(10번)까지 끝낸 뒤 이어 하기: 끝낸 것과 이어 할 자리 앞은 그대로, 남은 건 3세트째 하나만(5번)
+const f0 = lt(saved)[0], ch0 = f0.items[0];
+const from = saved.indexOf(lt(saved)[2]);          // 첫 글자 3세트째에서 멈춤
+const a1 = S.applyStudySettings(saved, from);
+assert.deepEqual(a1.slice(0, from), saved.slice(0, from), '이어 할 자리 앞은 그대로');
+const c0 = per(a1)[ch0];
+assert.equal(c0.length, 3); assert.equal(c0[0].reps, 10); assert.equal(c0[1].reps, 10); assert.equal(c0[2].reps, 5); assert.equal(a1[from], c0[2], '이어 할 자리 = 남은 세트');
+// 세트를 늘리면(6세트) 남은 세트가 늘고, 놀이는 저장된 놀이를 돌려 씀
+C.setStudy({ ls: 6, lr: 5 });
+assert.equal(per(S.applyStudySettings(saved, from))[ch0].length, 6);
+// 받침·낱말 쓰기: 안 한 것만 지금 횟수
+const bIdx = LESSONS.findIndex(l => l.kind === 'batchim');
+store.setSettings({ study: {}, traceReps: 10 });
+const bs = S.buildLesson(bIdx); const bt = bs.filter(x => x.t === 'traceSet');
+store.setSettings({ traceReps: 4 });
+const ba = S.applyStudySettings(bs, bs.indexOf(bt[1]));
+const bb = ba.filter(x => x.t === 'traceSet') as any[];
+assert.deepEqual(bb.map(x => x.reps), [10, 4, 4], '받침 쓰기: 끝낸 것 10번, 남은 것 4번');
+// 설정 그대로면 아무것도 안 바뀜
+store.setSettings({ study: {}, traceReps: 10 });
+assert.deepEqual(S.applyStudySettings(saved, 5), saved); assert.deepEqual(S.applyStudySettings(bs, 0), bs);
+// 안 배운 글자 없음: 바꾼 뒤 남은 단계도 배운 글자만 (refreshSteps 검사를 그대로 통과)
+C.setStudy({ ls: 2, lr: 7 });
+const a2 = S.applyStudySettings(saved, 1);
+assert.deepEqual(S.refreshSteps(a2, lIdx, 1).length, a2.length, '남은 놀이 다시 만들 것 없음');
+
 store.replaceAll(keep);
 store.flushSave();
-console.log(`공부량 자세히: 새 글자 ${allSets.length}가지 세트×횟수 · 받아쓰기 1~4번 · 받침 쓰기 1~15번 · 수학 하루 최대·다음 단계 조건·시간 범위 · 저장·백업·합치기 통과`);
+console.log(`공부량 자세히: 새 글자 ${allSets.length}가지 세트×횟수 · 받아쓰기 1~4번 · 받침 쓰기 1~15번 · 수학 하루 최대·다음 단계 조건·시간 범위 · 저장·백업·합치기·이어 하기 통과`);

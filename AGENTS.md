@@ -63,6 +63,12 @@ GitHub Pages로 바로 공개되는 **공개 저장소**이고, 태블릿에서 
 - 공부 먼저(분량) 칸도 －/＋(5분·5개 단위). 세트·횟수가 녹음 말과 다르면 새 말(`voice.ts` `repsStartLine`·`repsDoneLine`·`REPS_ALL_ANY`, 녹음 없음). 검사 `scripts/study_cfg_check.mts`(learning_rules_check 끝에서 실행).
 - 기본값·범위는 사용자가 직접 말할 때만 바꾼다. 받아쓰기 불합격 규칙·다음날 복습·오답 회수·보상 간격은 그대로.
 
+## 글자 합치기 — 낱말 전에 가~휴 읽고 쓰기 (2026-11-12 사용자 요청)
+
+- 첫 낱말 단계 바로 앞에서 받침 없는 140글자(자음 14 × 모음 10, 가나다…하 / 거너더…허 / … / 규뉴듀…휴)를 하루 한 줄씩. 코드: `data/syllables.ts`(글자·순서) · `lib/sylStage.ts`(진도·복습) · `engine/sylLesson.ts`(모험) · `games/SylRead.tsx`(줄 읽기·찾기).
+- 저장은 새 칸 없음: 줄 통과 `items['sy:모음']`, 복습 `lastPass.lesson = 1000 + 줄`. 한글 `lessonIdx`·`hold`·`curriculum.ts`는 건드리지 않는다. 모험 번호 1000번대는 진도표와 안 겹침(구버전 기기는 이 이어하기·복습을 무시).
+- 규칙(받아쓰기 통과해야 줄 통과·다음날 복습·놀이 오답 회수)은 다른 단계와 같다. 쓰기 횟수 기본 5번(`settings.study.sr`). 검사 `scripts/syl_stage_check.mts`. 화면 확인 `?play=syl&row=0`.
+
 ## 구조
 
 | 위치 | 내용 | 고쳐도 되나 |

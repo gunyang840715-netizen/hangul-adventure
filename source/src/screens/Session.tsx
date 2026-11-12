@@ -18,10 +18,12 @@ import { Greet, Batchim, SentenceGame, Rescue } from '../games/Story';
 import { Reward } from '../games/Reward';
 import { Recall } from '../games/Recall';
 import { Dictation } from '../games/Dictation';
+import { SylRead, SylFind } from '../games/SylRead';
 import { GiftPop } from '../games/Gift';
 import { Backdrop } from '../art/Scene';
 import { Buddy } from '../games/Buddies';
 import { LESSONS, UNITS } from '../data/curriculum';
+import { isSylIdx, sylRowOfIdx, sylRowTitle, SYL_UNIT } from '../data/syllables';
 
 interface Props {
   steps: Step[]; lessonIdx: number; name: string;
@@ -30,7 +32,7 @@ interface Props {
   onFail?: () => void;   // 받아쓰기 시험에 떨어짐 (다음 단계로 못 감)
 }
 
-const KNOWN = new Set(['greet', 'intro', 'trace', 'traceSet', 'hunt', 'mole', 'memory', 'feed', 'bubble', 'cards', 'blend', 'hop', 'picture', 'build', 'batchim', 'sentence', 'rescue', 'reward', 'recall', 'dictation']);
+const KNOWN = new Set(['greet', 'intro', 'trace', 'traceSet', 'hunt', 'mole', 'memory', 'feed', 'bubble', 'cards', 'blend', 'hop', 'picture', 'build', 'batchim', 'sentence', 'rescue', 'reward', 'recall', 'dictation', 'sylread', 'sylfind']);
 const GRACE = 4 * 60000;   // 시간이 다 된 뒤에도 지금 놀이는 이만큼 더 할 수 있음
 
 export function Session({ steps, lessonIdx, name, startAt = 0, replay = false, play = false, resumed = false, onFinish, onQuit, onPause, demo, onFail }: Props) {
@@ -44,8 +46,9 @@ export function Session({ steps, lessonIdx, name, startAt = 0, replay = false, p
   const step = steps[i];
   const timeUp = () => !demo && remainingMs() <= 0;
 
-  // 이어하기 위치 저장 (놀이터는 저장 안 함)
-  const saveAt = (idx: number) => { if (!play) setResume({ lessonIdx, replay, stepIdx: idx, steps, at: Date.now() }); };
+  // 이어하기 위치 저장 (놀이터는 저장 안 함. 글자 합치기를 '다시 하기'로 할 때도 저장 안 함 —
+  // 다시 하기 이어하기는 단계 번호를 안 따지므로, 아직 업데이트 안 된 기기가 1000번대 번호를 진도표에서 찾다가 멈출 수 있다)
+  const saveAt = (idx: number) => { if (!play && !(replay && isSylIdx(lessonIdx))) setResume({ lessonIdx, replay, stepIdx: idx, steps, at: Date.now() }); };
   useEffect(() => { saveAt(i); }, [i]);
 
   // 시간이 다 됐는지 살피기
@@ -116,6 +119,8 @@ export function Session({ steps, lessonIdx, name, startAt = 0, replay = false, p
       case 'rescue': return <Rescue {...P} />;
       case 'reward': return <Reward {...P} />;
       case 'recall': return <Recall {...P} />;
+      case 'sylread': return <SylRead {...P} />;
+      case 'sylfind': return <SylFind {...P} />;
       // 받아쓰기 시험: 통과하면 다음으로, 떨어지면 여기서 끝 (다시 하기 모험·놀이터에서는 결과와 상관없이 계속)
       case 'dictation': return <Dictation {...P} onResult={(pass) => { if (pass || !onFail) next(); else { stopVoice(); onFail(); } }} />;
     }
@@ -155,8 +160,10 @@ export function Session({ steps, lessonIdx, name, startAt = 0, replay = false, p
 
 /** 쉬었다가 다시 왔을 때: 하던 곳부터 */
 function ResumeCard({ lessonIdx, done, total, onGo }: { lessonIdx: number; done: number; total: number; onGo: () => void }) {
+  const syl = isSylIdx(lessonIdx);
   const l = LESSONS[Math.min(lessonIdx, LESSONS.length - 1)];
-  const u = UNITS[l.unit - 1];
+  const u = UNITS[(syl ? SYL_UNIT : l.unit) - 1];
+  const title = syl ? sylRowTitle(sylRowOfIdx(lessonIdx)) : l.title;
   useEffect(() => { say('하던 모험을 이어서 하자!'); }, []);
   return (
     <div class="screen" onClick={onGo}>
@@ -168,7 +175,7 @@ function ResumeCard({ lessonIdx, done, total, onGo }: { lessonIdx: number; done:
         </div>
         <div class="slide-up" style={{ display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'flex-start' }}>
           <div style={{ fontSize: 70, color: '#e0488a', textShadow: '0 4px 0 #fff' }}>이어서 하자!</div>
-          <div class="pill" style={{ fontSize: 36 }}><span>{u.emoji}</span> {u.name} · {l.title}</div>
+          <div class="pill" style={{ fontSize: syl ? 32 : 36 }}><span>{u.emoji}</span> {u.name} · {title}</div>
           <div class="pill" style={{ fontSize: 28, background: '#fff8d6' }}>🚩 {Math.round(done / Math.max(1, total) * 100)}% 했어요</div>
           <button class="btn big pulse" data-resume="1" onClick={(e) => { e.stopPropagation(); onGo(); }}>이어서 하기 ▶</button>
         </div>

@@ -257,6 +257,7 @@ export function allLines(name: string): string[] {
   levelLines().forEach(l => L.add(l));
   gateLines().forEach(l => L.add(l));
   studyLines().forEach(l => L.add(l));
+  sylLines().forEach(l => L.add(l));
   L.delete('');
   return [...L];
 }
@@ -353,3 +354,8 @@ export function studyLines(): string[] {
   for (let n = 1; n <= 15; n++) L.push(repsStartLine(n), repsDoneLine(n));
   return L;
 }
+// ---- 글자 합치기 (11-12 사용자 요청: 낱말 공부 전에 가~휴를 읽으면서 쓰는 연습 — data/syllables.ts · engine/sylLesson.ts) ----
+// 녹음 없음 → 기기 음성. 글자 소리(가·나·다 …)와 나머지 안내('같이 읽어 보자!'·'글자 친구를 눌러 봐!'·'잘 듣고 찾아 봐!' 등)는 이미 녹음된 말을 그대로 쓴다
+export const SYL_GREET = '오늘은 글자를 합쳐서, 소리 내어 읽으면서 써 보자!';
+/** 글자 합치기 말 전부 (allLines에 넣음) */
+export function sylLines(): string[] { return [SYL_GREET]; }

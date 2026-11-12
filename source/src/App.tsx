@@ -19,10 +19,13 @@ import { BuildScreen } from './screens/Build';
 import { RoomScreen, ParkScreen, YardScreen } from './screens/Home';
 import { BuildArt } from './art/Build';
 import { buildLesson, buildPlay, refreshSteps, applyStudySettings, dictationStep, LETTER_SETS, type Step } from './engine/session';
-import { petView, load, remainingMs, startClock, onChange, addLessonToday, addAdventure, addStars, todayDoneLessons, getResume, setResume, setClockActive, today, curLesson, passLesson, reviewDue, passReview, failReview } from './engine/store';
+import { petView, load, remainingMs, startClock, onChange, addLessonToday, addAdventure, addStars, todayDoneLessons, getResume, setResume, setClockActive, today, curLesson, passLesson, passReview, failReview } from './engine/store';
 import { unlock, music, newScene, sfx } from './engine/audio';
 import { syncSoon } from './engine/sync';
 import { LESSONS } from './data/curriculum';
+import { buildSylLesson, applySylSettings } from './engine/sylLesson';
+import { SYL_ROW_COUNT, isSylIdx, sylIdx, sylRowOfIdx } from './data/syllables';
+import { sylActive, curTask, reviewKind, passSylRow, failSylReview, sylPassRow } from './lib/sylStage';
 import { Pet, ItemIcon, SnackIcon } from './art/Pet';
 import { prefetchPets } from './art/petpaint';
 import { prefetchArt } from './art/paintbg';
@@ -137,7 +140,7 @@ export function App() {
   const validResume = () => {
     const r = getResume();
     if (!r || !Array.isArray(r.steps) || !r.steps.length || r.stepIdx >= r.steps.length) return null;
-    if (!r.replay && r.lessonIdx !== curLesson()) return null;
+    if (!r.replay && r.lessonIdx !== curTask()) return null;   // 지금 할 모험(글자 합치기 차례면 그 줄)의 이어하기만
     return r;
   };
 
@@ -162,6 +165,14 @@ export function App() {
     if (!k) return;
     const li = +(q.get('lesson') || 6);
     const part = q.get('part');
+    // 글자 합치기(11-12) 바로 열기: ?play=syl&row=0 (한 줄 모험 전체) · ?play=sylread&row=3 · ?play=sylfind&row=3
+    if (k === 'syl' || k === 'sylread' || k === 'sylfind') {
+      const row = Math.max(0, Math.min(SYL_ROW_COUNT - 1, +(q.get('row') || 0)));
+      const all = buildSylLesson(row);
+      setSess({ steps: k === 'syl' ? all : all.filter(st => st.t === k), idx: sylIdx(row), replay: true, play: true });
+      setScreen('session');
+      return;
+    }
     const steps: Step[] = k === 'dictation' ? [dictationStep([...(q.get('items') || 'ㄱㄴ')], q.get('mode') === 'review' ? 'review' : 'lesson')] : k === 'traceSet'
       ? [part != null ? { t: 'traceSet', items: [q.get('ch') || 'ㅓ'], reps: 10, level: +part + 1, guides: LETTER_SETS[+part], part: +part, parts: LETTER_SETS.length } : { t: 'traceSet', items: ['ㄱ', 'ㄴ'], reps: +(q.get('reps') || 10), level: +(q.get('level') || 1) }]
       : k === 'lesson' ? buildLesson(li) : buildPlay(li, k);
@@ -204,7 +215,7 @@ export function App() {
   const leave = (sc: Screen): Screen => { const g = gateBlock(sc); return g ? GATE_HOME[g.kind] : sc; };
 
   /** 다음날 공부를 시작하기 전 복습 시험을 볼 차례인가 */
-  const needReview = (idx: number, replay: boolean) => !demo && !replay && idx === curLesson() && reviewDue();
+  const needReview = (idx: number, replay: boolean) => !demo && !replay && idx === curTask() && reviewKind() !== null;
   /** 복습 시험(어제 통과한 단계의 글자 받아쓰기) → 통과하면 after, 떨어지면 그 단계를 다시 공부 */
   const runReview = (after: () => void) => {
     const lp = load().lastPass!;
@@ -218,11 +229,12 @@ export function App() {
     if (needReview(r.lessonIdx, r.replay)) { runReview(() => { if (!resumeSession()) go('map'); }); return true; }
     // 예전 판에서 저장된 남은 놀이에 안 배운 글자가 있으면 그 자리만 배운 글자로 다시 만든다
     let steps = r.steps as Step[];
-    try { steps = refreshSteps(steps, r.lessonIdx, r.stepIdx); } catch { /* 그대로 */ }
-    // 하던 모험도 아직 안 한 쓰기는 지금 부모 설정(새 글자 세트 수·횟수, 받침·낱말 횟수)으로 (11-10 사용자 지적)
-    try { steps = applyStudySettings(steps, r.stepIdx); } catch { /* 그대로 */ }
+    const syl = isSylIdx(r.lessonIdx);   // 글자 합치기 줄(11-12): 진도표 밖의 모험이라 진도표로 고치는 일은 건너뜀
+    try { if (!syl) steps = refreshSteps(steps, r.lessonIdx, r.stepIdx); } catch { /* 그대로 */ }
+    // 하던 모험도 아직 안 한 쓰기는 지금 부모 설정(새 글자 세트 수·횟수, 받침·낱말 횟수, 글자 합치기 횟수)으로 (11-10 사용자 지적)
+    try { steps = syl ? applySylSettings(steps, r.stepIdx) : applyStudySettings(steps, r.stepIdx); } catch { /* 그대로 */ }
     // 시험이 없던 예전 판에서 저장된 모험이면, 끝나기 전에 받아쓰기 시험을 넣는다 (시험 없이 다음 단계로 못 가게)
-    if (!r.replay && !steps.some(x => x.t === 'dictation')) {
+    if (!syl && !r.replay && !steps.some(x => x.t === 'dictation')) {
       try {
         const test = buildLesson(r.lessonIdx).find(x => x.t === 'dictation');
         if (test) {
@@ -256,10 +268,12 @@ export function App() {
 
   const startLesson = (idx: number, replay: boolean) => {
     if (timeOver()) { go('sleep'); return; }
+    // 글자 합치기(11-12 사용자 요청): 자음·모음을 다 배웠고 안 끝낸 줄이 있으면, 지금 할 단계(낱말 …)보다 그 줄이 먼저
+    if (!replay && idx === curLesson() && sylActive()) idx = curTask();
     if (needReview(idx, replay)) { runReview(() => startLesson(idx, replay)); return; }
     const r = validResume();
     if (r && r.lessonIdx === idx && r.replay === replay) { resumeSession(); return; }
-    setSess({ steps: buildLesson(idx), idx, replay });
+    setSess({ steps: isSylIdx(idx) ? buildSylLesson(sylRowOfIdx(idx)) : buildLesson(idx), idx, replay });
     go('session');
   };
 
@@ -276,7 +290,14 @@ export function App() {
     if (sess?.review) { passReview(); syncSoon(300); const after = sess.after; setSess(null); if (after) after(); else go('map'); return; }
     const st = load();
     if (sess && !sess.play) setResume(null);
-    if (sess && !sess.replay && sess.idx === curLesson(st)) {
+    if (sess && !sess.replay && isSylIdx(sess.idx)) {
+      // 글자 합치기 줄: 받아쓰기 시험까지 통과 → 그 줄 통과 + 내일 복습할 글자 기록 (한글 단계 번호는 그대로 둠)
+      if (sess.idx === curTask(st)) {
+        const test = sess.steps.find(x => x.t === 'dictation') as Extract<Step, { t: 'dictation' }> | undefined;
+        passSylRow(sylRowOfIdx(sess.idx), test ? test.items : []);
+        addLessonToday();
+      }
+    } else if (sess && !sess.replay && sess.idx === curLesson(st)) {
       // 받아쓰기 시험까지 통과해야 여기로 옴 → 다음 단계 (다시 공부하던 단계면 묶음 풀기) + 내일 복습할 글자 기록
       const test = sess.steps.find(x => x.t === 'dictation') as Extract<Step, { t: 'dictation' }> | undefined;
       passLesson(sess.idx, test ? test.items : []);
@@ -291,7 +312,7 @@ export function App() {
 
   /** 받아쓰기 시험에 떨어짐: 그날 시험이면 다음 단계로 못 감(처음부터 다시 공부), 복습 시험이면 전 단계를 다시 공부 */
   const failTest = () => {
-    if (sess?.review) failReview();
+    if (sess?.review) { if (sylPassRow() >= 0) failSylReview(); else failReview(); }   // 줄 복습이면 그 줄을, 아니면 전 단계를 다시 공부
     else setResume(null);
     syncSoon(300);
     setSess(null);
@@ -319,7 +340,7 @@ export function App() {
     case 'mathRoom': view = <HomeCtx.Provider value={MATH_HOME}><RoomScreen key={'m-' + room} place={room} onBack={() => { syncSoon(500); go('mathBuild'); }} /></HomeCtx.Provider>; break;
     case 'mathPark': view = <HomeCtx.Provider value={MATH_HOME}><ParkScreen onBack={() => { syncSoon(500); go('mathBuild'); }} /></HomeCtx.Provider>; break;
     case 'mathYard': view = <HomeCtx.Provider value={MATH_HOME}><YardScreen key={'m-yard-' + room} house={room} onBack={() => { syncSoon(500); go('mathBuild'); }} /></HomeCtx.Provider>; break;
-    case 'map': view = <MapScreen key={`${s.lessonIdx}:${todayDone}:${demo}:${ver > 0 ? s.epoch : 0}`} onStart={startLesson} onPlay={startPlay} onBook={() => go('book')} onHouse={() => go('house')} onParent={openParent} todayDone={todayDone} demo={demo} resumeIdx={validResume()?.lessonIdx ?? -1} />; break;
+    case 'map': view = <MapScreen key={`${s.lessonIdx}:${curTask(s)}:${todayDone}:${demo}:${ver > 0 ? s.epoch : 0}`} onStart={startLesson} onPlay={startPlay} onBook={() => go('book')} onHouse={() => go('house')} onParent={openParent} todayDone={todayDone} demo={demo} resumeIdx={validResume()?.lessonIdx ?? -1} />; break;
     case 'session': view = sess && <Session key={sess.steps.length + ':' + (sess.startAt ?? 0) + ':' + sess.idx} steps={sess.steps} lessonIdx={sess.idx} name={s.name} startAt={sess.startAt} resumed={sess.resumed} replay={sess.replay} play={sess.play} onFinish={finish} onPause={pause} onQuit={() => { setSess(null); syncSoon(500); go('map'); }} demo={demo} onFail={sess.review || !sess.replay ? failTest : undefined} />; break;
     case 'book': view = <Book onBack={() => go('map')} />; break;
     case 'house': view = <House onBack={() => { syncSoon(500); go('map'); }} onDress={() => go('dress')} onAdopt={() => go('adopt')} onBuild={() => go('build')} onYard={(h) => { setRoom(h); setYardBack('house'); go('yard'); }} />; break;

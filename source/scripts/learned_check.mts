@@ -14,6 +14,9 @@ for (const f of man.files) Object.keys(JSON.parse(fs.readFileSync(VD + '/' + f.u
 const { buildLesson, buildPlay } = await import('../src/engine/session');
 const { LESSONS, knownAfter } = await import('../src/data/curriculum');
 const { decompose } = await import('../src/lib/hangul');
+// 글자 합치기(11-12): 진도표 밖의 모험 — 첫 낱말 단계 바로 앞에서 하는 가~휴 열 줄
+const { buildSylLesson } = await import('../src/engine/sylLesson');
+const { SYL_ROW_COUNT, SYL_GATE } = await import('../src/data/syllables');
 
 const REP = Number(process.argv[2] || 150);
 const HANGUL = /[ㄱ-ㆎ가-힣]/;
@@ -54,6 +57,8 @@ function texts(st: any): string[] {
     case 'recall': add(st.cards, st.targets, st.order); break;
     case 'memory': st.cards.forEach((c: any) => add(c.id, c.face, c.say)); break;
     case 'dictation': add(st.items, st.order); break;
+    case 'sylread': add(st.items); break;
+    case 'sylfind': add(st.items, st.order); break;
   }
   return o;
 }
@@ -81,6 +86,10 @@ function sanity(st: any): string | null {
       if (st.cards.length !== 16) return `카드 ${st.cards.length}장`;
       for (const t of st.targets) if (st.cards.filter((c: string) => c === t).length !== 2) return `${t} 카드 수`;
       return st.order.length >= 2 ? null : '문제 없음';
+    }
+    case 'sylfind': {
+      if (!st.order.length) return '문제 없음';
+      return st.order.every((x: string) => st.items.includes(x)) ? null : '찾을 글자가 줄에 없음';
     }
     case 'bubble': case 'mole': {
       const order = st.order ?? [];
@@ -114,6 +123,9 @@ for (let rep = 0; rep < REP; rep++) {
     // 놀이터: 지금까지 끝낸 단계(i-1)까지 배운 것
     if (i > 0) for (const st of buildPlay(i)) walk(i, [st], prev.jamo, prev.batchim, 'play:');
   }
+  // 글자 합치기 열 줄: 그 앞 단계(첫 낱말 단계 전)까지 배운 자음·모음으로만
+  const gate = knownAfter(SYL_GATE - 1);
+  for (let r = 0; r < SYL_ROW_COUNT; r++) walk(SYL_GATE, buildSylLesson(r), gate.jamo, gate.batchim, `글자 합치기 ${r + 1}줄:`);
 }
 
 const group = (xs: Bad[]) => {

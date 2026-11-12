@@ -13,6 +13,7 @@ export interface StudyStored {
   ls?: number;            // 새 글자 쓰기 세트 수 (세트마다 끝나면 놀이 한 판)
   lr?: number;            // 새 글자 쓰기 한 세트의 횟수
   dr?: number;            // 받아쓰기 시험: 글자마다 몇 번 묻나
+  sr?: number;            // 글자 합치기(가~휴): 글자마다 쓰는 횟수 (11-12)
   cm?: number;            // 수학·맞춤법: 한 항목 하루 최대 문제 수
   um?: number;            // 수학: 다음 단계 판정에 필요한 그날 최소 문제 수
   up?: number;            // 수학: 다음 단계 정답률(%)
@@ -33,6 +34,7 @@ export const RANGE = {
   lr: { min: 1, max: 15, step: 1, def: 10 },              // 새 글자 세트당 횟수 (숫자 세기 말이 15까지)
   traceReps: { min: 1, max: 15, step: 1, def: 10 },       // 받침·낱말 한 세트 횟수
   dr: { min: 1, max: 4, step: 1, def: 2 },                // 받아쓰기 글자마다
+  sr: { min: 1, max: 15, step: 1, def: 5 },               // 글자 합치기: 글자마다 쓰는 횟수 (하루 한 줄 14글자)
   testPass: { min: 10, max: 100, step: 10, def: 80 },     // 받아쓰기 통과 기준(%)
   // 수학·맞춤법
   dayMin: { min: 5, max: 180, step: 5, def: 30 },         // 하루 공부 시간(분)
@@ -60,6 +62,8 @@ export const letterSetCount = (s?: State) => get('ls', s);
 export const letterReps = (s?: State) => get('lr', s);
 /** 받아쓰기: 글자마다 몇 번 */
 export const dictReps = (s?: State) => get('dr', s);
+/** 글자 합치기(가~휴): 글자마다 쓰는 횟수 */
+export const sylReps = (s?: State) => get('sr', s);
 /** 수학·맞춤법: 한 항목 하루 최대 문제 수 */
 export const catMax = (s?: State) => get('cm', s);
 /** 수학 다음 단계: 그날 최소 문제 수 · 정답률(0~1) */

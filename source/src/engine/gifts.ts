@@ -5,7 +5,7 @@ import { ITEM_LIST, ITEM } from '../data/pets';
 export type Gift = { kind: 'snack' | 'item' | 'mat'; id: string };
 
 /** 선물을 주는 놀이 */
-const GAMES = new Set(['hunt', 'bubble', 'mole', 'memory', 'feed', 'hop', 'blend', 'picture', 'build', 'cards', 'sentence', 'rescue', 'recall']);
+const GAMES = new Set(['hunt', 'bubble', 'mole', 'memory', 'feed', 'hop', 'blend', 'picture', 'build', 'cards', 'sentence', 'rescue', 'recall', 'sylfind']);
 const TRACE = new Set(['traceSet', 'trace']);
 
 /** 간식이 선물로 나올 비율 (새 간식은 여기에도 넣어야 실제로 나온다 — id_keep_check가 확인) */

@@ -10,6 +10,7 @@
 import { load, setSettings, today, todayMs, todayLessons, curLesson, type State } from '../engine/store';
 import { LESSONS } from '../data/curriculum';
 import { todayMath } from '../math/mathStore';
+import { sylActive } from './sylStage';
 
 export type GateKind = 'h' | 'm';            // h: 한글 / m: 수학·맞춤법
 export type GateMode = 'off' | 'time' | 'amount';
@@ -83,7 +84,8 @@ export function gateStatus(kind: GateKind, s: State = load()): GateStatus {
       // 한글 학습량 = 오늘의 새 단계 (부모 설정의 '하루 새 단계'와 같은 수). 모험을 다 끝냈으면 더 할 새 단계가 없으니 연다
       unit = 'lesson'; need = Math.max(1, s.settings.newPerDay || 1);
       const n = todayLessons(s);
-      have = Math.min(need, n); frac = n / need; done = n >= need || curLesson(s) >= LESSONS.length;
+      // (글자 합치기 줄이 남아 있으면 아직 할 새 단계가 있는 것 — 줄 하나도 새 단계 하나로 센다, 11-12)
+      have = Math.min(need, n); frac = n / need; done = n >= need || (curLesson(s) >= LESSONS.length && !sylActive(s));
     } else {
       // 수학·맞춤법 학습량 = 오늘 맞힌 문제 (아무거나 눌러서 채우지 못하게 푼 문제가 아니라 맞힌 문제)
       unit = 'problem'; need = r.n;

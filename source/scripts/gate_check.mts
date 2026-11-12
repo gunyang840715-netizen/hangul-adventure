@@ -17,6 +17,7 @@ const store = await import('../src/engine/store');
 const G = await import('../src/lib/gate');
 const V = await import('../src/data/voice');
 const { LESSONS } = await import('../src/data/curriculum');
+const { SYL_VOWELS } = await import('../src/data/syllables');
 const { freshMath } = await import('../src/math/mathData');
 const { mergeState } = await import('../shared/merge.js') as any;
 const B = await import('../src/engine/backup');
@@ -88,8 +89,11 @@ store.giveExtraLesson();
 st = G.gateStatus('h');
 assert.ok(st.open && st.need === 3, '부모가 새 단계를 더 줘도 분량·열림은 그대로');
 // 모험을 다 끝낸 아이는 더 할 새 단계가 없으니 막지 않음
+// (11-12 글자 합치기: 열 줄(가~휴)도 끝낸 아이 — 줄이 남아 있으면 그 줄이 오늘의 새 단계라 아직 잠김)
 reset();
 store.load().lessonIdx = LESSONS.length;
+assert.ok(!G.gateStatus('h').open, '모험은 끝냈어도 글자 합치기 줄이 남았으면 잠김(할 새 단계가 있음)');
+for (const v of SYL_VOWELS) store.load().items['sy:' + v] = { box: 1, due: 0, seen: 1, right: 1, wrong: 0, last: 0 };
 assert.ok(G.gateStatus('h').open, '모든 모험을 끝냈으면 안 잠김');
 reset();
 store.load().lessonIdx = LESSONS.length - 1;

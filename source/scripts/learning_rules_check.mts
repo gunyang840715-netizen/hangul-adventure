@@ -96,3 +96,5 @@ await import('./level_unlock_check.mts');
 await import('./gate_check.mts');
 // 공부량 자세히 (11-07 사용자 요청 — 세트 수·횟수·받아쓰기·수학 하루 문제·다음 단계 조건 부모 설정)
 await import('./study_cfg_check.mts');
+// 글자 합치기 (11-12 사용자 요청 — 낱말 공부 전에 가~휴 140글자를 읽으면서 쓰는 단계: 순서·연습한 글자만·한글 진도 그대로·복습·두 기기 합치기)
+await import('./syl_stage_check.mts');

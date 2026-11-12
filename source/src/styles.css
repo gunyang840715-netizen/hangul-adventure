@@ -574,3 +574,19 @@ button:focus-visible, [role=button]:focus-visible { outline: 4px solid #7048e8; 
 .gate-row b { color: #e0488a; font-size: 30px; }
 .gate-banner { position: absolute; left: 50%; top: calc(var(--top) + 100px); transform: translateX(-50%); z-index: 50; padding: 14px 34px; border-radius: 999px; background: #fff; color: #e0488a; font-size: 38px; white-space: nowrap; box-shadow: var(--shadow); pointer-events: none; animation: gateBanner 5s ease both; }
 @keyframes gateBanner { 0% { opacity: 0; transform: translate(-50%, -26px) scale(.9); } 8% { opacity: 1; transform: translate(-50%, 0) scale(1.05); } 14% { transform: translate(-50%, 0) scale(1); } 88% { opacity: 1; } 100% { opacity: 0; } }
+/* 글자 합치기 (11-12 사용자 요청: 낱말 공부 전에 가~휴 읽고 쓰기 — games/SylRead.tsx · screens/MapScreen.tsx) */
+.syl-grid { position: absolute; left: 276px; right: 22px; top: 190px; display: grid; grid-template-columns: repeat(7, 128px); justify-content: center; gap: 22px 14px; }
+.syl-tile { width: 128px; height: 188px; flex-direction: column; gap: 8px; border-radius: 30px; color: #5a3d73; }
+.syl-tile .syl-ch { font-size: 96px; line-height: 1; }
+.syl-tile .syl-parts { font-size: 28px; line-height: 1; color: #b9a7cc; }
+.syl-tile .syl-parts b { font-weight: normal; }
+.syl-tile .syl-parts .c { color: #1c7ed6; }
+.syl-tile .syl-parts .v { color: #e64980; }
+.syl-tile .syl-star { position: absolute; top: -16px; right: -10px; font-size: 38px; }
+.syl-tile.now { transform: scale(1.14); box-shadow: 0 0 0 7px #ff8fb8, 0 0 34px 8px rgba(255, 143, 184, .7); z-index: 3; }
+.syl-tile.read { background: #fff8d6; }
+.syl-count { font-weight: normal; color: #e0488a; font-size: 34px; }
+.node-syl-dots { position: absolute; left: 50%; top: 100%; margin-top: 12px; transform: translateX(-50%); display: flex; gap: 4px; padding: 6px 9px; border-radius: 999px; background: rgba(255, 255, 255, .94); box-shadow: 0 3px 0 rgba(90, 50, 120, .16); }
+.node-syl-dots i { display: block; width: 11px; height: 11px; border-radius: 50%; background: #e4dcec; }
+.node-syl-dots i.on { background: linear-gradient(135deg, #ffd43b, #ffa94d); }
+.node-syl-dots i.now { background: #ff8fb8; }

@@ -122,6 +122,9 @@ export type Step =
   | { t: 'memory'; cards: MemoryCard[] }
   | { t: 'feed'; rounds: Choice[] }
   | { t: 'dictation'; items: string[]; order: string[]; mode: 'lesson' | 'review' }
+  // 글자 합치기(11-12 — engine/sylLesson.ts): 글자 줄 읽기(듣고 따라 읽기·눌러 읽기) / 글자 줄에서 찾기
+  | { t: 'sylread'; items: string[] }
+  | { t: 'sylfind'; items: string[]; order: string[] }
   | { t: 'reward' };
 
 export const idOf = {
@@ -598,6 +601,8 @@ function stepTexts(st: Step): string[] {
     case 'recall': add(st.cards, st.targets, st.order); break;
     case 'memory': st.cards.forEach(c => add(c.id, c.face, c.say)); break;
     case 'dictation': add(st.items, st.order); break;
+    case 'sylread': add(st.items); break;
+    case 'sylfind': add(st.items, st.order); break;
   }
   return o;
 }

@@ -25,7 +25,9 @@ import { SENTS, SP_SEC_RANGE, makeSpellQ } from '../math/spellData';
 import { BK_BY, BK_SEC_RANGE, BK_TYPE_NAME, bkFull } from '../math/blankData';
 import { GateParent } from './GateUI';
 import { Stepper } from './Stepper';
-import { RANGE, letterSetCount, letterReps, dictReps, catMax, upMin, passRate, setStudy } from '../lib/studyCfg';
+import { RANGE, letterSetCount, letterReps, dictReps, catMax, upMin, passRate, setStudy, sylReps } from '../lib/studyCfg';
+import { SYL_ROWS, SYL_ROW_COUNT, SYL_VOWELS, SYL_GATE, SYL_NAME, sylRowLabel } from '../data/syllables';
+import { sylActive, sylNext, sylDoneCount, sylPassRow, sylRedo, setSylNext } from '../lib/sylStage';
 import { letterSets } from '../engine/session';
 import '../math/math.css';
 
@@ -277,7 +279,7 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
         : "⚠️ 이 브라우저에서 진도가 저장되지 않고 있습니다. 연동을 켜 두거나 '백업 코드'로 진도를 옮겨 두세요."}</p>}
 
       <h3>오늘</h3>
-      <div class="row">사용 {min}분{limit ? ` / ${limit}분` : ' (제한 없음)'} · 새 단계 {todayLessons()}/{s.settings.newPerDay + todayExtraLessons()}개 · 현재 {Math.min(s.lessonIdx + 1, LESSONS.length)}/{LESSONS.length}단계 ({UNITS[lesson.unit - 1].name} · {lesson.title})</div>
+      <div class="row">사용 {min}분{limit ? ` / ${limit}분` : ' (제한 없음)'} · 새 단계 {todayLessons()}/{s.settings.newPerDay + todayExtraLessons()}개 · 현재 {Math.min(s.lessonIdx + 1, LESSONS.length)}/{LESSONS.length}단계 ({UNITS[lesson.unit - 1].name} · {lesson.title}){sylActive(s) && ` — 지금은 그 앞의 ${SYL_NAME} ${sylNext(s) + 1}/${SYL_ROW_COUNT}줄(${sylRowLabel(sylNext(s))}) 차례`}</div>
       <div class="row">
         <button class="opt" onClick={() => { giveExtraMinutes(10); done('오늘 10분을 더 주었습니다.'); }}>오늘 +10분</button>
         <button class="opt" onClick={() => { giveExtraMinutes(30); done('오늘 30분을 더 주었습니다.'); }}>오늘 +30분</button>
@@ -316,7 +318,7 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
       <div class="row">아이 이름 <input type="text" value={nameIn} onInput={(e: any) => setNameIn(e.target.value)} style={{ width: 160 }} />
         <button class="opt" onClick={() => { const v = nameIn.trim().slice(0, 10) || '친구'; setName(v); setNameIn(v); done(`이름을 '${v}'(으)로 바꿨습니다.`); }}>저장</button></div>
       <div class="row" style={{ fontSize: 16, color: '#868e96' }}>하루 사용 시간·하루 새 단계·쓰기 횟수·받아쓰기는 위 '📚 공부량·진도'에서 고칩니다.</div>
-      <div class="row" style={{ fontSize: 18, color: '#666' }}>시험 상태: {s.hold ? `복습 시험 불합격 → ${s.hold.lesson + 1}단계 다시 공부 중` : s.lastPass ? `마지막 통과 ${s.lastPass.lesson + 1}단계 (${s.lastPass.items.join(' ')})` : '아직 없음'}</div>
+      <div class="row" style={{ fontSize: 18, color: '#666' }}>시험 상태: {s.hold ? `복습 시험 불합격 → ${s.hold.lesson + 1}단계 다시 공부 중` : sylRedo(s) ? `${SYL_NAME} 복습 시험 불합격 → ${sylPassRow(s) + 1}줄(${sylRowLabel(sylPassRow(s))}) 다시 공부 중` : s.lastPass ? `마지막 통과 ${sylPassRow(s) >= 0 ? `${SYL_NAME} ${sylPassRow(s) + 1}줄` : `${s.lastPass.lesson + 1}단계`} (${s.lastPass.items.join(' ')})` : '아직 없음'}</div>
       <div class="row">말 빠르기 {[[0.85, '느리게'], [1, '보통'], [1.15, '빠르게']].map(([v, l]) => <Opt on={s.settings.voiceRate === v} onClick={() => { setSettings({ voiceRate: v as number }); done('저장했습니다.'); }}>{l}</Opt>)}</div>
       <div class="row">배경 음악 <Opt on={s.settings.music} onClick={() => { setSettings({ music: true }); done('저장했습니다.'); }}>켜기</Opt><Opt on={!s.settings.music} onClick={() => { setSettings({ music: false }); done('저장했습니다.'); }}>끄기</Opt></div>
       <div class="row">음성: {hasPack() ? '녹음 음성 사용 중' : '기기 내장 음성 사용 중 (녹음 음성 없음)'}</div>
@@ -418,6 +420,13 @@ function StudyParent({ onSaved, jumpTo }: { onSaved: (m: string) => void; jumpTo
   const sets = letterSets();
   const ls = letterSetCount(), lr = letterReps();
   const later = '다음 모험부터 적용됩니다. (하던 모험은 그대로)';
+  // 글자 합치기(11-12): 다음에 할 줄(다 끝냈으면 줄 수) · 줄 옮기기
+  const sn = sylNext(s) < 0 ? SYL_ROW_COUNT : sylNext(s);
+  const sr = sylReps();
+  const setRow = (k: number) => {
+    setSylNext(k);
+    onSaved(k >= SYL_ROW_COUNT ? `${SYL_NAME}를 모두 통과한 것으로 했습니다(건너뛰기). 다른 기기도 연동되면 같이 바뀝니다.` : `${SYL_NAME}를 ${k + 1}줄(${sylRowLabel(k)})부터 하게 했습니다. 다른 기기도 연동되면 같이 바뀝니다.`);
+  };
   const dm = s.settings.dailyMin;
   const cm = catMax(), um = upMin(), up = Math.round(passRate() * 100);
   return (
@@ -434,6 +443,15 @@ function StudyParent({ onSaved, jumpTo }: { onSaved: (m: string) => void; jumpTo
           </select>
           <button class="opt" disabled={storageNeedsRecovery() || cur >= LESSONS.length - 1} onClick={() => jumpTo(cur + 1)}>다음 단계 ▶</button>
           <span class="study-note">지금 {cur + 1}/{LESSONS.length}단계 ({UNITS[lesson.unit - 1].name} · {lesson.title}) · 옮기면 앞 단계 글자는 '익힌 것'으로 처리, 오늘 새 단계 수는 0부터</span></div>
+        <div class="row" data-study-syl={sn}><span class="study-lbl">{SYL_NAME} (가~휴)</span>
+          <button class="opt" disabled={storageNeedsRecovery() || sn <= 0} onClick={() => setRow(sn - 1)}>◀ 앞 줄</button>
+          <select disabled={storageNeedsRecovery()} style={{ fontSize: 20, padding: 8 }} onChange={(e: any) => setRow(+e.target.value)} value={sn}>
+            {SYL_ROWS.map((row, r) => <option value={r}>{r + 1}. {row.slice(0, 3).join(' ')} … {row[row.length - 1]} ({SYL_VOWELS[r]})</option>)}
+            <option value={SYL_ROW_COUNT}>끝 — 모두 통과(건너뛰기)</option>
+          </select>
+          <button class="opt" disabled={storageNeedsRecovery() || sn >= SYL_ROW_COUNT} onClick={() => setRow(sn + 1)}>다음 줄 ▶</button>
+          <span class="study-note">{SYL_GATE + 1}단계(첫 낱말) 바로 앞에서, 자음+모음 글자를 하루 한 줄(14글자)씩 읽고 씁니다 · {sylDoneCount(s)}/{SYL_ROW_COUNT}줄 통과
+            {sylActive(s) ? ' · 지금 이 단계를 하는 중' : sn >= SYL_ROW_COUNT ? ' · 끝남' : ` · ${SYL_GATE}단계까지 마치면 시작`} · 낱말·받침 단계 진도는 그대로 두고 이 단계를 먼저 합니다('끝'을 고르면 건너뜀)</span></div>
         <div class="row" data-study-row="dailyMin"><span class="study-lbl">하루 사용 시간</span>
           <Stepper id="dailyMin" value={dm} r={RANGE.dailyMin} fmt={v => (v ? fmtMinute(v) : '제한 없음')} presets={[20, 30, 45, 60]} onSet={v => { setSettings({ dailyMin: v }); onSaved(`한글 하루 사용 시간을 ${fmtMinute(v)}으로 바꿨습니다.`); }} />
           <Opt on={!dm} onClick={() => { setSettings({ dailyMin: 0 }); onSaved('한글 하루 사용 시간: 제한 없음'); }}>제한 없음</Opt></div>
@@ -451,6 +469,10 @@ function StudyParent({ onSaved, jumpTo }: { onSaved: (m: string) => void; jumpTo
         <div class="row" data-study-row="traceReps"><span class="study-lbl">받침·낱말 쓰기 (세트마다)</span>
           <Stepper id="traceReps" value={Math.max(1, Math.min(15, s.settings.traceReps || 10))} r={RANGE.traceReps} fmt={v => `${v}번`} presets={[5, 10, 15]} onSet={v => { setSettings({ traceReps: v }); onSaved(`받침·낱말 단계 쓰기를 세트마다 ${v}번으로 바꿨습니다. ${later}`); }} />
           <span class="study-note">받침·낱말·복습 단계는 3세트(사이사이 놀이), 끝 몇 번은 혼자 쓰기</span></div>
+        <div class="row" data-study-row="sr"><span class="study-lbl">{SYL_NAME} 쓰기 (글자마다)</span>
+          <Stepper id="sr" value={sr} r={RANGE.sr} fmt={v => `${v}번`} presets={[3, 5, 10]} onSet={v => { setStudy({ sr: v }); onSaved(`${SYL_NAME} 쓰기를 글자마다 ${v}번으로 바꿨습니다(하루 한 줄 14글자 = ${14 * v}번). 하던 모험도 아직 안 쓴 글자부터 적용됩니다.`); }} />
+          <b data-syl-total={14 * sr}>= 하루 {14 * sr}번</b>
+          <span class="study-note">가~하 한 줄 14글자를 세 글자씩: 합치기(ㄱ+ㅏ=가) → 글자마다 읽으면서 쓰기 → 읽기 놀이, 끝에 받아쓰기 5글자</span></div>
         <div class="row" data-study-row="dict"><span class="study-lbl">받아쓰기 시험</span>
           <span>글자마다</span>
           <Stepper id="dr" value={dictReps()} r={RANGE.dr} fmt={v => `${v}번`} onSet={v => { setStudy({ dr: v }); onSaved(`받아쓰기는 글자마다 ${v}번 묻습니다. 다음 시험부터 적용됩니다.`); }} />

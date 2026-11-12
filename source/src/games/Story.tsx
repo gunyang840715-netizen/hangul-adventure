@@ -10,20 +10,25 @@ import { adventuresTotal } from '../engine/store';
 import { compose, josa, shuffle } from '../lib/hangul';
 import { Buddies, Buddy } from './Buddies';
 import { useScene, praise, spoken, Dots, Speaker, gentle, type GameProps, penalty } from './common';
-import { batchimAsk, batchimEnd } from '../data/voice';
+import { batchimAsk, batchimEnd, SYL_GREET } from '../data/voice';
+import { isSylIdx, sylRowOfIdx, sylRowTitle, SYL_UNIT } from '../data/syllables';
 
 // ---------- 인사 ----------
 export function Greet({ onDone, outfit, name, lessonIdx }: GameProps<'greet'> & { lessonIdx: number }) {
   const { alive } = useScene();
   const [ready, setReady] = useState(false);
+  // 글자 합치기(11-12)는 진도표 밖의 모험(1000 + 줄) — 낱말 다리에서, 줄 이름으로
+  const syl = isSylIdx(lessonIdx);
   const l = LESSONS[lessonIdx];
-  const u = UNITS[(l?.unit ?? 1) - 1];
+  const u = UNITS[(syl ? SYL_UNIT : l?.unit ?? 1) - 1];
+  const title = syl ? sylRowTitle(sylRowOfIdx(lessonIdx)) : l.title;
   const n = adventuresTotal() + 1;
   useEffect(() => {
     (async () => {
       const hello = `${name}${josa(name, '아', '야')}, 안녕!`;
       const lines = [hello, `오늘은 ${u.name}에서 모험할 거야.`];
-      if (l.kind === 'letters' || l.kind === 'vowel' || l.kind === 'cons') lines.push('새 글자 친구들이 기다리고 있어!');
+      if (syl) lines.push(SYL_GREET);
+      else if (l.kind === 'letters' || l.kind === 'vowel' || l.kind === 'cons') lines.push('새 글자 친구들이 기다리고 있어!');
       else if (l.kind === 'batchim') lines.push('오늘은 받침 친구를 만날 거야!');
       else if (l.kind === 'sentence') lines.push('오늘은 이야기를 읽어 보자!');
       else lines.push('배운 글자로 낱말을 읽어 보자!');
@@ -43,7 +48,7 @@ export function Greet({ onDone, outfit, name, lessonIdx }: GameProps<'greet'> & 
         </div>
         <div class="slide-up" style={{ display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'flex-start' }}>
           <div style={{ fontSize: 76, color: '#e0488a', textShadow: '0 4px 0 #fff, 0 8px 16px rgba(200,60,120,.25)' }}>{name}{josa(name, '아', '야')}, 안녕!</div>
-          <div class="pill" style={{ fontSize: 40 }}><span>{u.emoji}</span> {u.name} · {l.title}</div>
+          <div class="pill" style={{ fontSize: syl ? 36 : 40 }}><span>{u.emoji}</span> {u.name} · {title}</div>
           <div class="pill" style={{ fontSize: 28, background: '#fff8d6' }}>🎒 {n}번째 모험</div>
           {ready && <button class="btn big pulse" onClick={(e) => { e.stopPropagation(); sfx.tap(); onDone(); }}>출발! ▶</button>}
         </div>

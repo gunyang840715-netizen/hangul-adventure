@@ -8,6 +8,7 @@ import { freshMath, ITEM_EVERY, MAT_EVERY, SNACK_EVERY, CATS, SP_CAT, BK_CAT, ty
 import { catMax, upMin, passRate } from '../lib/studyCfg';
 import { spNext, spCode, spOf, spWrongKeys, SP_KEYS, SP_WRONG } from './spellData';
 import { BK_KEYS, BK_BY, blankWrongKeys, storyProgress } from './blankData';
+import { CK_CAT, CK_MAX, ckKey, ckDaySuffix, kindStats, wrongKinds, weakKinds, reviewKinds, type CkKind } from './clockData';
 
 /** 읽기용 (아직 수학을 안 했으면 처음 상태) */
 export function mathState(): MathState { return load().math ?? freshMath(); }
@@ -111,7 +112,7 @@ function record(m: MathState, ok: boolean, cat: AnyCat): AnswerResult {
   let snack: string | null = null;
   if (ok && mathTotalCorrect(m) % SNACK_EVERY === 0) { snack = randomSnack(); bump(m.snacks[snack] ||= {}); }
   const catDone = before < catMax() && todayCat(cat, m).solved >= catMax();
-  const ups = catDone && cat !== SP_CAT && cat !== BK_CAT ? judge(m, [cat as Cat]) : [];
+  const ups = catDone && cat !== SP_CAT && cat !== BK_CAT && cat !== CK_CAT ? judge(m, [cat as Cat]) : [];
   save();
   return { item, mat, snack, catDone, ups };
 }
@@ -139,12 +140,60 @@ export function blankStats(m = mathState()) {
   return { total: BK_KEYS.length, sent, story: BK_KEYS.length - sent, seen, wrong, ...storyProgress(m.sp) };
 }
 
-/** 문제 화면에서 공부한 시간 더하기(ms). 오늘 공부 시간을 넘는 그 순간 한 번 모든 항목 판정 → 오른 항목 */
-export function addMathMs(n: number): { timeUp: boolean; ups: Cat[] } {
+// ---------- 시계와 시간 기록 (11-13 사용자 요청 — 문제·단계·한 판 규칙은 clockData.ts) ----------
+/** 통과한 단계 수 0~8 (0 = 바늘 알아보기부터, 8 = 일곱 단계 모두 통과) */
+export const clockLv = (m = mathState()) => Math.max(0, Math.min(CK_MAX, Math.floor(m.lv.ck ?? 0)));
+/** 단계 정하기 (통과·부모 설정) — 두 기기에서는 나중에 바꾼 쪽. 0은 칸을 지워 '처음부터'(예전 기록과 같은 모양) */
+export function setClockLv(n: number) {
+  const m = edit();
+  const v = Math.max(0, Math.min(CK_MAX, Math.floor(n) || 0));
+  const lv = { ...m.lv };
+  if (v >= 1) lv.ck = v; else delete lv.ck;
+  m.lv = lv; m.lvT = { ...m.lvT, [CK_CAT]: Date.now() };
+  save();
+}
+/** 그 단계를 통과 → 다음 단계가 열림. 지금 할 단계가 아니면(이미 통과한 단계를 다시 풂) 그대로 두고 false */
+export function passClockStep(step: number): boolean {
+  if (step < 0 || step >= CK_MAX || clockLv() !== step) return false;
+  setClockLv(step + 1);
+  return true;
+}
+/** 시계와 시간 한 문제를 풀었을 때 (ok = 힌트를 보기 전에 한 번에 맞혔나):
+ *  그 유형의 상태(틀림 → 다음에 다시, 고침 → 이틀 뒤 한 번 더 — 맞춤법과 같은 규칙·같은 sp 칸) + 유형별 하루 기록 + 수학과 같은 기록·보상
+ *  (하루 공부 시간·하루 문제 수·정답 보상은 수학·맞춤법과 같이 씀. 단계 통과는 한 판이 끝날 때 passClockStep) */
+export function answerClock(ok: boolean, kind: CkKind): AnswerResult {
+  const m = edit();
+  const key = ckKey(kind);
+  const sp = { ...m.sp, [key]: spCode(Date.now() / 60000, spNext(m.sp[key], ok)) };
+  m.sp = Object.fromEntries(Object.keys(sp).sort().map(k => [k, sp[k]]));
+  const dk = dayKey() + ':' + ckDaySuffix(kind);
+  bump(m.solvedC[dk] ||= {});
+  if (ok) bump(m.correctC[dk] ||= {});
+  return record(m, ok, CK_CAT);
+}
+/** 지금 틀린 상태인 유형 (오래전에 틀린 것부터) */
+export const clockWrong = (m = mathState()) => wrongKinds(m.sp);
+/** 다음 판을 시작할 때 짧게 복습할 유형: 지금 틀린 유형 + 틀렸다가 고친 지 이틀이 지난 유형 */
+export const clockDue = (m = mathState()) => reviewKinds(m.sp, Date.now() / 60000);
+/** 시계와 시간 기록 요약 (단계 지도·부모 화면): 최근 days일의 유형별 정답률 · 어려워하는 유형 · 이 학습에 쓴 시간(ms) */
+export function clockStats(m = mathState(), days = 30) {
+  const t = today();
+  const kinds = kindStats(m.solvedC, m.correctC, m.sp, t, days);
+  const msOf = (n: number) => { let s = 0; for (let d = t - n + 1; d <= t; d++) s += sumMap(m.ms[`${d}:${CK_CAT}`]) as number; return s; };
+  return {
+    lv: clockLv(m), kinds, solved: kinds.reduce((a, k) => a + k.solved, 0), correct: kinds.reduce((a, k) => a + k.correct, 0),
+    weak: weakKinds(kinds), wrong: wrongKinds(m.sp), today: todayCat(CK_CAT, m), msToday: msOf(1), msWeek: msOf(7), msMonth: msOf(days),
+  };
+}
+
+/** 문제 화면에서 공부한 시간 더하기(ms). 오늘 공부 시간을 넘는 그 순간 한 번 모든 항목 판정 → 오른 항목
+ *  (part 'ck': 시계와 시간 화면에서 쓴 시간이면 그만큼을 '날짜:ck'에도 적는다 — 부모 화면의 학습 시간) */
+export function addMathMs(n: number, part?: typeof CK_CAT): { timeUp: boolean; ups: Cat[] } {
   if (!(n > 0)) return { timeUp: false, ups: [] };
   const m = edit();
   const was = mathTimeUp(m);
   bump(m.ms[dayKey()] ||= {}, Math.round(n));
+  if (part === CK_CAT) bump(m.ms[dayKey() + ':' + CK_CAT] ||= {}, Math.round(n));
   const timeUp = !was && mathTimeUp(m);
   const ups = timeUp ? judge(m, CATS.map(c => c.id)) : [];
   // 몇 초마다 부르므로 평소에는 조용히 저장만 (화면 다시 그리기 X), 시간이 끝난 순간에는 알림

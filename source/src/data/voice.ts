@@ -6,6 +6,7 @@ import { FONT_SYLLABLES } from './fontchars';
 import { PETS, ITEM_LIST, SNACKS, BUILDS, partLine, doneBuildLine, iga, reul, iya, eul } from './pets';
 import { SLOTS, BUILD, MAX_LEVEL, type Slot } from './pets';
 import { WEAR_LV, partLv } from './unlock';
+import { CK_STEPS, CK_MIX_LEARNED, CK_REVIEW_LEARNED } from '../math/clockData';
 
 export const FIXED = [
   // 칭찬·격려
@@ -258,6 +259,7 @@ export function allLines(name: string): string[] {
   gateLines().forEach(l => L.add(l));
   studyLines().forEach(l => L.add(l));
   sylLines().forEach(l => L.add(l));
+  clockLines().forEach(l => L.add(l));
   L.delete('');
   return [...L];
 }
@@ -359,3 +361,39 @@ export function studyLines(): string[] {
 export const SYL_GREET = '오늘은 글자를 합쳐서, 소리 내어 읽으면서 써 보자!';
 /** 글자 합치기 말 전부 (allLines에 넣음) */
 export function sylLines(): string[] { return [SYL_GREET]; }
+// ---- 시계와 시간 (11-13 사용자 요청 — 수학·맞춤법 모드: math/clockData.ts · screens/ClockScreen.tsx) ----
+// 녹음 없음 → 서버 음성이 있으면 그것으로, 없으면 기기 음성. 사용자 예시("짧은 바늘은 시를 알려줘요") 그대로 '-요' 말투.
+// 숫자가 든 문제·힌트는 그때그때 만들어 기기 음성으로만 읽는다(audio.ts say의 local) — 여기에는 정해진 말만.
+export type ClockHand = 'h' | 'm' | 's';
+/** 바늘을 눌렀을 때 */
+export const CLOCK_HAND: Record<ClockHand, string> = { h: '짧은 바늘은 시를 알려줘요.', m: '긴 바늘은 분을 알려줘요.', s: '가장 얇고 긴 바늘은 초를 알려줘요.' };
+/** 바늘 설명에 이어서 한 줄 더 */
+export const CLOCK_HAND_MORE: Record<ClockHand, string> = {
+  h: '짧은 바늘은 천천히 움직여요. 한 바퀴를 도는 데 12시간이 걸려요.',
+  m: '긴 바늘이 한 바퀴 돌면 1시간, 60분이에요.',
+  s: '초침이 한 바퀴 돌면 1분, 60초예요.',
+};
+export const CLOCK_TAP_ASK = '바늘을 눌러 보세요.';
+export const CLOCK_MATCH_ASK = '설명 카드를 끌어서 알맞은 바늘에 놓아 보세요.';
+/** 짝 맞추기에서 다른 바늘에 놓았을 때: 정답 대신 그 바늘을 찾는 힌트 */
+export const CLOCK_MATCH_MISS: Record<ClockHand, string> = { h: '짧은 바늘을 찾아보세요. 길이가 가장 짧아요.', m: '긴 바늘을 찾아보세요. 짧은 바늘보다 길어요.', s: '초침을 찾아보세요. 가장 얇고 길어요.' };
+export const CLOCK_MATCH_OK = '딱 맞아요!';
+/** 하루는 24시간 (해와 달이 바뀌는 장면) */
+export const CLOCK_DAY = [
+  '밤 12시, 하루가 시작돼요. 모두 자고 있어요.',
+  '해가 뜨고 낮 12시까지가 오전이에요. 오전은 12시간이에요.',
+  '해가 지고 달이 뜨면 밤이에요. 낮 12시부터 밤 12시까지가 오후예요. 오후도 12시간이에요.',
+  '오전 12시간과 오후 12시간을 더하면 하루는 24시간이에요. 짧은 바늘은 하루에 두 바퀴를 돌아요.',
+];
+export const CLOCK_LOCKED = '앞 단계를 먼저 통과하면 열려요.';
+export const CLOCK_PASS = '통과! 다음 단계가 열렸어요.';
+export const CLOCK_FAST = '벌써 잘하네요! 바로 다음 단계로 가요.';
+export const CLOCK_MORE = '조금만 더 연습하면 통과할 수 있어요.';
+export const CLOCK_ALL = '일곱 단계를 모두 통과했어요! 이제 골고루 복습해요.';
+/** 시계와 시간의 정해진 말 전부 (allLines에 넣음) — '오늘 배운 것' 한 문장은 clockData.ts에 */
+export function clockLines(): string[] {
+  return [
+    ...Object.values(CLOCK_HAND), ...Object.values(CLOCK_HAND_MORE), CLOCK_TAP_ASK, CLOCK_MATCH_ASK, ...Object.values(CLOCK_MATCH_MISS), CLOCK_MATCH_OK,
+    ...CLOCK_DAY, CLOCK_LOCKED, CLOCK_PASS, CLOCK_FAST, CLOCK_MORE, CLOCK_ALL, ...CK_STEPS.map(x => x.learned), CK_MIX_LEARNED, CK_REVIEW_LEARNED,
+  ];
+}

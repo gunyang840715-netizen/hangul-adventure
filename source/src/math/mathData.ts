@@ -3,11 +3,13 @@
 // 10-25: 수학 친구도 한글처럼 아기부터 간식을 먹으면 자람 — 성장 점수 = fed(먹은 횟수, 한 번에 1점) + fedPlus(2·3점 간식의 덤)
 // 저장은 한글 진도(State)의 'math' 한 칸에만 (10-23 사용자 허락). 두 기기 합치기는 shared/merge.js mergeMath.
 // 아이 이름은 저장소에 쓰지 않는다 — 부모 설정에서 넣은 이름(math.name)을 실행할 때만 읽어 보여 준다.
+// 11-13: 같은 모드에 '시계와 시간'을 더함(문제·단계는 clockData.ts) — 새 칸 없이 이 모양의 lv.ck(단계) · sp['ck:유형'] · 하루 기록 '날짜:ck'·'날짜:ck.유형' · ms['날짜:ck']
 // 이 파일은 store.ts를 부르지 않는다 (store.ts가 이 파일의 normalizeMath를 쓰므로 서로 부르면 꼬임).
 import { ITEM, PET, BUILD, SNACK, type Slot } from '../data/pets';
 import { FURN_BY } from '../data/home';
 import { SP_KEY_SET } from './spellData';
 import { BK_KEY_SET } from './blankData';
+import { CK_KEY_SET, CK_DAY_SUFFIX, CK_MAX, CK_CAT } from './clockData';
 
 type DevMap = Record<string, number>;
 type DayMap = Record<string, DevMap>;
@@ -24,8 +26,9 @@ export interface MathState {
   lastItem?: string; lastItemT?: number;
   pet?: string; petT?: number;            // 옷장에서 마지막에 고른 친구
   // ---- 10-23 2차: 항목별 단계 · 문제 시간 · 이름 · 집 짓기·꾸미기 (한글 집과 따로) ----
-  lv: Record<Cat, number>; lvT: Record<string, number>;   // 항목 → 지금 단계 (항목마다 나중에 바꾼 쪽)
-  solvedC: DayMap; correctC: DayMap;      // '날짜:항목' → 기기 → 푼 수 / 맞힌 수
+  lv: Record<Cat, number> & { ck?: number }; lvT: Record<string, number>;   // 항목 → 지금 단계 (항목마다 나중에 바꾼 쪽)
+                                          // 11-13: 시계와 시간이 통과한 단계 수는 lv.ck(1~8, 아직 0이면 칸 없음 — clockData.ts), 바꾼 시각은 lvT.ck
+  solvedC: DayMap; correctC: DayMap;      // '날짜:항목' → 기기 → 푼 수 / 맞힌 수 (11-13: 시계와 시간은 '날짜:ck'와 유형마다 '날짜:ck.유형')
   timeMul: number; timeMulT: number;      // 문제 시간 배율 (1 보통 · 1.5 넉넉하게 · 0.75 짧게 · 0 끄기)
   name: string; nameT: number;            // 화면에 보일 이름 (부모 설정 → 기기 저장값에만, 저장소에는 없음)
   dog?: string; cat?: string; petsT?: number;   // 수학 집에 사는 강아지·고양이
@@ -34,7 +37,7 @@ export interface MathState {
   deco: Record<string, Record<string, string>>; decoT: Record<string, number>;   // 장소 → 자리 → 놓은 가구
   // ---- 10-24 3차: 문제 수 대신 하루 공부 시간 ----
   dayMin: number; dayMinT: number;        // 하루 공부 시간(분, 부모 설정 30분·1시간)
-  ms: DayMap;                             // 날짜 → 기기 → 문제 화면에서 공부한 시간(ms)
+  ms: DayMap;                             // 날짜 → 기기 → 문제 화면에서 공부한 시간(ms) (11-13: 그중 시계와 시간에 쓴 시간은 '날짜:ck'에 한 번 더)
   // ---- 10-24 4차: 수학 간식 (한글 간식과 따로) ----
   snacks: DayMap;                         // 간식 id → 기기 → 받은 개수 (정답 5개마다 하나)
   eaten: DayMap;                          // 간식 id → 기기 → 먹인 개수
@@ -42,17 +45,21 @@ export interface MathState {
   // ---- 10-25 5차: 맞춤법 (같은 모드 안에서 수학과 나란히 — 하루 공부 시간·정답 보상은 같이 씀) ----
   sp: Record<string, number>;             // 맞춤법 문제 열쇠 → 마지막으로 푼 때(분)×10 + 상태 (0 맞힘 · 1 틀림 · 2 고침 · 3 다시 확인까지 맞힘 — spellData.ts)
                                           // 11-07: 빈칸 추리 문제 열쇠('bk숫자', blankData.ts)도 같은 칸·같은 상태 규칙 (새 칸 없음 — 합치기는 열쇠마다 큰 값)
+                                          // 11-13: 시계와 시간의 유형 열쇠('ck:유형', clockData.ts)도 같은 칸·같은 상태 규칙 (틀린 유형을 다음에 다시)
   // ---- 10-25 6차: 수학 친구도 아기부터 간식을 먹으면 자람 (한글과 같은 레벨·단계, 한글 성장과 따로) ----
   fedPlus: DayMap;                        // 친구 id → 기기 → 2·3점 간식의 덤 점수(간식 점수 − 1). 성장 점수 = fed + fedPlus
                                           // (이 칸이 생기기 전에 먹은 간식은 fed에만 있어 1점씩으로 친다)
 }
 /** 맞춤법 항목 (하루 기록 열쇠 '날짜:sp' — 단계 판정은 없음) */
 export const SP_CAT = 'sp';
-export type AnyCat = Cat | typeof SP_CAT | typeof BK_CAT;
+export type AnyCat = Cat | typeof SP_CAT | typeof BK_CAT | typeof CK_CAT;
 export const SP_INFO = { id: SP_CAT as AnyCat, icon: '✍️', name: '맞춤법' };
 /** 빈칸 추리 항목 (11-07 — 하루 기록 열쇠 '날짜:bk', 단계 판정 없음. 2단계(짧은 이야기)는 기록에서 셈 — blankData.ts storyProgress) */
 export const BK_CAT = 'bk';
 export const BK_INFO = { id: BK_CAT as AnyCat, icon: '🧩', name: '빈칸 추리' };
+/** 시계와 시간 항목 (11-13 — 하루 기록 열쇠 '날짜:ck', 단계는 lv.ck — clockData.ts) */
+export { CK_CAT };
+export const CK_INFO = { id: CK_CAT as AnyCat, icon: '🕒', name: '시계와 시간' };
 
 export const PER_DAY = 50;                // (예전) 하루 문제 수 기본값 — perDay 칸 읽기용으로만 남김
 export const DAY_MIN = 30;                // 하루 공부 시간 기본 30분 (10-24 사용자 요청)
@@ -111,11 +118,15 @@ const timeMap = (m: any, ok: (k: string) => boolean): Record<string, number> => 
   if (obj(m)) for (const k of Object.keys(m)) if (ok(k) && isNum(m[k]) && m[k] >= 0) o[k] = m[k];
   return o;
 };
-const dayCatKey = (k: string) => /^\d+:(add|sub|mul|div|sp|bk)$/.test(k);
-/** 맞춤법·빈칸 추리(11-07) 기록: 있는 문제 열쇠만, 값은 분×10+상태(0~3) — 열쇠 순서는 정렬 (합친 결과와 같은 모양) */
+const DAY_SUFFIX = new Set(['add', 'sub', 'mul', 'div', 'sp', 'bk', ...CK_DAY_SUFFIX]);
+/** 하루 기록 열쇠 '날짜:항목' — 항목은 수학 네 가지·맞춤법·빈칸 추리·시계와 시간('ck', 유형마다 'ck.유형') */
+const dayCatKey = (k: string) => { const i = k.indexOf(':'); return i > 0 && /^\d+$/.test(k.slice(0, i)) && DAY_SUFFIX.has(k.slice(i + 1)); };
+/** 공부한 시간 열쇠: '날짜'(전체) · '날짜:ck'(그중 시계와 시간) */
+const msKey = (k: string) => /^\d+(:ck)?$/.test(k);
+/** 맞춤법·빈칸 추리(11-07)·시계와 시간 유형(11-13) 기록: 있는 열쇠만, 값은 분×10+상태(0~3) — 열쇠 순서는 정렬 (합친 결과와 같은 모양) */
 const spMap = (m: any): Record<string, number> => {
   const o: Record<string, number> = {};
-  if (obj(m)) for (const k of Object.keys(m).sort()) if ((SP_KEY_SET.has(k) || BK_KEY_SET.has(k)) && isNum(m[k]) && m[k] > 0 && m[k] < 1e11 && Math.floor(m[k]) % 10 <= 3) o[k] = Math.floor(m[k]);
+  if (obj(m)) for (const k of Object.keys(m).sort()) if ((SP_KEY_SET.has(k) || BK_KEY_SET.has(k) || CK_KEY_SET.has(k)) && isNum(m[k]) && m[k] > 0 && m[k] < 1e11 && Math.floor(m[k]) % 10 <= 3) o[k] = Math.floor(m[k]);
   return o;
 };
 
@@ -144,10 +155,12 @@ export function normalizeMath(o: any): MathState | undefined {
   if (typeof o.lastItem === 'string' && ITEM[o.lastItem]) { m.lastItem = o.lastItem; m.lastItemT = isNum(o.lastItemT) ? o.lastItemT : 0; }
   if (typeof o.pet === 'string' && PET[o.pet]) { m.pet = o.pet; m.petT = isNum(o.petT) ? o.petT : 0; }
   // 항목별 단계: 없으면 예전 12단계 위치에서 옮김
-  const lv = lvFromLevel(level);
+  const lv: MathState['lv'] = lvFromLevel(level);
   if (obj(o.lv)) for (const c of CATS) if (isNum(o.lv[c.id])) lv[c.id] = Math.max(0, Math.min(c.stages.length - 1, Math.floor(o.lv[c.id])));
+  // 11-13 시계와 시간: 통과한 단계 수 1~8 (0·없음·이상한 값이면 칸을 두지 않음 = 처음부터 — 예전 기록과 같은 모양)
+  if (obj(o.lv) && isNum(o.lv.ck) && Math.floor(o.lv.ck) >= 1) lv.ck = Math.min(CK_MAX, Math.floor(o.lv.ck));
   m.lv = lv;
-  m.lvT = timeMap(o.lvT, isCat);
+  m.lvT = timeMap(o.lvT, k => isCat(k) || k === CK_CAT);
   m.solvedC = dayMap(o.solvedC, dayCatKey); m.correctC = dayMap(o.correctC, dayCatKey);
   // 11-07 사용자 요청(공부량 자세히): 문제 시간 배율은 끄기(0) 또는 0.25~3배 (0.25 단위) — 예전 값(1.5·1·0.75·0)도 그대로
   m.timeMul = isNum(o.timeMul) && (o.timeMul === 0 || (o.timeMul >= 0.25 && o.timeMul <= 3 && Math.abs(o.timeMul * 4 - Math.round(o.timeMul * 4)) < 1e-9)) ? o.timeMul : 1;
@@ -171,7 +184,7 @@ export function normalizeMath(o: any): MathState | undefined {
   // 11-07 사용자 요청(공부량 자세히): 하루 공부 시간은 5~180분 (5분 단위) — 예전 값(30·60)도 그대로
   m.dayMin = isNum(o.dayMin) && o.dayMin >= DAY_MIN_RANGE[0] && o.dayMin <= DAY_MIN_RANGE[1] && o.dayMin % 5 === 0 ? o.dayMin : DAY_MIN;
   m.dayMinT = isNum(o.dayMinT) ? o.dayMinT : 0;
-  m.ms = dayMap(o.ms);
+  m.ms = dayMap(o.ms, msKey);
   // 4차(10-24): 수학 간식 — 모르는 간식·친구는 버림
   m.snacks = dayMap(o.snacks, k => !!SNACK[k]);
   m.eaten = dayMap(o.eaten, k => !!SNACK[k]);

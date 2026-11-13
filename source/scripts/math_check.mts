@@ -562,3 +562,5 @@ console.log(`수학 모드: ${STAGES.length}단계 문제·보기 각 ${N}개, �
   + ` 수학 옷장·집(짓기·가구·마당)·이름이 한글과 따로, 초기화·예전 백업·망가진 칸·예전 기록 옮기기 통과`);
 // ---------- 6) 빈칸 추리 (11-07 사용자 요청): 문제 은행·고르기·기록·보상·저장 — scripts/blank_check.mts (package.json 그대로) ----------
 await import('./blank_check.mts');
+// ---------- 7) 시계와 시간 (11-13 사용자 요청): 문제 만들기·힌트·한 판·기록·저장 — scripts/clock_check.mts (package.json 그대로) ----------
+await import('./clock_check.mts');

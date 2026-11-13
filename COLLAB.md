@@ -95,6 +95,9 @@
 14. 공부량 자세히(11-07 사용자 요청 — AGENTS.md '공부량 자세히'): 부모가 고치는 새 값은 기존 `settings` 주머니 안의 선택 키 `settings.study`에만 쓴다(형식은 `lib/studyCfg.ts`의 `declare module` 확장).
     기존 칸은 범위만 넓힘(수학 dayMin 5~180분·timeMul 0.25 단위는 `normalizeMath`). State 구조·`shared/merge.js`·저장 키는 그대로, 검사 `study_cfg_check`.
 
+15. 시계와 시간(11-13 사용자 요청 — AGENTS.md '시계와 시간'): 수학 모드의 같은 칸 State.math에만 — 단계 lv.ck(lvT.ck), 유형 상태 sp['ck:유형'], 하루 기록 '날짜:ck'·'날짜:ck.유형', 학습 시간 ms['날짜:ck'].
+    새 칸·merge.js 변경 없음(예전 앱은 이 열쇠를 버리지만 합칠 때 새 앱 쪽 값이 남음 — clock_check가 확인). 한글 칸·수학 네 항목 단계는 건드리지 않는다.
+
 ## 6. 이름 (반영함)
 
 - 홈 화면 아이콘·manifest: 「한글나라」. id·아이콘 파일 이름은 그대로.

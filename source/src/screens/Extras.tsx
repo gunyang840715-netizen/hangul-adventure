@@ -20,7 +20,8 @@ import { josa } from '../lib/hangul';
 import { ITEM_LIST, ITEM } from '../data/pets';
 import { unlockTable } from '../data/unlock';
 import { STAGES, CATS, DAY_MIN_CHOICES, TIME_CHOICES, ITEM_EVERY, MAT_EVERY, SP_CAT, BK_CAT, catSecRange } from '../math/mathData';
-import { mathState, todayMath, todayCat, mathTotalCorrect, mathMatsLeft, mathSnackTotal, mathPetView, setMathLv, setMathDayMin, setMathTime, setMathName, modeTitle, spellStats, spellWrong, blankStats, blankWrong } from '../math/mathStore';
+import { mathState, todayMath, todayCat, mathTotalCorrect, mathMatsLeft, mathSnackTotal, mathPetView, setMathLv, setMathDayMin, setMathTime, setMathName, modeTitle, spellStats, spellWrong, blankStats, blankWrong, clockStats, clockLv, setClockLv } from '../math/mathStore';
+import { CK_STEPS, CK_KIND, CK_MAX, CK_ROUND, CK_PASS, CK_FAST, stepKinds, sampleProblem, seeded } from '../math/clockData';
 import { SENTS, SP_SEC_RANGE, makeSpellQ } from '../math/spellData';
 import { BK_BY, BK_SEC_RANGE, BK_TYPE_NAME, bkFull } from '../math/blankData';
 import { GateParent } from './GateUI';
@@ -389,13 +390,65 @@ function MathParent({ onSaved }: { onSaved: (m: string) => void }) {
       {showBkWrong && <div class="row" style={{ fontSize: 17, color: '#495057', display: 'block', lineHeight: 1.6 }} data-blank-wrong-list="1">
         {blankWrong(m).map(k => { const b = BK_BY[k]; return b ? <div>• {bkFull(b)} <span style={{ color: '#2b8a3e' }}>(정답: {b.a})</span> <span style={{ color: '#868e96' }}>· {BK_TYPE_NAME[b.ty]}</span></div> : null; })}
       </div>}
+      <ClockParent />
       <div class="row" style={{ fontSize: 16, color: '#868e96' }}>항목마다 단계·하루 공부 시간·하루 문제 수·다음 단계 조건·문제 시간은 위 '📚 공부량·진도'에서 고칩니다.</div>
       <div class="row" style={{ fontSize: 16, color: '#868e96' }}>
         항목마다 단계가 따로 · 하루 공부 시간이 끝날 때(또는 그 항목을 {catMax()}문제 다 풀 때), 그날 그 항목을 {upMin()}문제 이상 풀고 {Math.round(passRate() * 100)}% 이상 맞혔으면 그 항목만 다음 단계(하루 한 단계까지 — 그날 단계를 직접 바꾼 항목은 다음 날 판정) · 정답 {ITEM_EVERY}개마다 꾸미기, {MAT_EVERY}개마다 집 재료와 간식(틀려도 안 가져감, 간식은 수학 '간식 주기'에서 먹임 — 강아지·고양이는 한글처럼 아기부터 간식 점수만큼 자람) ·
         한글 진도·하루 사용 시간·한글 옷장·한글 집과 따로 · '골고루'만 풀면 항목마다 문제 수가 적어 단계가 거의 안 오름(복습용) · 두 기기 연동됨<br />
         맞춤법: 속담·명언·좋은 말 문장 속 괄호에서 바른 말 둘 중 하나 고르기(단계 없음, 쉬운 문제가 먼저 나오기 쉬움) · 같은 문장도 괄호 자리를 바꿔 다시 나옴 · 틀린 문제는 다음에 다시 나오고(열 문제쯤 뒤·다음 날), 맞히면 이틀 뒤 한 번 더 확인 · '틀린 문제 다시 풀기'로 따로 풀 수 있음 · 하루 공부 시간·하루 {catMax()}문제·정답 보상은 수학과 같이 셈<br />
-        빈칸 추리: 글 속 빈칸에 알맞은 말을 보기 셋 중에서 고르기(오답 보기도 그럴듯하지만 글 속 단서로 틀린 것을 알 수 있게 만듦) · 1단계 한 문장(쉬운 것 먼저) → 한 문장 문제를 맞힌 개수가 {bs.need}개가 되면 2단계 짧은 이야기도 섞여 나옴 · 틀리면 단서를 노랗게 보여 주고 고른 말이 왜 아닌지 설명 · 맞히면 가끔 '어느 말을 보고 알았어?'(근거 찾기) · 틀린 문제는 맞춤법처럼 다음에 다시 나옴 · 하루 공부 시간·하루 {catMax()}문제·정답 보상은 수학과 같이 셈
+        빈칸 추리: 글 속 빈칸에 알맞은 말을 보기 셋 중에서 고르기(오답 보기도 그럴듯하지만 글 속 단서로 틀린 것을 알 수 있게 만듦) · 1단계 한 문장(쉬운 것 먼저) → 한 문장 문제를 맞힌 개수가 {bs.need}개가 되면 2단계 짧은 이야기도 섞여 나옴 · 틀리면 단서를 노랗게 보여 주고 고른 말이 왜 아닌지 설명 · 맞히면 가끔 '어느 말을 보고 알았어?'(근거 찾기) · 틀린 문제는 맞춤법처럼 다음에 다시 나옴 · 하루 공부 시간·하루 {catMax()}문제·정답 보상은 수학과 같이 셈<br />
+        시계와 시간: 시계 바늘 알아보기 → 1 정각 읽기 → 2 30분·15분·45분 읽기 → 3 5분 단위 읽기(잘하면 1분 단위 도전) → 4 시계 직접 맞추기(바늘 끌기) → 5 60분 이내의 시간 전후 계산 → 6 시간을 넘나드는 전후 계산 → 7 하루·여러 날의 시간 계산 · 한 판은 본 문제 {CK_ROUND}개, 한 번에(힌트 없이) 맞힌 것이 {CK_PASS}개 이상이면 통과(처음 {CK_FAST}문제를 모두 맞히면 바로 통과) → 다음 단계가 열림 · 정답률에 따라 난이도 자동 조절(쉽게: 도움 숫자·쉬운 수 / 어렵게: 오전·오후, 큰 수, 도전 문제) · 틀리면 정답 대신 힌트를 주고 다시 풀게 함 · 틀린 유형은 두 문제 뒤와 다음 판 처음에 다시 나옴(고치면 이틀 뒤 한 번 더) · 문제마다 제한 시간은 없음 · 하루 공부 시간·하루 {catMax()}문제·정답 보상은 수학과 같이 셈
       </div>
+    </>
+  );
+}
+
+// ---------- 부모 화면: 시계와 시간 (11-13 사용자 요청 — "정답률, 어려워하는 유형, 학습 시간, 추천 복습 문제를 확인") ----------
+const ckMin = (ms: number) => Math.round(ms / 60000);
+const ckPct = (correct: number, solved: number) => (solved ? `${Math.round(correct / solved * 100)}%` : '-');
+function ClockParent() {
+  const m = mathState();
+  const [open, setOpen] = useState(false);
+  const ck = clockStats(m);
+  const lvText = ck.lv >= CK_MAX ? '일곱 단계 모두 통과(골고루 복습)' : ck.lv === 0 ? `첫걸음 · ${CK_STEPS[0].name}` : `${ck.lv}단계 · ${CK_STEPS[ck.lv].name}`;
+  // 추천 복습 문제: 어려워하는 유형이 있으면 그 유형(셋까지), 없으면 지금 단계의 유형 — 날마다 바뀌고 그날은 같은 문제
+  const weakKinds = ck.weak.map(w => w.kind);
+  const recKinds = (weakKinds.length ? weakKinds : stepKinds(Math.max(1, Math.min(CK_MAX - 1, ck.lv)))).slice(0, 3);
+  const recs = recKinds.flatMap((k, i) => [0, 1].map(j => ({ k, ...sampleProblem(k, seeded(today() * 97 + i * 13 + j * 7 + 1)) })));
+  const seenKinds = ck.kinds.filter(k => k.solved > 0 || k.wrongNow);
+  return (
+    <>
+      <div class="row" data-clock-parent="1" data-clock-solved={ck.solved}>🕒 시계와 시간: 지금 {lvText} · 오늘 {ck.today.solved}문제 중 {ck.today.correct}개 한 번에 맞힘 ·
+        최근 30일 정답률 <b data-clock-rate={ckPct(ck.correct, ck.solved)}>{ckPct(ck.correct, ck.solved)}</b>{ck.solved > 0 && ` (${ck.correct}/${ck.solved})`} ·
+        학습 시간 오늘 {ckMin(ck.msToday)}분 · 최근 7일 {ckMin(ck.msWeek)}분 · 30일 {ckMin(ck.msMonth)}분 ·
+        어려워하는 유형 {ck.weak.length ? ck.weak.map(w => CK_KIND[w.kind].name).join(', ') : '없음'}
+        <button class="opt" data-clock-detail-btn="1" onClick={() => setOpen(x => !x)}>{open ? '자세히 닫기' : '자세히 보기 (유형별 정답률·추천 복습 문제)'}</button></div>
+      {open && (
+        <div class="row" style={{ display: 'block', fontSize: 17, color: '#495057', lineHeight: 1.6 }} data-clock-detail="1">
+          <div><b>유형별 정답률</b> (최근 30일 · 한 번에 맞힌 문제 / 푼 문제 — 힌트를 보고 고친 것은 맞힌 것으로 세지 않음)</div>
+          {seenKinds.length === 0 ? <div style={{ color: '#868e96' }}>아직 푼 문제가 없습니다.</div> : (
+            <table data-clock-kinds={seenKinds.length} style={{ marginBottom: 8 }}>
+              <tr><th>단계</th><th>유형</th><th>푼 문제</th><th>한 번에 맞힘</th><th>정답률</th><th>상태</th></tr>
+              {seenKinds.map(k => (
+                <tr data-clock-kind={k.kind}>
+                  <td>{CK_KIND[k.kind].step}</td><td style={{ textAlign: 'left' }}>{CK_KIND[k.kind].name}</td><td>{k.solved}</td><td>{k.correct}</td>
+                  <td style={{ color: k.solved >= 4 && k.rate < 0.75 ? '#c92a2a' : undefined }}>{ckPct(k.correct, k.solved)}</td>
+                  <td>{k.wrongNow ? <span style={{ color: '#c92a2a' }}>최근에 틀림 → 다음 판에 복습</span> : k.solved >= 4 && k.rate < 0.75 ? <span style={{ color: '#c92a2a' }}>어려워함</span> : '좋음'}</td>
+                </tr>
+              ))}
+            </table>
+          )}
+          <div data-clock-weak={ck.weak.length}><b>어려워하는 유형</b> (최근에 틀렸거나, 4문제 이상 풀고 정답률이 75%가 안 되는 유형): {ck.weak.length
+            ? ck.weak.map(w => <span style={{ background: '#fff0f6', padding: '2px 10px', borderRadius: 8, marginRight: 6 }}>{CK_KIND[w.kind].name} {w.solved ? `${ckPct(w.correct, w.solved)} (${w.correct}/${w.solved})` : ''}</span>)
+            : '없음 👍'}</div>
+          <div style={{ marginTop: 6 }}><b>추천 복습 문제</b> ({weakKinds.length ? '어려워하는 유형' : '지금 단계'} — 종이나 진짜 시계로 같이 풀어 보세요. 날마다 바뀝니다)</div>
+          <div data-clock-recs={recs.length}>
+            {recs.map(r => (
+              <div data-clock-rec={r.k}>• <span style={{ color: '#868e96' }}>[{CK_KIND[r.k].name}]</span> {r.q} <span style={{ color: '#2b8a3e' }}>→ {r.a}</span> <span style={{ color: '#868e96' }}>({r.tip})</span></div>
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -488,6 +541,11 @@ function StudyParent({ onSaved, jumpTo }: { onSaved: (m: string) => void; jumpTo
             {c.stages.map((st, i) => <Opt on={m.lv[c.id] === i} onClick={() => { setMathLv(c.id, i); onSaved(`${c.name}을 ${i + 1}단계(${STAGES[st].name} ${STAGES[st].sub})로 바꿨습니다.`); }}>{i + 1}. {STAGES[st].name} · {STAGES[st].sub}</Opt>)}
           </div>
         ))}
+        <div class="row" style={{ gap: 6 }} data-clock-lv={clockLv(m)}><span class="study-lbl">🕒 시계와 시간 진도</span>
+          {[...CK_STEPS.map(sd => (sd.step === 0 ? '처음 · 바늘 알아보기' : `${sd.step}. ${sd.short}`)), '모두 통과'].map((lab, i) => (
+            <Opt on={clockLv(m) === i} onClick={() => { setClockLv(i); onSaved(i >= CK_MAX ? '시계와 시간을 모두 통과한 것으로 했습니다(골고루 복습만 나옴).' : `시계와 시간을 '${i === 0 ? CK_STEPS[0].name : `${i}단계 ${CK_STEPS[i].name}`}'부터 하게 했습니다. 그 앞 단계는 통과한 것으로 봅니다.`); }}>{lab}</Opt>
+          ))}
+        </div>
         <div class="row" data-math-daymin="1"><span class="study-lbl">하루 공부 시간</span>
           <Stepper id="dayMin" value={m.dayMin} r={RANGE.dayMin} fmt={fmtMinute} presets={DAY_MIN_CHOICES} onSet={v => { setMathDayMin(v); onSaved(`수학·맞춤법 하루 공부 시간을 ${fmtMinute(v)}으로 바꿨습니다. 오늘 공부한 시간은 그대로 셉니다.`); }} />
           <span class="study-note">문제 화면에서만 셈(3분 넘게 안 만지면 멈춤) · 다 되면 풀던 문제까지 풀고 끝</span></div>

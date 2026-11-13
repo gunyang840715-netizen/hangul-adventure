@@ -397,13 +397,15 @@ function halt() {
 /** 하던 말 멈추기 (아이가 누르면 바로 반응하도록) */
 export function stopVoice() { talk++; halt(); }
 
-/** 말하기. 끝나면 resolve. 다른 말이 끼어들면 조용히 resolve */
-export async function say(text: string, opt: { rate?: number; pitch?: number; interrupt?: boolean } = {}): Promise<void> {
+/** 말하기. 끝나면 resolve. 다른 말이 끼어들면 조용히 resolve
+ *  local: 그때그때 만든 문장(시계 문제의 숫자가 든 말 등)은 서버에 녹음을 부탁하지 않고 기기 음성으로만 읽는다
+ *  (문장이 끝없이 달라서 서버·기기 저장 공간에 쌓이지 않게 — 녹음이 이미 있으면 그것을 씀) */
+export async function say(text: string, opt: { rate?: number; pitch?: number; interrupt?: boolean; local?: boolean } = {}): Promise<void> {
   if (opt.interrupt !== false) talk++;
   return speak(text, opt);
 }
 
-async function speak(text: string, opt: { rate?: number; pitch?: number; interrupt?: boolean } = {}): Promise<void> {
+async function speak(text: string, opt: { rate?: number; pitch?: number; interrupt?: boolean; local?: boolean } = {}): Promise<void> {
   if (!text) return;
   if (!/[\p{L}\p{N}]/u.test(text)) return;     // 그림 카드(🍓 등)처럼 글자가 없는 것은 읽지 않는다
   if (opt.interrupt !== false) halt();
@@ -415,7 +417,7 @@ async function speak(text: string, opt: { rate?: number; pitch?: number; interru
   const recording = await clip(text).catch(() => null);
   const buf = recording?.buffer;
   if (!buf && isVoiceKey(text)) return;          // 쓸 수 없는 녹음 키: 조용히 넘어감
-  if (!buf && remote) wantVoices([text], true);
+  if (!buf && remote && !opt.local) wantVoices([text], true);
   if (my !== seq) return;
   if (buf) {
     return new Promise(res => {

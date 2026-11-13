@@ -13,7 +13,7 @@ import { MatIcon } from '../art/Build';
 import { sfx } from '../engine/audio';
 import { syncSoon } from '../engine/sync';
 import { ITEM, ITEM_LIST } from '../data/pets';
-import { makeProblemFor, stageName, catStage, CATS, CAT, ITEM_EVERY, MAT_EVERY, IDLE_MS, SP_INFO, BK_INFO, type Problem, type Mode, type Cat, type AnyCat } from '../math/mathData';
+import { makeProblemFor, stageName, catStage, CATS, CAT, ITEM_EVERY, MAT_EVERY, IDLE_MS, SP_INFO, BK_INFO, CK_INFO, type Problem, type Mode, type Cat, type AnyCat } from '../math/mathData';
 import { catMax, upMin, passRate } from '../lib/studyCfg';
 import { mathState, todayMath, todayCat, answerMath, addMathMs, mathTimeUp, catFull, openCats, toNextItem, mathPet, mathPetInfo, mathWear, mathWho, mathMatsLeft, mathSnackTotal } from '../math/mathStore';
 import { gateLocked } from '../lib/gate';
@@ -42,10 +42,10 @@ export function useCountdown(key: number, ms: number, active: boolean, onEnd: ()
   return left;
 }
 
-/** 오늘 항목별 결과 (오늘 끝 화면·첫 화면에서 같이 씀 — 10-25부터 맞춤법 줄도, 11-07부터 빈칸 추리 줄도) */
+/** 오늘 항목별 결과 (오늘 끝 화면·첫 화면에서 같이 씀 — 10-25부터 맞춤법 줄도, 11-07부터 빈칸 추리 줄도, 11-13부터 시계와 시간 줄도) */
 export function TodaySummary({ ups = [] }: { ups?: Cat[] }) {
   const m = mathState();
-  const rows = [...CATS.map(c => ({ id: c.id as AnyCat, icon: c.icon, name: c.name })), SP_INFO, BK_INFO].map(c => ({ c, ...todayCat(c.id, m) })).filter(r => r.solved > 0);
+  const rows = [...CATS.map(c => ({ id: c.id as AnyCat, icon: c.icon, name: c.name })), SP_INFO, BK_INFO, CK_INFO].map(c => ({ c, ...todayCat(c.id, m) })).filter(r => r.solved > 0);
   if (!rows.length) return null;
   return (
     <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>

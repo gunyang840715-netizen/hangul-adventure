@@ -73,7 +73,7 @@ export function Title({ onStart, onMath }: { onStart: () => void; onMath?: () =>
 }
 
 // ---------- 잠자기 (시간이 풀리면 저절로 깨어나 이어서) ----------
-export function Sleep({ onParent, onWake, demo }: { onParent: () => void; onWake: () => void; demo?: boolean }) {
+export function Sleep({ onParent, onWake, onMath, demo }: { onParent: () => void; onWake: () => void; onMath?: () => void; demo?: boolean }) {
   const [waking, setWaking] = useState(false);
   useEffect(() => {
     const n = load().name;
@@ -101,6 +101,8 @@ export function Sleep({ onParent, onWake, demo }: { onParent: () => void; onWake
         <div style={{ fontSize: 64, color: '#fff', textShadow: '0 4px 0 rgba(60,30,90,.45), 0 0 22px rgba(40,20,80,.55)' }}>{waking ? '다시 놀 수 있어요! ☀️' : '오늘은 여기까지! 🌙'}</div>
         <div style={{ fontSize: 32, color: '#f3edff', textShadow: '0 3px 0 rgba(60,30,90,.45), 0 0 16px rgba(40,20,80,.6)' }}>{hasResume ? '하던 모험은 시간이 되면 그 자리부터 이어서 해요 🚩' : '내일 또 모험하자'}</div>
       </div>
+      {/* 로희 시간이 끝나 잠자기 화면이어도 로아는 자기 수학·맞춤법을 바로 열 수 있다 (11-14 사용자 요청: 로희·로아 따로) */}
+      {onMath && <button class="btn sky m-math-btn" data-math-start="1" onClick={() => onMath()}>✏️ {modeTitle()}</button>}
       <div class="topbar"><GearLite onOpen={onParent} /></div>
     </div>
   );
@@ -226,7 +228,7 @@ function SyncPanel() {
   );
 }
 
-export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo: (on: boolean) => void; demo: boolean }) {
+export function Parent({ onClose, onDemo, demo, scope = 'h' }: { onClose: () => void; onDemo: (on: boolean) => void; demo: boolean; scope?: 'h' | 'm' }) {
   const [, force] = useState(0);
   useEffect(() => onChange(() => force(x => x + 1)), []);
   const s = load();
@@ -269,10 +271,28 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
   const weak = Object.keys(s.items).filter(k => k.startsWith('j:') || k.startsWith('w:')).map(k => ({ k, st: stat(k) })).filter(x => x.st.wrong > 0).sort((a, b) => b.st.wrong / (b.st.seen || 1) - a.st.wrong / (a.st.seen || 1)).slice(0, 8);
   const hist = history(14);
 
+  // 로아(수학·맞춤법) 학습 화면의 톱니바퀴로 연 설정 — 로아 것만 (한글 설정은 로희 학습 화면의 톱니바퀴에서)
+  if (scope === 'm') {
+    const mm = mathState();
+    return (
+      <div class="parent" data-parent-scope="m">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <h2 style={{ margin: 0 }}>{mm.name ? `${mm.name} 설정` : '수학·맞춤법 설정'}</h2>
+          <button class="opt" style={{ marginLeft: 'auto', fontSize: 22 }} onClick={onClose}>닫기 ✕</button>
+        </div>
+        {!isStorageOk() && <p style={{ color: '#c92a2a' }}>⚠️ 이 브라우저에서 진도가 저장되지 않고 있습니다. 한글 쪽 부모 설정에서 연동·백업을 확인해 주세요.</p>}
+        <StudyParent scope="m" onSaved={done} jumpTo={jumpTo} />
+        <GateParent only="m" onSaved={done} />
+        <MathParent onSaved={done} />
+        {msg && <p style={{ color: '#5f3dc4', position: 'sticky', bottom: 0, background: '#f3efff', padding: 12, borderRadius: 10 }}>{msg}</p>}
+      </div>
+    );
+  }
+
   return (
-    <div class="parent">
+    <div class="parent" data-parent-scope="h">
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-        <h2 style={{ margin: 0 }}>부모 설정</h2>
+        <h2 style={{ margin: 0 }}>{s.name ? `${s.name} 설정` : '한글 부모 설정'}</h2>
         <button class="opt" style={{ marginLeft: 'auto', fontSize: 22 }} onClick={onClose}>닫기 ✕</button>
       </div>
       {!isStorageOk() && <p style={{ color: '#c92a2a' }}>{storageNeedsRecovery()
@@ -287,9 +307,9 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
         <button class="opt" onClick={() => { giveExtraLesson(); done('오늘 새 단계를 1개 더 열었습니다.'); }}>새 단계 +1개</button>
       </div>
 
-      <StudyParent onSaved={done} jumpTo={jumpTo} />
+      <StudyParent scope="h" onSaved={done} jumpTo={jumpTo} />
 
-      <GateParent onSaved={done} />
+      <GateParent only="h" onSaved={done} />
 
       <h3>초기화</h3>
       <div class="row">
@@ -324,8 +344,6 @@ export function Parent({ onClose, onDemo, demo }: { onClose: () => void; onDemo:
       <div class="row">배경 음악 <Opt on={s.settings.music} onClick={() => { setSettings({ music: true }); done('저장했습니다.'); }}>켜기</Opt><Opt on={!s.settings.music} onClick={() => { setSettings({ music: false }); done('저장했습니다.'); }}>끄기</Opt></div>
       <div class="row">음성: {hasPack() ? '녹음 음성 사용 중' : '기기 내장 음성 사용 중 (녹음 음성 없음)'}</div>
       <div class="row" style={{ fontSize: 18, color: '#666' }} data-build={__BUILD__}>앱 버전: {__BUILD__}</div>
-
-      <MathParent onSaved={done} />
 
       <h3>글자별 숙련도 (0=처음 ~ 5=완전히 익힘)</h3>
       <div class="row" style={{ gap: 6 }}>
@@ -464,7 +482,7 @@ function guideText(gs: string[]) {
 }
 const fmtMinute = (n: number) => (n >= 60 && n % 60 === 0 ? `${n / 60}시간` : n > 60 ? `${Math.floor(n / 60)}시간 ${n % 60}분` : `${n}분`);
 
-function StudyParent({ onSaved, jumpTo }: { onSaved: (m: string) => void; jumpTo: (idx: number) => void }) {
+function StudyParent({ onSaved, jumpTo, scope }: { onSaved: (m: string) => void; jumpTo: (idx: number) => void; scope: 'h' | 'm' }) {
   const s = load();
   const m = mathState();
   const Opt = ({ on, children, onClick }: any) => <button class={`opt ${on ? 'on' : ''}`} onClick={onClick}>{children}</button>;
@@ -487,7 +505,7 @@ function StudyParent({ onSaved, jumpTo }: { onSaved: (m: string) => void; jumpTo
       <h3>📚 공부량·진도</h3>
       <div class="study-note" style={{ margin: '0 0 6px' }}>－ / ＋ 를 누를 때마다 바로 저장되고, 연동된 다른 기기에도 같이 바뀝니다. 기본값: 한글 새 글자 10번×4세트·하루 30분·새 단계 1개 / 수학 하루 30분·항목당 150문제·20문제 이상 90%면 다음 단계.</div>
 
-      <div class="study-box" data-study="h">
+      {scope === 'h' && <div class="study-box" data-study="h">
         <h4>한글</h4>
         <div class="row" data-study-progress="1"><span class="study-lbl">진도</span>
           <button class="opt" disabled={storageNeedsRecovery() || cur <= 0} onClick={() => jumpTo(cur - 1)}>◀ 앞 단계</button>
@@ -532,9 +550,9 @@ function StudyParent({ onSaved, jumpTo }: { onSaved: (m: string) => void; jumpTo
           <span>통과</span>
           <Stepper id="testPass" value={s.settings.testPass || 80} r={RANGE.testPass} fmt={v => `${v}%`} onSet={v => { setSettings({ testPass: v }); onSaved(`받아쓰기 통과 기준을 ${v}%로 바꿨습니다. 다음 시험부터 적용됩니다.`); }} /></div>
         <div class="row study-note" style={{ margin: '0 0 6px' }}>그날 끝 시험에 떨어지면 다음 단계가 안 열리고, 다음날 복습 시험에 떨어지면 전 단계를 다시 공부합니다(이 규칙은 그대로).</div>
-      </div>
+      </div>}
 
-      <div class="study-box" data-study="m">
+      {scope === 'm' && <div class="study-box" data-study="m">
         <h4>수학·맞춤법{m.name ? ` (${m.name})` : ''}</h4>
         {CATS.map(c => (
           <div class="row" style={{ gap: 6 }} data-math-cat={c.id}><span class="study-lbl">{c.icon} {c.name} 진도</span>
@@ -563,7 +581,7 @@ function StudyParent({ onSaved, jumpTo }: { onSaved: (m: string) => void; jumpTo
         <div class="row study-note" style={{ margin: '0 0 6px' }}>
           {m.timeMul ? <>지금 문제 시간: {CATS.map(c => { const [a, b] = catSecRange(c.id); const f = (x: number) => Math.round(x * m.timeMul); return `${c.name} ${a === b ? f(a) : `${f(a)}~${f(b)}`}초`; }).join(' · ')} · 맞춤법 {Math.round(SP_SEC_RANGE[0] * m.timeMul)}~{Math.round(SP_SEC_RANGE[1] * m.timeMul)}초 · 빈칸 추리 {Math.round(BK_SEC_RANGE[0] * m.timeMul)}~{Math.round(BK_SEC_RANGE[1] * m.timeMul)}초 (×1 = 보통)</> : '문제 시간 제한 없음'} — 시간이 다 되면 틀린 것으로 하고 정답을 보여 줌
         </div>
-      </div>
+      </div>}
     </>
   );
 }

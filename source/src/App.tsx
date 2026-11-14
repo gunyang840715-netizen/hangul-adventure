@@ -122,6 +122,7 @@ export function App() {
   if (ICON) return <Icon />;
   const [screen, setScreen] = useState<Screen>('title');
   const [back, setBack] = useState<Screen>('map');
+  const [pScope, setPScope] = useState<'h' | 'm'>('h');   // 부모 설정 범위: 로희(한글) 화면에서 열면 'h', 로아(수학·맞춤법) 화면에서 열면 'm' (11-14)
   const [sess, setSess] = useState<Sess | null>(null);
   const [room, setRoom] = useState<'doghouse' | 'cathouse'>('doghouse');
   const [yardBack, setYardBack] = useState<'build' | 'house'>('build');
@@ -325,13 +326,13 @@ export function App() {
   // 시간이 풀리면 자동으로 이어서
   const wake = () => { if (!resumeSession()) go('map'); };
 
-  const openParent = () => { setBack(screen === 'parent' ? 'map' : screen); go('parent'); };
+  const openParent = () => { setPScope(screen.startsWith('math') ? 'm' : 'h'); setBack(screen === 'parent' ? 'map' : screen); go('parent'); };
 
   let view;
   switch (screen) {
     case 'title': view = <Title onStart={start} onMath={startMath} />; break;
     // 수학 모드 — 집 짓기·집 안·놀이터·마당은 한글과 같은 화면을 수학 기록(MATH_HOME)으로
-    case 'math': view = <MathHome onBack={() => { syncSoon(300); go('title'); }} onPlay={(md) => { setMathMode(md); go('mathPlay'); }} onSpell={(rv) => { setSpellReview(rv); go('mathSpell'); }} onBlank={() => go('mathBlank')} onClock={() => go('mathClock')} onCloset={() => go('mathCloset')} onHouse={() => go('mathBuild')} onFeed={() => go('mathFeed')} />; break;
+    case 'math': view = <MathHome onBack={() => { syncSoon(300); go('title'); }} onParent={openParent} onPlay={(md) => { setMathMode(md); go('mathPlay'); }} onSpell={(rv) => { setSpellReview(rv); go('mathSpell'); }} onBlank={() => go('mathBlank')} onClock={() => go('mathClock')} onCloset={() => go('mathCloset')} onHouse={() => go('mathBuild')} onFeed={() => go('mathFeed')} />; break;
     case 'mathSpell': view = <SpellScreen key={spellReview ? 'sp-review' : 'sp-all'} review={spellReview} onBack={() => { syncSoon(300); go('math'); }} onCloset={() => go('mathCloset')} onMore={() => setSpellReview(false)} />; break;
     case 'mathBlank': view = <BlankScreen onBack={() => { syncSoon(300); go('math'); }} onCloset={() => go('mathCloset')} />; break;
     case 'mathClock': view = <ClockScreen onBack={() => { syncSoon(300); go('math'); }} onCloset={() => go('mathCloset')} />; break;
@@ -352,8 +353,8 @@ export function App() {
     case 'park': view = <ParkScreen onBack={() => { syncSoon(500); go('build'); }} />; break;
     case 'dress': view = <Dress onBack={() => { syncSoon(500); go('house'); }} />; break;
     case 'adopt': view = <Adopt onBack={() => { syncSoon(500); go('house'); }} />; break;
-    case 'sleep': view = <Sleep onParent={openParent} onWake={wake} demo={demo} />; break;
-    case 'parent': view = <Parent demo={demo} onDemo={(on) => { setDemo(on); tick(x => x + 1); }} onClose={() => { music(load().settings.music); syncSoon(300); if (back === 'sleep' && !timeOver()) wake(); else go(leave(back === 'parent' ? 'map' : back)); }} />; break;
+    case 'sleep': view = <Sleep onParent={openParent} onWake={wake} onMath={startMath} demo={demo} />; break;
+    case 'parent': view = <Parent scope={pScope} demo={demo} onDemo={(on) => { setDemo(on); tick(x => x + 1); }} onClose={() => { if (pScope === 'h') music(load().settings.music); syncSoon(300); if (back === 'sleep' && !timeOver()) wake(); else go(leave(back === 'parent' ? 'map' : back)); }} />; break;
   }
 
   useEffect(() => { (window as any).__FIT__?.(); });

@@ -76,7 +76,7 @@ const GATE_MIN_RANGE = { min: 5, max: 180, step: 5, def: 10 };
 const GATE_N_RANGE = { min: 5, max: 300, step: 5, def: 10 };
 
 /** onSaved: 부모 설정의 안내 글 · 연동 저장 · 다시 그리기 (Parent의 done) */
-export function GateParent({ onSaved }: { onSaved: (m: string) => void }) {
+export function GateParent({ onSaved, only }: { onSaved: (m: string) => void; only?: GateKind }) {   // only: 한 아이 것만 (로희 한글 'h' · 로아 수학 'm', 11-14)
   const s = load();
   const Opt = ({ on, children, onClick }: { on: boolean; children: any; onClick: () => void }) => <button class={`opt ${on ? 'on' : ''}`} onClick={onClick}>{children}</button>;
   const block = (kind: GateKind) => {
@@ -122,8 +122,8 @@ export function GateParent({ onSaved }: { onSaved: (m: string) => void }) {
         잠기는 곳 — 한글: 스티커북, 우리 집(꾸미기·친구 고르기·집 짓기·집 안·놀이터·마당) / 수학·맞춤법: 옷장, 집 꾸미기, 간식 주기. 모험·놀이·문제·맞춤법은 항상 열려 있습니다.<br />
         학습량 — 한글: 오늘의 새 단계 / 수학·맞춤법: 맞힌 문제 수. 시간 — 한글: 오늘 앱을 쓴 시간 / 수학·맞춤법: 문제를 푼 시간. 설정은 연동된 기기에 같이 적용됩니다. 체험 모드에서는 잠기지 않습니다.
       </div>
-      {block('h')}
-      {block('m')}
+      {only !== 'm' && block('h')}
+      {only !== 'h' && block('m')}
     </>
   );
 }

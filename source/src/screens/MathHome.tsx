@@ -15,10 +15,11 @@ import { mathState, todayMath, todayCat, mathTimeUp, openCats, mathPet, mathPetI
 import { TodaySummary, leftText } from './MathScreen';
 import { gateLocked, takeGateOpened } from '../lib/gate';
 import { GatePill, GateBanner, celebrateGate } from './GateUI';
+import { HoldGear } from './MapScreen';
 import '../math/math.css';
 
-export function MathHome({ onBack, onPlay, onSpell, onBlank, onClock, onCloset, onHouse, onFeed }: {
-  onBack: () => void; onPlay: (mode: Mode) => void; onSpell: (review: boolean) => void; onBlank?: () => void; onClock?: () => void; onCloset: () => void; onHouse: () => void; onFeed?: () => void;
+export function MathHome({ onBack, onParent, onPlay, onSpell, onBlank, onClock, onCloset, onHouse, onFeed }: {
+  onBack: () => void; onParent?: () => void; onPlay: (mode: Mode) => void; onSpell: (review: boolean) => void; onBlank?: () => void; onClock?: () => void; onCloset: () => void; onHouse: () => void; onFeed?: () => void;
 }) {
   const m = mathState();
   const t = todayMath(m);
@@ -66,9 +67,11 @@ export function MathHome({ onBack, onPlay, onSpell, onBlank, onClock, onCloset, 
       <div class="layer">
         <button class="iconbtn" style={{ position: 'absolute', left: 20, top: 18 }} onClick={() => { sfx.tap(); onBack(); }} aria-label="처음 화면">🏠</button>
         <div class="pill" style={{ position: 'absolute', left: 112, top: 22, fontSize: 32 }} data-mode-title="1">✏️ {modeTitle(m)}</div>
-        <div class="pill" style={{ position: 'absolute', right: 24, top: 22, fontSize: 26 }} data-today="1">
+        <div class="pill" style={{ position: 'absolute', right: 100, top: 22, fontSize: 26 }} data-today="1">
           ⏳ {leftText(t.leftMs)} · 📝 {t.solved} · ⭕ {t.correct} · <MatIcon size={30} /> {mathMatsLeft(m)} · 👗 {m.owned.length}/{ITEM_LIST.length}
         </div>
+        {/* 로아 설정(11-14 사용자 요청): 로희 학습 화면과 같은 톱니바퀴(2초 누르기) — 로아 시간·진도·공부 먼저는 여기서 */}
+        {onParent && <div style={{ position: 'absolute', right: 20, top: 20, width: 64, display: 'flex' }} data-math-gear="1"><HoldGear onOpen={onParent} /></div>}
         <div style={{ position: 'absolute', left: 0, right: 0, top: 104, textAlign: 'center', fontSize: 32, color: '#fff', textShadow: '0 3px 0 #9775fa' }}>
           {done ? '오늘 공부 시간이 끝났어! 내일 또 하자 🎉' : !open.length && spFull && bkFull && ckFull ? `오늘 수학·맞춤법·빈칸 추리·시계 모두 ${catMax()}문제씩 풀었어! 🎉` : `무엇을 풀까? (오늘 공부 시간 ${m.dayMin}분)`}
         </div>

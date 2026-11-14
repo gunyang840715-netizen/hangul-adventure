@@ -205,7 +205,13 @@ assert.ok(mapSrc.includes("gateLocked('h')") && mapSrc.includes('<GatePill kind=
 const mathHomeSrc = readFileSync(new URL('../src/screens/MathHome.tsx', import.meta.url), 'utf8');
 assert.ok(mathHomeSrc.includes("gateLocked('m')") && mathHomeSrc.includes('<GatePill kind="m"') && mathHomeSrc.includes("takeGateOpened('m')"), '수학 첫 화면: 🔒 표시·진행 막대·열림 축하');
 const parentSrc = readFileSync(new URL('../src/screens/Extras.tsx', import.meta.url), 'utf8');
-assert.ok(parentSrc.includes('<GateParent onSaved={done} />'), '부모 설정에 공부 먼저 칸');
+assert.ok(parentSrc.includes('<GateParent only="h" onSaved={done} />') && parentSrc.includes('<GateParent only="m" onSaved={done} />'), '부모 설정에 공부 먼저 칸 — 한글(로희) 설정과 수학·맞춤법(로아) 설정에 각각 (11-14 분리)');
+
+// 11-14 사용자 요청: 로희(한글)·로아(수학·맞춤법) 따로 — 로희 시간이 끝난 잠자기 화면에서도 로아 화면으로 갈 수 있고, 설정은 각자 학습 화면의 톱니바퀴에서
+assert.ok(app.includes('onMath={startMath}'), '잠자기 화면(로희 시간 끝)에서도 로아 수학·맞춤법으로 갈 수 있음');
+assert.ok(mathHomeSrc.includes('<HoldGear onOpen={onParent} />') && app.includes('onParent={openParent}'), '로아 학습 화면에 설정 톱니바퀴');
+assert.ok(app.includes("setPScope(screen.startsWith('math') ? 'm' : 'h')") && app.includes('<Parent scope={pScope}'), '톱니바퀴를 누른 화면에 따라 로희/로아 설정만 열림');
+assert.ok(parentSrc.includes("scope === 'm'") && parentSrc.includes('<StudyParent scope="m"') && parentSrc.includes('<StudyParent scope="h"') && !/StudyParent scope="h"[\s\S]{0,4000}<MathParent/.test(parentSrc.slice(parentSrc.indexOf('<h2 style={{ margin: 0 }}>{s.name'))), '로희 설정에는 한글만, 로아 설정에는 수학·맞춤법만');
 
 // ---------- 4) 연동·백업에서 살아남기 ----------
 reset();

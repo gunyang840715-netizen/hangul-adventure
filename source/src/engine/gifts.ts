@@ -8,16 +8,19 @@ export type Gift = { kind: 'snack' | 'item' | 'mat'; id: string };
 const GAMES = new Set(['hunt', 'bubble', 'mole', 'memory', 'feed', 'hop', 'blend', 'picture', 'build', 'cards', 'sentence', 'rescue', 'recall', 'sylfind']);
 const TRACE = new Set(['traceSet', 'trace']);
 
-/** 간식이 선물로 나올 비율 (새 간식은 여기에도 넣어야 실제로 나온다 — id_keep_check가 확인) */
-export const SNACK_WEIGHT: [string, number][] = [['bone', 3], ['fish', 3], ['cookie', 2], ['milk', 2], ['meat', 1], ['churu', 1],
-  // 새 간식(10-15): 1점 = 2, 2점 = 1, 케이크(3점) = 1
-  ['sweetpotato', 2], ['carrot', 2], ['shrimp', 2], ['catgrass', 2], ['apple', 2], ['watermelon', 2], ['cheese', 2],
+/** 간식이 선물로 나올 비율 (새 간식은 여기에도 넣어야 실제로 나온다 — id_keep_check가 확인)
+ *  11-16 사용자 요청: 간식도 골고루 나오게 → 모든 간식을 같은 비율로 */
+export const SNACK_WEIGHT: [string, number][] = [['bone', 1], ['fish', 1], ['cookie', 1], ['milk', 1], ['meat', 1], ['churu', 1],
+  ['sweetpotato', 1], ['carrot', 1], ['shrimp', 1], ['catgrass', 1], ['apple', 1], ['watermelon', 1], ['cheese', 1],
   ['jerky', 1], ['chicken', 1], ['tuna', 1], ['salmon', 1], ['egg', 1], ['dogcake', 1], ['catcake', 1]];
+let lastSnack = '';
+/** 간식 하나 고르기 — 바로 전에 나온 간식은 피한다(같은 것이 연달아 나오지 않게) */
 export function randomSnack(): string {
-  const tot = SNACK_WEIGHT.reduce((a, [, w]) => a + w, 0);
+  const list = SNACK_WEIGHT.filter(([id]) => id !== lastSnack);
+  const tot = list.reduce((a, [, w]) => a + w, 0);
   let r = Math.random() * tot;
-  for (const [id, w] of SNACK_WEIGHT) { r -= w; if (r < 0) return id; }
-  return 'cookie';
+  for (const [id, w] of list) { r -= w; if (r < 0) return (lastSnack = id); }
+  return (lastSnack = list[0][0]);
 }
 
 /** 받을 꾸미기 아이템: 아직 없는 것 중 무작위 (10-23 사용자 요청: 늘 같은 순서 말고 여러 가지가 섞여 나오게).
@@ -62,9 +65,11 @@ export function giftFor(stepType: string): Gift | null {
   // 받아쓰기 시험 통과: 재료 하나 더
   if (stepType === 'dictation') { addMat(); return { kind: 'mat', id: 'mat' }; }
   // 쓰기 세트를 끝내면 4번 중 3번은 꾸미기 아이템, 1번은 간식 (10-23 사용자 요청: 간식보다 꾸미기가 더 많이 나오게)
-  // 쓰기 세트 사이에는 놀이가 하나씩 있으므로 놀이 수로 순서를 정한다(새 저장 칸 없음). 꾸미기를 다 모았으면 간식
+  // 11-16 고침: 예전에는 놀이 수(gamesTotal)로 정했는데, 글자 합치기 단계는 쓰기 세트 3개가 놀이 없이 이어지고
+  // 한 묶음마다 놀이가 2개씩 늘어 짝·홀이 그날 내내 같아서 쓰기에서 간식이 한 번도 안 나오는 날이 생겼다 → 4번 중 1번 무작위.
+  // 꾸미기를 다 모았으면 간식
   if (TRACE.has(stepType)) {
-    if (gamesTotal() % 4 !== 3) {
+    if (Math.random() >= 0.25) {
       const it = giveItem();
       if (it) return it;
     }
